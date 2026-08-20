@@ -1,0 +1,36 @@
+import Order from '../models/Order.js';
+import Doctor from '../models/Doctor.js';
+import Product from '../models/Product.js';
+import recordAudit from '../utils/audit.js';
+
+export async function createOrder(req, res) {
+  const { doctorId, visitId, items, notes } = req.body;
+  if (!doctorId || !Array.isArray(items) || items.length === 0) return res.status(400).json({ message: 'doctorId and items are required' });
+  const doctor = await Doctor.findOne({ _id: doctorId, companyId: req.user.companyId });
+  if (!doctor) return res.status(404).json({ message: 'Doctor not found in this company' });
+  const productIds = items.map(item => item.productId);
+  const products = await Product.find({ _id: { $in: productIds }, companyId: req.user.companyId, active: true });
+  if (products.length !== productIds.length) return res.status(400).json({ message: 'One or more products are invalid' });
+  const prices = new Map(products.map(product => [String(product._id), product.unitPrice]));
+  const normalizedItems = items.map(item => ({ productId: item.productId, quantity: Number(item.quantity), unitPrice: prices.get(String(item.productId)) }));
+  if (normalizedItems.some(item => !Number.isInteger(item.quantity) || item.quantity < 1)) return res.status(400).json({ message: 'Quantities must be positive integers' });
+  const order = await Order.create({ companyId: req.user.companyId, doctorId, visitId, items: normalizedItems, notes, createdBy: req.user.id });
+  await recordAudit(req, 'order_created', {}, { orderId: order._id, doctorId, itemCount: normalizedItems.length });
+  return res.status(201).json({ order });
+}
+
+export async function listOrders(req, res) {
+  const query = ['admin', 'company_owner', 'hr_manager', 'hr', 'manager'].includes(req.user.role) ? { companyId: req.user.companyId } : { companyId: req.user.companyId, createdBy: req.user.id };
+  const orders = await Order.find(query).populate('doctorId createdBy', 'name email clinicName role').populate('items.productId', 'name sku unitPrice').sort({ createdAt: -1 });
+  return res.json({ orders });
+}
+
+export async function updateOrderStatus(req, res) {
+  if (!['admin', 'company_owner', 'hr_manager', 'manager'].includes(req.user.role)) return res.status(403).json({ message: 'Insufficient permissions' });
+  const { status } = req.body;
+  if (!['PLACED', 'CONFIRMED', 'FULFILLED', 'CANCELLED'].includes(status)) return res.status(400).json({ message: 'Invalid order status' });
+  const order = await Order.findOneAndUpdate({ _id: req.params.id, companyId: req.user.companyId }, { status }, { new: true, runValidators: true });
+  if (!order) return res.status(404).json({ message: 'Order not found' });
+  await recordAudit(req, 'order_status_updated', {}, { orderId: order._id, status });
+  return res.json({ order });
+}

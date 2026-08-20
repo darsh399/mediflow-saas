@@ -1,0 +1,16 @@
+.app-container{
+    display: flex;
+}
+
+.content{
+    width: 100%;
+}
+
+/* Small responsive polish */
+@media (max-width: 767px){
+    .sidebar { display: none }
+    .navbar .navbar-brand { font-size: 1rem }
+}
+
+.card { border-radius: 8px }
+.table-responsive { overflow-x: auto }
