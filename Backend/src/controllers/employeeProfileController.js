@@ -26,6 +26,8 @@ export async function getMyProfile(req, res) {
 
 export async function saveProfile(req, res) {
   const { profileData, experienceType, documents } = req.body;
+  console.log('data come from experinece', profileData, 'experinecetype', experienceType, 'documents', documents);
+  
   if (experienceType && !['fresher', 'experienced'].includes(experienceType)) return res.status(400).json({ message: 'Invalid experienceType' });
   const profile = await EmployeeProfile.findOneAndUpdate(
     { companyId: req.user.companyId, userId: req.user.id },

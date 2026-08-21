@@ -18,5 +18,5 @@ export const uploadMultiple = upload.array("files", 5);
 
 export const uploadFields = upload.fields([
     { name: "profileImage", maxCount: 1 },
-    { name: "documents", maxCount: 5 }
+    { name: "documents", maxCount: 15 }
 ]);
