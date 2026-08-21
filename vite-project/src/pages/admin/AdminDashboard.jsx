@@ -16,11 +16,14 @@ const AdminDashboard = ()=>{
           userApi.listUsers(), doctorApi.listDoctors(), medicalApi.listMedicals(), visitApi.listVisits(), leaveApi.listLeaves()
         ])
         setCounts({ users: (u.users||u).length, doctors: (d.doctors||d).length, medicals: (m.medicals||m).length, visits: (v.visits||v).length, leaves: (l.leaves||l).length })
-      }catch(err){}
-      setLoading(false)
+      }catch(err){
+  console.error('Dashboard API error:', err)
+}
+setLoading(false)
+      
     })()
   },[])
-
+ console.log(counts, 'in admint')
   return (
     <div className="container my-4">
       <h2>Admin Dashboard</h2>

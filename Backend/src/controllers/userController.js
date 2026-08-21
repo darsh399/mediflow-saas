@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import Visit from '../models/Visit.js'
 import hashPassword from '../utils/hashPassword.js';
 import createToken from '../utils/createToken.js';
 import getCookieOptions from '../utils/getCookieOptions.js'
@@ -318,5 +319,46 @@ export const updateProfile = async (req, res) => {
     } catch (error) {
         console.error('Error updating profile:', error);
         return res.status(500).json({ message: 'Error updating profile', error: error.message });
+    }
+};
+
+
+
+export const getAllMyVisits = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const companyId = req.user?.companyId;
+
+        if (!userId) {
+            return res.status(401).json({
+                message: 'User authentication required'
+            });
+        }
+
+        if (!companyId) {
+            return res.status(400).json({
+                message: 'Company context missing'
+            });
+        }
+
+        const visits = await Visit.find({
+            companyId,
+            userId
+        })
+            .populate('doctorId')
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            message: 'Your visits retrieved successfully',
+            visits
+        });
+
+    } catch (error) {
+        console.error('Error retrieving my visits:', error);
+
+        return res.status(500).json({
+            message: 'Error retrieving visits',
+            error: error.message
+        });
     }
 };

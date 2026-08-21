@@ -4,6 +4,7 @@ import doctorApi from '../../api/doctorApi'
 export const fetchDoctors = createAsyncThunk('doctors/fetch', async (_, { rejectWithValue }) => {
   try {
     const data = await doctorApi.listDoctors()
+    console.log('in slice doctor', data)
     return data.doctors || data
   } catch (err) {
     return rejectWithValue(err.response?.data || { message: err.message })
