@@ -12,13 +12,23 @@ const AddVisit = ()=>{
   const [medicals, setMedicals] = useState([])
   const [selected, setSelected] = useState('')
   const [notes, setNotes] = useState('')
+  const [location, setLocation] = useState({ latitude: '', longitude: '' })
+  const [locationStatus, setLocationStatus] = useState('Requesting live location...')
 
-  useEffect(()=>{ (async ()=>{ try{ const d = await doctorApi.listDoctors(); setDoctors(d.doctors||d) }catch(e){}; try{ const m = await medicalApi.listMedicals(); setMedicals(m.medicals||m) }catch(e){} })() }, [])
+  useEffect(()=>{
+    (async ()=>{ try{ const d = await doctorApi.listDoctors(); setDoctors(d.doctors||d) }catch(e){}; try{ const m = await medicalApi.listMedicals(); setMedicals(m.medicals||m) }catch(e){} })()
+    if(!navigator.geolocation) { setLocationStatus('Geolocation is not supported by this browser'); return undefined }
+    const watchId = navigator.geolocation.watchPosition(pos=>{
+      setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
+      setLocationStatus('Live location active')
+    }, err=>setLocationStatus(`Location permission needed: ${err.message}`), { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 })
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [])
 
   const handleUseLocationAndSubmit = ()=>{
-    if(!navigator.geolocation) return alert('Geolocation not supported')
-    navigator.geolocation.getCurrentPosition(async (pos)=>{
-      const payload = { currentLatitude: pos.coords.latitude, currentLongitude: pos.coords.longitude, purpose: 'field_visit', notes }
+    if(!location.latitude || !location.longitude) return alert('Current location is not available yet')
+    const submitVisit = async ()=>{
+      const payload = { currentLatitude: location.latitude, currentLongitude: location.longitude, purpose: 'field_visit', notes }
       if(type === 'doctor') payload.doctorId = selected
       else payload.medicalId = selected
       try{
@@ -28,8 +38,14 @@ const AddVisit = ()=>{
       }catch(err){
         alert('Error: '+(err.message||JSON.stringify(err)))
       }
-    }, err=> alert('Unable to read location: '+err.message))
+    }
+    submitVisit()
   }
+
+  const hasLocation = location.latitude !== '' && location.longitude !== ''
+  const mapUrl = hasLocation
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${location.longitude - 0.005}%2C${location.latitude - 0.005}%2C${location.longitude + 0.005}%2C${location.latitude + 0.005}&layer=mapnik&marker=${location.latitude}%2C${location.longitude}`
+    : ''
 
   return (
     <div>
@@ -53,6 +69,15 @@ const AddVisit = ()=>{
       <div className="mb-3">
         <label className="form-label">Notes</label>
         <textarea className="form-control" rows={3} value={notes} onChange={e=>setNotes(e.target.value)} />
+      </div>
+
+      <div className="mb-3">
+        <div className="small text-muted mb-2">{locationStatus}</div>
+        <div className="row g-2 mb-2">
+          <div className="col-md-6"><label className="form-label">Current latitude</label><input className="form-control" value={location.latitude} readOnly /></div>
+          <div className="col-md-6"><label className="form-label">Current longitude</label><input className="form-control" value={location.longitude} readOnly /></div>
+        </div>
+        {hasLocation && <iframe title="Current visit location" src={mapUrl} style={{ width: '100%', height: 220, border: 0 }} loading="lazy" />}
       </div>
 
       <button className="btn btn-primary" onClick={handleUseLocationAndSubmit} disabled={loading || !selected}>{loading? 'Submitting...':'Use my location & Submit'}</button>

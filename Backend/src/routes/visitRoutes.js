@@ -6,12 +6,12 @@ import { createVisit, listVisits, getVisit, updateVisit, deleteVisit, doctorVisi
 
 const router = express.Router();
 
-router.post('/', authMiddleware, companyMiddleware, roleMiddleware('admin','hr','manager','superadmin','super_admin'), createVisit);
+router.post('/', authMiddleware, companyMiddleware, roleMiddleware('admin','company_owner','hr','manager','superadmin','super_admin'), createVisit);
 router.post('/doctor', authMiddleware, companyMiddleware, doctorVisit);
 router.post('/medical', authMiddleware, companyMiddleware, medicalVisit);
 router.get('/', authMiddleware, companyMiddleware, listVisits);
 router.get('/:id', authMiddleware, companyMiddleware, getVisit);
-router.put('/:id', authMiddleware, companyMiddleware, roleMiddleware('admin','hr','manager','superadmin','super_admin'), updateVisit);
-router.delete('/:id', authMiddleware, companyMiddleware, roleMiddleware('admin','hr','manager','superadmin','super_admin'), deleteVisit);
+router.put('/:id', authMiddleware, companyMiddleware, roleMiddleware('admin','company_owner','hr','manager','superadmin','super_admin'), updateVisit);
+router.delete('/:id', authMiddleware, companyMiddleware, roleMiddleware('admin','company_owner','hr','manager','superadmin','super_admin'), deleteVisit);
 
 export default router;

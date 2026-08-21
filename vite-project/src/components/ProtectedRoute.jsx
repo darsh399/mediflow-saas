@@ -5,6 +5,9 @@ import { Navigate, Outlet } from 'react-router-dom'
 const ProtectedRoute = ({ rolesAllowed }) => {
   const auth = useSelector(state => state.auth)
   const user = auth?.user
+  if (auth?.token && (!auth.sessionValidated || auth.loading)) {
+    return <div className="container py-5 text-center">Checking session...</div>
+  }
   if (!auth?.isAuthenticated && !auth?.token) {
     return <Navigate to="/login" replace />
   }

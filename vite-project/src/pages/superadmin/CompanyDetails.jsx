@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
-import axios from '../../api/axiosInstance'
 import { useParams, useNavigate } from 'react-router-dom'
 import superAdminApi from '../../api/superAdminApi'
-import { useDispatch } from 'react-redux'
-import { clearAuth } from '../../redux/slices/authSlice'
 import { useNotify } from '../../components/NotificationProvider'
 import BackButton from '../../components/BackButton'
 
@@ -12,7 +9,6 @@ const fmtDate = (d) => d ? new Date(d).toLocaleString() : '-'
 const CompanyDetails = ()=>{
   const { id } = useParams()
   const [data,setData] = useState(null)
-  const dispatch = useDispatch()
   const navigate = useNavigate()
   const { notify } = useNotify()
 
@@ -47,14 +43,14 @@ const CompanyDetails = ()=>{
           </div>
         </div>
         <div>
-          {data.company.status === 'PENDING' && <>
+          {['PENDING', 'PENDING_APPROVAL', 'PENDING_ACTIVATION'].includes(data.company.status) && <>
             <button className="btn btn-sm btn-success me-2" onClick={()=>changeStatus('ACTIVE')}>Approve</button>
             <button className="btn btn-sm btn-outline-danger me-2" onClick={()=>changeStatus('REJECTED')}>Reject</button>
           </>}
-          {data.company.status !== 'BLOCKED' && data.company.status !== 'PENDING' && data.company.status !== 'REJECTED' ? (
+          {data.company.status !== 'BLOCKED' && !['PENDING', 'PENDING_APPROVAL', 'PENDING_ACTIVATION'].includes(data.company.status) && data.company.status !== 'REJECTED' ? (
             <button className="btn btn-sm btn-warning me-2" onClick={()=>changeStatus('BLOCKED')}>Block</button>
           ) : (
-            data.company.status !== 'PENDING' && <button className="btn btn-sm btn-success me-2" onClick={()=>changeStatus('ACTIVE')}>Activate</button>
+            !['PENDING', 'PENDING_APPROVAL', 'PENDING_ACTIVATION'].includes(data.company.status) && <button className="btn btn-sm btn-success me-2" onClick={()=>changeStatus('ACTIVE')}>Activate</button>
           )}
           <button className="btn btn-sm btn-danger" onClick={handleDelete}>Delete</button>
         </div>

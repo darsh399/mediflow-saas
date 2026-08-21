@@ -14,14 +14,19 @@ export const sendInvite = async (req, res) => {
   try {
     const sender = req.user; 
     if (!sender) return res.status(401).json({ message: 'Authentication required' });
-    const allowed = ['admin', 'hr', 'manager'];
+    const allowed = ['admin', 'hr', 'manager', 'company_owner'];
     if (!hasAnyRole(sender, allowed)) return res.status(403).json({ message: 'Insufficient permissions' });
 
     const { inviteeEmail, role = 'employee', profileTemplate, expiresDays = 7 } = req.body;
     if (!inviteeEmail) return res.status(400).json({ message: 'inviteeEmail is required' });
+    const allowedRoles = ['hr_manager', 'hr', 'manager', 'project_manager', 'employee', 'mr', ];
+    if (!allowedRoles.includes(role)) return res.status(400).json({ message: 'Invalid employee invitation role' });
+    const existingUser = await User.findOne({ email: inviteeEmail.toLowerCase().trim() });
+    if (existingUser) return res.status(409).json({ message: 'Email already belongs to a user' });
 
     
-    const token = crypto.randomBytes(24).toString('hex');
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const expiresAt = new Date(Date.now() + Number(expiresDays) * 24 * 60 * 60 * 1000);
 
     const invite = new Invite({
@@ -29,7 +34,7 @@ export const sendInvite = async (req, res) => {
       companyId: sender.companyId || null,
       inviteeEmail,
       role,
-      token,
+      tokenHash,
       expiresAt,
       profileTemplate
     });
@@ -67,7 +72,8 @@ export const acceptInvite = async (req, res) => {
     const { password, ...profileData } = req.body;
     if (!token) return res.status(400).json({ message: 'Token is required' });
 
-    const invite = await Invite.findOne({ token });
+    const tokenHash = crypto.createHash('sha256').update(token || '').digest('hex');
+    const invite = await Invite.findOne({ $or: [{ tokenHash }, { token }] }).select('+tokenHash');
     if (!invite) return res.status(404).json({ message: 'Invite not found' });
     if (invite.status !== 'pending') return res.status(400).json({ message: 'Invite is not pending' });
     if (invite.expiresAt && invite.expiresAt < new Date()) return res.status(400).json({ message: 'Invite has expired' });
@@ -168,10 +174,39 @@ export const changePassword = async (req, res) => {
   return res.json({ message: 'Password changed successfully' });
 };
 
+// export const currentUser = async (req, res) => {
+//   const user = await User.findById(req.user.id).select('-password');
+//   if (!user) return res.status(401).json({ message: 'User account not found' });
+//   return res.json({ user });
+// };
+
 export const currentUser = async (req, res) => {
-  const user = await User.findById(req.user.id).select('-password');
-  if (!user) return res.status(401).json({ message: 'User account not found' });
-  return res.json({ user });
+  try {
+    const user = await User.findById(req.user.id)
+      .select("-password")
+      .populate(
+        "companyId",
+        "name website phone email address"
+      );
+
+    if (!user) {
+      return res.status(401).json({
+        message: "User account not found",
+      });
+    }
+
+    return res.status(200).json({
+      user,
+    });
+
+  } catch (error) {
+    console.error("Current user error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch current user",
+      error: error.message,
+    });
+  }
 };
 
 export default { sendInvite, acceptInvite, forgotPassword, resetPassword, changePassword, currentUser };

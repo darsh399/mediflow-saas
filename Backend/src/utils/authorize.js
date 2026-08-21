@@ -1,12 +1,15 @@
 
 export function hasAnyRole(user, roles = []) {
   if (!user || !user.role) return false;
-  return roles.includes(user.role);
+  const role = user.role === 'project_manager' ? 'manager' : user.role;
+  return roles.includes(role) || roles.includes(user.role);
 }
 
 export function requireRole(...roles) {
   return (req, res, next) => {
     const user = req.user;
+    console.log('getting roles', ...roles)
+    console.log(user, 'for sending requies')
     if (!user) return res.status(401).json({ message: 'Authentication required' });
     if (!hasAnyRole(user, roles)) return res.status(403).json({ message: 'Insufficient permissions' });
     return next();
@@ -34,6 +37,7 @@ export const ROLE_HIERARCHY = envHierarchy && typeof envHierarchy === 'string'
   : DEFAULT_ROLE_HIERARCHY;
 
 export function roleRank(role) {
+  if (role === 'project_manager') role = 'manager';
   const idx = ROLE_HIERARCHY.indexOf(role);
   return idx === -1 ? ROLE_HIERARCHY.length : idx;
 }
@@ -45,6 +49,7 @@ export const PRIVILEGED_ROLES = envPriv && typeof envPriv === 'string'
   : ['super_admin', 'admin', 'company_owner'];
 
 export function isPrivilegedRole(role) {
+  if (role === 'project_manager') role = 'manager';
   return PRIVILEGED_ROLES.includes(role);
 }
 

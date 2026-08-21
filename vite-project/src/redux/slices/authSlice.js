@@ -17,7 +17,7 @@ const initialState = (() => {
         const raw = localStorage.getItem(storageKey)
         if (raw) return JSON.parse(raw)
     } catch (error) { void error }
-    return { user: null, token: null, isAuthenticated: false, loading: false, error: null }
+    return { user: null, token: null, isAuthenticated: false, loading: false, sessionValidated: false, error: null }
 })()
 
 export const login = createAsyncThunk('auth/login', async ({ email, password }, { rejectWithValue }) => {
@@ -85,17 +85,19 @@ const slice = createSlice({
                     state.user = user
                     state.token = token
                     state.isAuthenticated = !!token
+                    state.sessionValidated = true
                     state.error = null
                     persistState(state)
                     setAuthToken(token)
                 }
             })
             .addCase(login.rejected, (state, action) => { state.loading = false; state.error = action.payload || { message: 'Login failed' } })
-            .addCase(validateSession.pending, (state) => { state.loading = true })
+            .addCase(validateSession.pending, (state) => { state.loading = true; state.sessionValidated = false })
             .addCase(validateSession.fulfilled, (state, action) => {
                 state.loading = false
                 state.user = action.payload.user
                 state.isAuthenticated = !!state.token
+                state.sessionValidated = true
                 state.error = null
                 persistState(state)
             })
@@ -104,6 +106,7 @@ const slice = createSlice({
                 state.user = null
                 state.token = null
                 state.isAuthenticated = false
+                state.sessionValidated = true
                 state.error = null
                 clearPersistedState()
                 setAuthToken(null)

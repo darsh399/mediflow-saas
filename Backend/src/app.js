@@ -16,6 +16,8 @@ import taskRoutes from './routes/taskRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import projectRoutes from './routes/projectRoutes.js';
+import activityRoutes from './routes/activityRoutes.js';
 import superadminRoutes from './routes/superadminRoutes.js';
 import errorMiddleware from './middleware/errorMiddleware.js';
 
@@ -78,6 +80,8 @@ app.use('/api/employee-profiles', employeeProfileRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/activities', activityRoutes);
 // Keep legacy /superadmin route
 app.use('/superadmin', superadminRoutes);
 // Also expose superadmin API under /api/superadmin so frontend dev proxy can forward API calls

@@ -7,6 +7,7 @@ import { validateProfile } from '../validators/userValidator.js';
 import { canActOn, isPrivilegedRole } from '../utils/authorize.js';
 import AuditLog from '../models/AuditLog.js';
 import Company from '../models/Company.js';
+import Invite from '../models/Invite.js';
 
 
 
@@ -94,6 +95,19 @@ export const loginUser = async (req, res) => {
         const userExists = await User.findOne({ email });
         if (!userExists) return res.status(404).json({ message: 'User not found' });
 
+        let ownedCompany = await Company.findOne({ ownerId: userExists._id }).select('_id status isActive');
+        if (!ownedCompany) {
+            const acceptedOwnerInvite = await Invite.findOne({ inviteeEmail: userExists.email, role: 'company_owner', status: 'accepted' }).sort({ acceptedAt: -1 });
+            if (acceptedOwnerInvite?.companyId) {
+                ownedCompany = await Company.findByIdAndUpdate(acceptedOwnerInvite.companyId, { ownerId: userExists._id }, { new: true }).select('_id status isActive');
+            }
+        }
+        if (ownedCompany && (String(userExists.companyId || '') !== String(ownedCompany._id) || userExists.role !== 'company_owner')) {
+            userExists.companyId = ownedCompany._id;
+            userExists.role = 'company_owner';
+            await userExists.save();
+        }
+
         const isMatch = await bcrypt.compare(password, userExists.password);
         if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
@@ -101,7 +115,7 @@ export const loginUser = async (req, res) => {
             return res.status(403).json({ message: 'Account is disabled or blocked' });
         }
         if (userExists.companyId && userExists.role !== 'super_admin') {
-            const company = await Company.findById(userExists.companyId).select('status isActive');
+            const company = ownedCompany || await Company.findById(userExists.companyId).select('status isActive');
             if (!company || !company.isActive || company.status !== 'ACTIVE') {
                 return res.status(403).json({ message: `Company account is ${company?.status || 'inactive'}` });
             }

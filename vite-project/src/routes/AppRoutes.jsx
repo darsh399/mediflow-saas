@@ -17,6 +17,7 @@ import Doctors from "../pages/admin/Doctors";
 import AddDoctor from "../pages/admin/AddDoctor";
 import Medicals from "../pages/admin/Medicals";
 import AddMedical from "../pages/admin/AddMedical";
+import Visits from "../pages/admin/Visits";
 import AddVisit from "../pages/mr/AddVisit";
 import Leaves from "../pages/hr/Leaves";
 import Users from "../pages/admin/Users";
@@ -32,6 +33,8 @@ import ProfileReviews from "../pages/employee/ProfileReviews";
 import Tasks from "../pages/tasks/Tasks";
 import Orders from "../pages/orders/Orders";
 import Notifications from "../pages/notifications/Notifications";
+import Projects from "../pages/projects/Projects";
+import DailyActivity from "../pages/employee/DailyActivity";
 
 
 const AppRoutes = () => {
@@ -51,33 +54,42 @@ const AppRoutes = () => {
                   <Route path='superadmin/companies/:id' element={<CompanyDetails/>} />
                  </Route>
                  <Route path='activate-account' element={<ActivateAccount/>} />
-                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager","employee","mr"]} />}>
+                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager","project_manager","employee","mr"]} />}>
+                  <Route path='profile' element={<AdminLayout />}><Route index element={<Profile />} /></Route>
+                 </Route>
+                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager","project_manager","employee","mr"]} />}>
                   <Route path='employee/onboarding' element={<AdminLayout />}><Route index element={<EmployeeOnboarding />} /></Route>
                  </Route>
-                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager"]} />}>
+                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager","project_manager"]} />}>
                   <Route path='employee/profiles' element={<AdminLayout />}><Route index element={<ProfileReviews />} /></Route>
                  </Route>
-                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager","employee","mr"]} />}>
+                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager","project_manager","employee","mr"]} />}>
                   <Route path='notifications' element={<AdminLayout />}><Route index element={<Notifications />} /></Route>
                  </Route>
-                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager","employee","mr"]} />}>
+                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager","project_manager","employee","mr"]} />}>
                   <Route path='tasks' element={<AdminLayout />}><Route index element={<Tasks />} /></Route>
                  </Route>
-                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager","employee","mr"]} />}>
+                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","manager","project_manager"]} />}>
+                  <Route path='projects' element={<AdminLayout />}><Route index element={<Projects />} /></Route>
+                 </Route>
+                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager","project_manager","employee","mr"]} />}>
                   <Route path='orders' element={<AdminLayout />}><Route index element={<Orders />} /></Route>
+                 </Route>
+                 <Route element={<ProtectedRoute rolesAllowed={["admin","company_owner","hr_manager","hr","manager","project_manager","employee","mr"]} />}>
+                  <Route path='employee/activity' element={<AdminLayout />}><Route index element={<DailyActivity />} /></Route>
                  </Route>
                                  <Route path='about' element={<About/>} />
                                  <Route path='contact' element={<Contact/>} />
 
                                  {/* Admin area */}
-                                 <Route element={<ProtectedRoute rolesAllowed={["admin","super_admin","company_owner","manager"]} /> }>
+                                 <Route element={<ProtectedRoute rolesAllowed={["admin","super_admin","company_owner","manager","project_manager"]} /> }>
                                      <Route path="/admin" element={<AdminLayout/>}>
                                          <Route index element={<AdminDashboard/>} />
                                          <Route path="doctors" element={<Doctors/>} />
                                          <Route path="doctors/add" element={<AddDoctor/>} />
                                          <Route path="medicals" element={<Medicals/>} />
                                          <Route path="medicals/add" element={<AddMedical/>} />
-                                        <Route path="visits" element={<></>} />
+                                        <Route path="visits" element={<Visits/>} />
                                         <Route path="users" element={<Users/>} />
                                         <Route path="users/add" element={<AddEmployee/>} />
                                         <Route path="users/:id" element={<UserDetails/>} />
@@ -89,14 +101,14 @@ const AppRoutes = () => {
                                  </Route>
 
                                 {/* MR area */}
-                                <Route element={<ProtectedRoute rolesAllowed={["employee","mr","manager"]} /> }>
+                                <Route element={<ProtectedRoute rolesAllowed={["employee","mr","manager","project_manager"]} /> }>
                                     <Route path="/mr" element={<AdminLayout/>}>
                                         <Route path="add-visit" element={<AddVisit/>} />
                                     </Route>
                                 </Route>
 
                                 {/* HR area */}
-                                <Route element={<ProtectedRoute rolesAllowed={["hr","hr_manager","admin"]} /> }>
+                                <Route element={<ProtectedRoute rolesAllowed={["hr","hr_manager","admin","company_owner","manager","project_manager"]} /> }>
                                     <Route path="/hr" element={<AdminLayout/>}>
                                         <Route path="leaves" element={<Leaves/>} />
                                     </Route>

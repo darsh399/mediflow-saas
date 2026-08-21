@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt'
+import crypto from 'crypto'
 import User from '../models/User.js'
 import createToken from '../utils/createToken.js'
 import getCookieOptions from '../utils/getCookieOptions.js'
@@ -9,10 +10,20 @@ import Medical from '../models/Medical.js'
 import Visit from '../models/Visit.js'
 import Leave from '../models/Leave.js'
 import Invite from '../models/Invite.js'
+import Product from '../models/Product.js'
+import Order from '../models/Order.js'
+import Task from '../models/Task.js'
+import Project from '../models/Project.js'
+import EmployeeProfile from '../models/EmployeeProfile.js'
+import EmployeeActivity from '../models/EmployeeActivity.js'
+import Notification from '../models/Notification.js'
+import AuditLog from '../models/AuditLog.js'
 import generateInviteToken from '../utils/generateInviteToken.js'
 import mailService from '../services/mailService.js'
 import subscriptionService from '../services/subscriptionService.js'
 import companyService from '../services/companyService.js'
+import fs from 'fs/promises'
+import path from 'path'
 
 export const login = async (req, res) => {
   try {
@@ -55,7 +66,7 @@ export const dashboard = async (req, res) => {
     const activeCompanies = await Company.countDocuments({ status: 'ACTIVE' })
     const suspendedCompanies = await Company.countDocuments({ status: 'SUSPENDED' })
     const blockedCompanies = await Company.countDocuments({ status: 'BLOCKED' })
-    const pendingCompanies = await Company.countDocuments({ status: 'PENDING' })
+    const pendingCompanies = await Company.countDocuments({ status: { $in: ['PENDING', 'PENDING_APPROVAL', 'PENDING_ACTIVATION'] } })
     const expiredSubs = await Subscription.countDocuments({ status: 'EXPIRED' })
     const activeSubs = await Subscription.countDocuments({ status: 'ACTIVE' })
     const totalUsers = await User.countDocuments()
@@ -75,12 +86,16 @@ export const dashboard = async (req, res) => {
 
 export const createCompanyOnboard = async (req, res) => {
   try {
-    const { companyName, companyEmail, companyMobile, companyAddress, companyWebsite, ownerName, ownerEmail, ownerMobile, plan, startDate, endDate, expiresDays = 2 } = req.body
+    const { companyName, companyEmail, companyMobile, companyAddress, companyWebsite, ownerName, ownerEmail, ownerMobile, role = 'company_owner', plan, startDate, endDate, expiresDays = 2 } = req.body
 
-    if (!companyName || !ownerEmail) return res.status(400).json({ message: 'companyName and ownerEmail required' })
-    console.log('Onboard create request:', { companyName, companyEmail, companyMobile, companyAddress, companyWebsite, ownerName, ownerEmail, ownerMobile, plan, startDate, endDate, expiresDays })
+    if (!ownerName || !ownerEmail || !ownerMobile) return res.status(400).json({ message: 'ownerName, ownerEmail and ownerMobile are required' })
+    const allowedRoles = ['company_owner', 'hr_manager', 'hr', 'manager', 'project_manager', 'employee']
+    if (!allowedRoles.includes(role)) return res.status(400).json({ message: 'Invalid invitation role' })
+    const existingUser = await User.findOne({ email: ownerEmail.toLowerCase().trim() })
+    if (existingUser) return res.status(409).json({ message: 'Owner email already exists' })
+    const resolvedCompanyName = companyName?.trim() || `${ownerName.trim()}'s Company`
     // create company with contact fields if provided
-    const company = await companyService.createCompany({ companyName, ownerId: null, status: 'PENDING', companyEmail, companyMobile, companyAddress, companyWebsite })
+    const company = await companyService.createCompany({ companyName: resolvedCompanyName, ownerId: null, status: 'PENDING_APPROVAL', companyEmail, companyMobile, companyAddress, companyWebsite })
 
     // create subscription
     const start = startDate ? new Date(startDate) : new Date()
@@ -89,8 +104,9 @@ export const createCompanyOnboard = async (req, res) => {
 
     // create invite for owner (owner will accept and become user)
     const token = generateInviteToken()
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
     const expiresAt = new Date(Date.now() + Number(expiresDays) * 24 * 60 * 60 * 1000)
-    const invite = new Invite({ inviter: req.user.id, companyId: company._id, inviteeEmail: ownerEmail, role: 'company_owner', token, expiresAt, profileTemplate: { name: ownerName, mobile: ownerMobile } })
+    const invite = new Invite({ inviter: req.user.id, companyId: company._id, inviteeEmail: ownerEmail, role, tokenHash, expiresAt, profileTemplate: { name: ownerName, mobile: ownerMobile } })
     await invite.save()
 
     // send email
@@ -98,14 +114,12 @@ export const createCompanyOnboard = async (req, res) => {
     const inviteLink = `${base.replace(/\/$/, '')}/activate-account?token=${token}`
 
     try {
-      console.log('Sending invite email via mailService to', ownerEmail)
-      await mailService.sendMail({ to: ownerEmail, subject: `Invitation to join ${companyName}`, text: `You have been invited to join ${companyName}. Activate: ${inviteLink}`, html: `<p>You have been invited to join <strong>${companyName}</strong>.</p><p><a href="${inviteLink}">Activate account</a></p>` })
+      await mailService.sendMail({ to: ownerEmail, subject: `Invitation to join ${resolvedCompanyName}`, text: `You have been invited as ${role} to join ${resolvedCompanyName}. Activate: ${inviteLink}`, html: `<p>You have been invited as <strong>${role.replace('_', ' ')}</strong> to join <strong>${resolvedCompanyName}</strong>.</p><p><a href="${inviteLink}">Activate account</a></p>` })
     } catch (err) {
       console.error('Failed to send invite email via mailService:', err && err.message ? err.message : err)
-      console.log('Invite link for owner (fallback):', inviteLink)
     }
 
-    return res.status(201).json({ message: 'Company created and owner invited', company, subscription, inviteLink })
+    return res.status(201).json({ message: 'Company created and invitation sent', company, subscription, role })
   } catch (err) {
     console.error('Onboard create error:', err)
     return res.status(500).json({ message: 'Server error', error: err.message })
@@ -168,15 +182,37 @@ export const deleteCompany = async (req, res) => {
     const company = await Company.findById(id)
     if (!company) return res.status(404).json({ message: 'Company not found' })
 
-    // remove related subscriptions and invites
-    await Subscription.deleteMany({ companyId: id })
-    await Invite.deleteMany({ companyId: id })
+    const companyUsers = await User.find({ $or: [{ companyId: id }, ...(company.ownerId ? [{ _id: company.ownerId }] : [])] }).select('_id')
+    const userIds = companyUsers.map(user => user._id)
+    const profiles = await EmployeeProfile.find({ companyId: id }).select('documents')
 
-    // Optionally, unset companyId on users instead of deleting them
-    await User.updateMany({ companyId: id }, { $unset: { companyId: '' } })
+    const privateUploadDirectory = path.resolve(process.cwd(), 'private_uploads')
+    const files = profiles.flatMap(profile => profile.documents || [])
+      .map(document => document.url)
+      .filter(url => url && url.startsWith('private_uploads/'))
+      .map(url => path.basename(url))
+    await Promise.all(files.map(file => fs.unlink(path.join(privateUploadDirectory, file)).catch(() => undefined)))
+
+    await Promise.all([
+      Subscription.deleteMany({ companyId: id }),
+      Invite.deleteMany({ companyId: id }),
+      Doctor.deleteMany({ companyId: id }),
+      Medical.deleteMany({ companyId: id }),
+      Visit.deleteMany({ companyId: id }),
+      Leave.deleteMany({ companyId: id }),
+      Product.deleteMany({ companyId: id }),
+      Order.deleteMany({ companyId: id }),
+      Task.deleteMany({ companyId: id }),
+      Project.deleteMany({ companyId: id }),
+      EmployeeProfile.deleteMany({ companyId: id }),
+      EmployeeActivity.deleteMany({ companyId: id }),
+      Notification.deleteMany({ companyId: id }),
+      AuditLog.deleteMany({ companyId: id }),
+      User.deleteMany({ _id: { $in: userIds } })
+    ])
 
     await Company.findByIdAndDelete(id)
-    return res.status(200).json({ message: 'Company deleted' })
+    return res.status(200).json({ message: 'Company and all related data deleted', deletedUsers: userIds.length })
   } catch (err) {
     console.error('Delete company error:', err)
     return res.status(500).json({ message: 'Server error', error: err.message })

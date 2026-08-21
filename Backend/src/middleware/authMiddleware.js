@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Company from '../models/Company.js';
+import Invite from '../models/Invite.js';
 
 export default async function authMiddleware(req, res, next) {
   try {
@@ -25,8 +26,25 @@ export default async function authMiddleware(req, res, next) {
     const user = await User.findById(payload.id).select('_id email role companyId active blocked');
     if (!user) return res.status(401).json({ message: 'User account not found' });
     if (user.blocked || user.active === false) return res.status(403).json({ message: 'Account is disabled or blocked' });
-    if (user.companyId && user.role !== 'super_admin') {
-      const company = await Company.findById(user.companyId).select('status isActive');
+    let company = null;
+    let ownedCompany = await Company.findOne({ ownerId: user._id }).select('_id status isActive');
+    if (!ownedCompany) {
+      const acceptedOwnerInvite = await Invite.findOne({ inviteeEmail: user.email, role: 'company_owner', status: 'accepted' }).sort({ acceptedAt: -1 });
+      if (acceptedOwnerInvite?.companyId) {
+        ownedCompany = await Company.findByIdAndUpdate(acceptedOwnerInvite.companyId, { ownerId: user._id }, { new: true }).select('_id status isActive');
+      }
+    }
+    if (ownedCompany) {
+      if (String(user.companyId || '') !== String(ownedCompany._id) || user.role !== 'company_owner') {
+        user.companyId = ownedCompany._id;
+        user.role = 'company_owner';
+        await user.save();
+      }
+      company = ownedCompany;
+    } else if (user.companyId && user.role !== 'super_admin') {
+      company = await Company.findById(user.companyId).select('status isActive');
+    }
+    if (company && user.role !== 'super_admin') {
       if (!company || !company.isActive || company.status !== 'ACTIVE') return res.status(403).json({ message: `Company account is ${company?.status || 'inactive'}` });
     }
     req.user = {

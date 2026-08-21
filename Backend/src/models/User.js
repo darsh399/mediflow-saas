@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     role: {
         type: String,
-        enum: ['user', 'admin', 'hr', 'hr_manager', 'superadmin', 'super_admin', 'company_owner', 'manager', 'employee', 'mr', 'teamlead', 'intern', 'contractor', 'consultant', 'freelancer', 'partner', 'vendor', 'client', 'customer', 'guest'],
+        enum: ['user', 'admin', 'hr', 'hr_manager', 'superadmin', 'super_admin', 'company_owner', 'manager', 'project_manager', 'employee', 'mr', 'teamlead', 'intern', 'contractor', 'consultant', 'freelancer', 'partner', 'vendor', 'client', 'customer', 'guest'],
         default: 'user'
     },
     mobile: { type: String, required: false, unique: false },

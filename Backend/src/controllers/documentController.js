@@ -12,13 +12,13 @@ export async function uploadProfileDocuments(req, res) {
   if (!files.length) return res.status(400).json({ message: 'At least one document is required' });
   await fs.mkdir(privateUploadDirectory, { recursive: true });
   const stored = [];
-  for (const file of files) {
+  for (const [index, file] of files.entries()) {
     const extension = path.extname(file.originalname).toLowerCase();
     if (!allowedExtensions.has(extension)) return res.status(400).json({ message: 'Unsupported document type' });
     const storageName = `${crypto.randomUUID()}${extension}`;
     await fs.writeFile(path.join(privateUploadDirectory, storageName), file.buffer, { flag: 'wx' });
     stored.push({
-      type: file.fieldname === 'profileImage' ? 'passportPhoto' : (req.body.documentType || 'document'),
+      type: file.fieldname === 'profileImage' ? 'passportPhoto' : (Array.isArray(req.body.documentType) ? req.body.documentType[index] : req.body.documentType || 'document'),
       url: `private_uploads/${storageName}`,
       originalName: file.originalname,
       mimeType: file.mimetype

@@ -7,7 +7,7 @@ import { applyLeave, listLeaves, reviewLeave } from '../controllers/leaveControl
 const router = express.Router();
 
 router.post('/', authMiddleware, companyMiddleware, applyLeave);
-router.get('/', authMiddleware, companyMiddleware, roleMiddleware('admin','hr','manager','superadmin','super_admin'), listLeaves);
-router.post('/:id/review', authMiddleware, companyMiddleware, roleMiddleware('admin','hr','manager','superadmin','super_admin'), reviewLeave);
+router.get('/', authMiddleware, companyMiddleware, roleMiddleware('admin','company_owner','hr','manager','superadmin','super_admin'), listLeaves);
+router.post('/:id/review', authMiddleware, companyMiddleware, roleMiddleware('admin','company_owner','hr','manager','superadmin','super_admin'), reviewLeave);
 
 export default router;

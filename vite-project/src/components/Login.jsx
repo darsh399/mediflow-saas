@@ -23,6 +23,7 @@ const Login = () => {
         return '/superadmin/dashboard'
       case 'company_owner':
       case 'manager':
+      case 'project_manager':
         return '/admin'
       case 'hr':
       case 'hr_manager':
@@ -41,7 +42,6 @@ const Login = () => {
     const form = e.target
     const email = form.querySelector('input[type="email"]').value
     const password = form.querySelector('input[type="password"]').value
-    console.log('Login attempt', { email, password })
     dispatch(loginThunk({ email, password }))
       .unwrap()
       .then((data)=>{

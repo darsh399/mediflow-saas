@@ -8,6 +8,7 @@
     "dev": "nodemon src/app.js",
     "seed-superadmin": "node src/utils/seedSuperAdmin.js",
     "seed-test-users": "node src/utils/seedTestUsers.js",
+    "test": "node --test",
     "start:prod": "node src/app.js",
     "pm2-start": "pm2 start ecosystem.config.js --env production"
   },
