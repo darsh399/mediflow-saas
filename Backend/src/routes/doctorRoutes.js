@@ -6,7 +6,7 @@ import { createDoctor, listDoctors, getDoctor, updateDoctor, deleteDoctor } from
 
 const router = express.Router();
 
-router.post('/', authMiddleware, companyMiddleware, roleMiddleware('admin','company_owner','hr','manager','superadmin','super_admin'), createDoctor);
+router.post('/', authMiddleware, companyMiddleware, roleMiddleware('admin','company_owner','hr','mr','manager','superadmin','super_admin'), createDoctor);
 router.get('/', authMiddleware, companyMiddleware, listDoctors);
 router.get('/:id', authMiddleware, companyMiddleware, getDoctor);
 router.put('/:id', authMiddleware, companyMiddleware, roleMiddleware('admin','company_owner','hr','manager','superadmin','super_admin'), updateDoctor);

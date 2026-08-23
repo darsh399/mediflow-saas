@@ -1,9 +1,212 @@
+// import { useState } from "react";
+// import { Link } from "react-router-dom";
+// import { useDispatch } from 'react-redux'
+// import { useNavigate } from 'react-router-dom'
+// import { login as loginThunk } from '../redux/slices/authSlice'
+// import { useNotify } from './NotificationProvider'
+// import {
+//   Container,
+//   Row,
+//   Col,
+//   Card,
+//   Form,
+//   Button,
+//   InputGroup,
+// } from "react-bootstrap";
+
+// const Login = () => {
+//   const [showPassword, setShowPassword] = useState(false);
+
+//   const getDashboardPath = (role) => {
+//     switch (role) {
+//       case 'super_admin':
+//         return '/superadmin/dashboard'
+//       case 'company_owner':
+//       case 'manager':
+//       case 'project_manager':
+//         return '/admin'
+//       case 'hr':
+//       case 'hr_manager':
+//         return '/hr/leaves'
+//       case 'employee':
+//       case 'mr':
+//         return '/mr/add-visit'
+//       default:
+//         return '/'
+//     }
+//   }
+
+//   const handleSubmit = (e) => {
+//     e.preventDefault();
+
+//     const form = e.target
+//     const email = form.querySelector('input[type="email"]').value
+//     const password = form.querySelector('input[type="password"]').value
+//     dispatch(loginThunk({ email, password }))
+//       .unwrap()
+//       .then((data)=>{
+//         navigate(getDashboardPath(data?.user?.role))
+//       })
+//       .catch(err=>{
+//         console.error('Login failed', err)
+//         notify(err?.message || 'Login failed')
+//       })
+//   };
+
+//   const dispatch = useDispatch()
+//   const navigate = useNavigate()
+//   const { notify } = useNotify()
+
+//   return (
+//     <div className="min-vh-100 bg-light d-flex align-items-center">
+//       <Container>
+//         <Row className="justify-content-center">
+//           <Col xs={12} sm={10} md={7} lg={5} xl={4}>
+
+//             <Card className="border-0 shadow-lg rounded-4">
+//               <Card.Body className="p-4 p-md-5">
+
+//                 {/* Logo */}
+//                 <div className="text-center mb-4">
+
+//                   <div
+//                     className="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3"
+//                     style={{
+//                       width: "55px",
+//                       height: "55px",
+//                       fontSize: "24px",
+//                       fontWeight: "700",
+//                     }}
+//                   >
+//                     M
+//                   </div>
+
+//                   <h3 className="fw-bold mb-1">
+//                     Welcome Back
+//                   </h3>
+
+//                   <p className="text-secondary mb-0">
+//                     Sign in to your account
+//                   </p>
+
+//                 </div>
+
+//                 {/* Login Form */}
+//                 <Form onSubmit={handleSubmit}>
+
+//                   {/* Email */}
+//                   <Form.Group className="mb-3">
+//                     <Form.Label className="fw-semibold">
+//                       Email Address
+//                     </Form.Label>
+
+//                     <Form.Control
+//                       type="email"
+//                       placeholder="Enter your email"
+//                       size="lg"
+//                       required
+//                     />
+//                   </Form.Group>
+
+//                   {/* Password */}
+//                   <Form.Group className="mb-3">
+
+//                     <div className="d-flex justify-content-between">
+//                       <Form.Label className="fw-semibold">
+//                         Password
+//                       </Form.Label>
+
+//                       <Link
+//                         to="/forgot-password"
+//                         className="text-decoration-none small"
+//                       >
+//                         Forgot password?
+//                       </Link>
+//                     </div>
+
+//                     <InputGroup>
+
+//                       <Form.Control
+//                         type={showPassword ? "text" : "password"}
+//                         placeholder="Enter your password"
+//                         size="lg"
+//                         required
+//                       />
+
+//                       <Button
+//                         variant="outline-secondary"
+//                         onClick={() =>
+//                           setShowPassword(!showPassword)
+//                         }
+//                         type="button"
+//                       >
+//                         {showPassword ? "Hide" : "Show"}
+//                       </Button>
+
+//                     </InputGroup>
+
+//                   </Form.Group>
+
+//                   {/* Remember Me */}
+//                   <Form.Check
+//                     type="checkbox"
+//                     label="Remember me"
+//                     className="mb-4"
+//                   />
+
+//                   {/* Login Button */}
+//                   <Button
+//                     type="submit"
+//                     variant="primary"
+//                     size="lg"
+//                     className="w-100 fw-semibold"
+//                   >
+//                     Sign In
+//                   </Button>
+
+//                 </Form>
+
+//                 {/* Register */}
+//                 <div className="text-center mt-4">
+
+//                   <span className="text-secondary">
+//                     Don't have an account?{" "}
+//                   </span>
+
+//                   <Link
+//                     to="/signup"
+//                     className="fw-semibold text-decoration-none"
+//                   >
+//                     Get Started
+//                   </Link>
+
+//                 </div>
+
+//               </Card.Body>
+//             </Card>
+
+//             {/* Footer */}
+//             <p className="text-center text-secondary small mt-4">
+//               © 2026 MediFlow. All rights reserved.
+//             </p>
+
+//           </Col>
+//         </Row>
+//       </Container>
+//     </div>
+//   );
+// };
+
+// export default Login;
+
+
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
-import { login as loginThunk } from '../redux/slices/authSlice'
-import { useNotify } from './NotificationProvider'
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { login as loginThunk } from "../redux/slices/authSlice";
+import { useNotify } from "./NotificationProvider";
 import {
   Container,
   Row,
@@ -19,180 +222,340 @@ const Login = () => {
 
   const getDashboardPath = (role) => {
     switch (role) {
-      case 'super_admin':
-        return '/superadmin/dashboard'
-      case 'company_owner':
-      case 'manager':
-      case 'project_manager':
-        return '/admin'
-      case 'hr':
-      case 'hr_manager':
-        return '/hr/leaves'
-      case 'employee':
-      case 'mr':
-        return '/mr/add-visit'
+      case "super_admin":
+        return "/superadmin/dashboard";
+      case "company_owner":
+      case "manager":
+      case "project_manager":
+        return "/admin";
+      case "hr":
+      case "hr_manager":
+        return "/hr/leaves";
+      case "employee":
+      case "mr":
+        return "/mr/add-visit";
       default:
-        return '/'
+        return "/";
     }
-  }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const form = e.target
-    const email = form.querySelector('input[type="email"]').value
-    const password = form.querySelector('input[type="password"]').value
+    const form = e.target;
+    const email = form.querySelector('input[type="email"]').value;
+    const password = form.querySelector('input[type="password"]').value;
+
     dispatch(loginThunk({ email, password }))
       .unwrap()
-      .then((data)=>{
-        navigate(getDashboardPath(data?.user?.role))
+      .then((data) => {
+        navigate(getDashboardPath(data?.user?.role));
       })
-      .catch(err=>{
-        console.error('Login failed', err)
-        notify(err?.message || 'Login failed')
-      })
+      .catch((err) => {
+        console.error("Login failed", err);
+        notify(err?.message || "Login failed");
+      });
   };
 
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const { notify } = useNotify()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { notify } = useNotify();
 
   return (
-    <div className="min-vh-100 bg-light d-flex align-items-center">
-      <Container>
-        <Row className="justify-content-center">
-          <Col xs={12} sm={10} md={7} lg={5} xl={4}>
+    <div
+      className="min-vh-100 d-flex align-items-center position-relative overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(135deg, #f5f7ff 0%, #eef3ff 45%, #f8f5ff 100%)",
+      }}
+    >
+      <div
+        className="position-absolute rounded-circle"
+        style={{
+          width: "420px",
+          height: "420px",
+          background: "rgba(13, 110, 253, 0.08)",
+          top: "-180px",
+          left: "-150px",
+        }}
+      />
 
-            <Card className="border-0 shadow-lg rounded-4">
+      <div
+        className="position-absolute rounded-circle"
+        style={{
+          width: "500px",
+          height: "500px",
+          background: "rgba(102, 16, 242, 0.07)",
+          bottom: "-250px",
+          right: "-200px",
+        }}
+      />
+
+      <Container className="position-relative py-5">
+        <Row className="justify-content-center align-items-center">
+          <Col xs={12} sm={10} md={8} lg={6} xl={5}>
+            <Card
+              className="border-0 shadow-lg"
+              style={{
+                borderRadius: "24px",
+                overflow: "hidden",
+              }}
+            >
               <Card.Body className="p-4 p-md-5">
-
-                {/* Logo */}
                 <div className="text-center mb-4">
-
                   <div
-                    className="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3"
+                    className="d-flex align-items-center justify-content-center mx-auto mb-3 text-white fw-bold shadow-sm"
                     style={{
-                      width: "55px",
-                      height: "55px",
-                      fontSize: "24px",
-                      fontWeight: "700",
+                      width: "68px",
+                      height: "68px",
+                      borderRadius: "20px",
+                      fontSize: "30px",
+                      background:
+                        "linear-gradient(135deg, #0d6efd, #6610f2)",
                     }}
                   >
                     M
                   </div>
 
-                  <h3 className="fw-bold mb-1">
-                    Welcome Back
-                  </h3>
+                  <h2 className="fw-bold mb-2">
+                    Welcome back
+                  </h2>
 
-                  <p className="text-secondary mb-0">
-                    Sign in to your account
+                  <p className="text-muted mb-0">
+                    Sign in to continue to your MediFlow account
                   </p>
-
                 </div>
 
-                {/* Login Form */}
-                <Form onSubmit={handleSubmit}>
+                <div
+                  className="d-flex align-items-center gap-3 p-3 mb-4 rounded-3"
+                  style={{
+                    background: "#f4f7ff",
+                    border: "1px solid #e5ebff",
+                  }}
+                >
+                  <div
+                    className="d-flex align-items-center justify-content-center rounded-3 text-primary"
+                    style={{
+                      width: "42px",
+                      height: "42px",
+                      background: "#e3ecff",
+                    }}
+                  >
+                    <i className="bi bi-shield-check fs-5"></i>
+                  </div>
 
-                  {/* Email */}
-                  <Form.Group className="mb-3">
+                  <div>
+                    <div className="fw-semibold small">
+                      Secure Sign In
+                    </div>
+
+                    <div className="text-muted small">
+                      Your account is protected with secure authentication
+                    </div>
+                  </div>
+                </div>
+
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-4">
                     <Form.Label className="fw-semibold">
                       Email Address
                     </Form.Label>
 
-                    <Form.Control
-                      type="email"
-                      placeholder="Enter your email"
-                      size="lg"
-                      required
-                    />
+                    <InputGroup size="lg">
+                      <InputGroup.Text
+                        className="bg-white border-end-0"
+                        style={{
+                          borderColor: "#dee2e6",
+                        }}
+                      >
+                        <i className="bi bi-envelope text-primary"></i>
+                      </InputGroup.Text>
+
+                      <Form.Control
+                        type="email"
+                        placeholder="Enter your email"
+                        required
+                        className="border-start-0 ps-1"
+                      />
+                    </InputGroup>
                   </Form.Group>
 
-                  {/* Password */}
                   <Form.Group className="mb-3">
-
-                    <div className="d-flex justify-content-between">
-                      <Form.Label className="fw-semibold">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <Form.Label className="fw-semibold mb-0">
                         Password
                       </Form.Label>
 
                       <Link
                         to="/forgot-password"
-                        className="text-decoration-none small"
+                        className="text-primary text-decoration-none small fw-semibold"
                       >
                         Forgot password?
                       </Link>
                     </div>
 
-                    <InputGroup>
+                    <InputGroup size="lg">
+                      <InputGroup.Text
+                        className="bg-white border-end-0"
+                        style={{
+                          borderColor: "#dee2e6",
+                        }}
+                      >
+                        <i className="bi bi-lock text-primary"></i>
+                      </InputGroup.Text>
 
                       <Form.Control
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
-                        size="lg"
                         required
+                        className="border-start-0 border-end-0 ps-1"
                       />
 
                       <Button
-                        variant="outline-secondary"
+                        variant="light"
+                        type="button"
+                        className="border border-start-0"
                         onClick={() =>
                           setShowPassword(!showPassword)
                         }
-                        type="button"
                       >
-                        {showPassword ? "Hide" : "Show"}
+                        <i
+                          className={`bi ${
+                            showPassword
+                              ? "bi-eye-slash"
+                              : "bi-eye"
+                          }`}
+                        ></i>
                       </Button>
-
                     </InputGroup>
-
                   </Form.Group>
 
-                  {/* Remember Me */}
-                  <Form.Check
-                    type="checkbox"
-                    label="Remember me"
-                    className="mb-4"
-                  />
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <Form.Check
+                      type="checkbox"
+                      label="Remember me"
+                    />
 
-                  {/* Login Button */}
+                    <span className="text-muted small">
+                      Secure access
+                    </span>
+                  </div>
+
                   <Button
                     type="submit"
-                    variant="primary"
                     size="lg"
-                    className="w-100 fw-semibold"
+                    className="w-100 border-0 fw-semibold py-3"
+                    style={{
+                      borderRadius: "12px",
+                      background:
+                        "linear-gradient(135deg, #0d6efd, #6610f2)",
+                      boxShadow:
+                        "0 8px 20px rgba(13, 110, 253, 0.25)",
+                    }}
                   >
+                    <i className="bi bi-box-arrow-in-right me-2"></i>
                     Sign In
                   </Button>
-
                 </Form>
 
-                {/* Register */}
-                <div className="text-center mt-4">
-
-                  <span className="text-secondary">
-                    Don't have an account?{" "}
+                <div className="position-relative my-4">
+                  <hr />
+                  <span
+                    className="position-absolute top-50 start-50 translate-middle px-3 text-muted small"
+                    style={{ background: "#fff" }}
+                  >
+                    OR
                   </span>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-muted mb-2">
+                    Don't have a MediFlow account?
+                  </p>
 
                   <Link
                     to="/signup"
-                    className="fw-semibold text-decoration-none"
+                    className="btn btn-outline-primary w-100 fw-semibold py-2"
+                    style={{
+                      borderRadius: "12px",
+                    }}
                   >
-                    Get Started
+                    <i className="bi bi-person-plus me-2"></i>
+                    Create an Account
                   </Link>
-
                 </div>
-
               </Card.Body>
             </Card>
 
-            {/* Footer */}
-            <p className="text-center text-secondary small mt-4">
-              © 2026 MediFlow. All rights reserved.
-            </p>
+            <div className="text-center mt-4">
+              <div className="d-flex justify-content-center gap-3 mb-2">
+                <Link
+                  to="/privacy"
+                  className="text-muted text-decoration-none small"
+                >
+                  Privacy Policy
+                </Link>
 
+                <span className="text-muted">•</span>
+
+                <Link
+                  to="/terms"
+                  className="text-muted text-decoration-none small"
+                >
+                  Terms & Conditions
+                </Link>
+
+                <span className="text-muted">•</span>
+
+                <Link
+                  to="/contact"
+                  className="text-muted text-decoration-none small"
+                >
+                  Contact
+                </Link>
+              </div>
+
+              <p className="text-muted small mb-0">
+                © 2026 MediFlow. All rights reserved.
+              </p>
+            </div>
           </Col>
         </Row>
       </Container>
+
+      <style>
+        {`
+          .form-control,
+          .input-group-text,
+          .btn {
+            transition: all 0.2s ease;
+          }
+
+          .form-control:focus {
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+            border-color: #86b7fe;
+          }
+
+          .btn:hover {
+            transform: translateY(-1px);
+          }
+
+          .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+          }
+
+          .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12) !important;
+          }
+
+          @media (max-width: 576px) {
+            .card-body {
+              padding: 1.5rem !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 };

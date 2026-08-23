@@ -1,3 +1,464 @@
+// import { Link, useNavigate } from "react-router-dom";
+// import { useSelector, useDispatch } from "react-redux";
+// import { useState, useEffect, useRef } from "react";
+
+// import NotificationBell from "./NotificationBell";
+// import { logout, clearAuth } from "../redux/slices/authSlice";
+// import employeeProfileApi from "../api/employeeProfileApi";
+
+// const Header = () => {
+//   const dispatch = useDispatch();
+//   const navigate = useNavigate();
+//   const auth = useSelector((state) => state.auth);
+
+//   const { user, isAuthenticated } = auth;
+// console.log(user, 'in header')
+//   const signedIn = Boolean(isAuthenticated || auth?.token);
+ 
+//   const [open, setOpen] = useState(false);
+//   const [profileOpen, setProfileOpen] = useState(false);
+//   const [avatarUrl, setAvatarUrl] = useState("");
+
+//   const profileRef = useRef(null);
+
+//   useEffect(() => {
+//     let objectUrl = "";
+
+//     if (!signedIn || user?.role === "super_admin") {
+//       return undefined;
+//     }
+
+//     employeeProfileApi
+//       .getMyProfile()
+//       .then(async (response) => {
+//         const photo = response.profile?.documents?.find(
+//           (document) => document.type === "passportPhoto"
+//         );
+
+//         if (photo?.url) {
+//           const blob =
+//             await employeeProfileApi.downloadDocument(photo.url);
+
+//           objectUrl = URL.createObjectURL(blob);
+//           setAvatarUrl(objectUrl);
+//         }
+//       })
+//       .catch((error) => {
+//         console.error("Profile photo loading error:", error);
+//       });
+
+//     return () => {
+//       if (objectUrl) {
+//         URL.revokeObjectURL(objectUrl);
+//       }
+//     };
+//   }, [signedIn, user?.role]);
+
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (
+//         profileRef.current &&
+//         !profileRef.current.contains(event.target)
+//       ) {
+//         setProfileOpen(false);
+//       }
+//     };
+
+//     document.addEventListener("mousedown", handleClickOutside);
+
+//     return () => {
+//       document.removeEventListener(
+//         "mousedown",
+//         handleClickOutside
+//       );
+//     };
+//   }, []);
+
+//   const initials = (
+//     user?.name ||
+//     user?.email ||
+//     "U"
+//   )
+//     .trim()
+//     .charAt(0)
+//     .toUpperCase();
+
+//   const formattedRole = user?.role
+//     ? user.role
+//         .split("_")
+//         .map(
+//           (word) =>
+//             word.charAt(0).toUpperCase() +
+//             word.slice(1)
+//         )
+//         .join(" ")
+//     : "-";
+
+//   const companyDisplay = user?.companyId
+//     ? typeof user.companyId === "object"
+//       ? user.companyId.name ||
+//         user.companyId._id ||
+//         "-"
+//       : user.companyId
+//     : "Product Owner";
+
+//   const handleLogout = async () => {
+//     try {
+//       await dispatch(logout()).unwrap();
+//     } catch (error) {
+//       console.error("Logout error:", error);
+//     } finally {
+//       dispatch(clearAuth());
+//       setProfileOpen(false);
+//       setOpen(false);
+//       navigate("/");
+//     }
+//   };
+
+//   return (
+//     <nav
+//       className="navbar navbar-expand-lg bg-white border-bottom shadow-sm sticky-top"
+//       style={{
+//         zIndex: 1100,
+//       }}
+//     >
+//       <div className="container">
+//         <Link
+//           to="/"
+//           className="navbar-brand d-flex align-items-center gap-2"
+//           onClick={() => setOpen(false)}
+//         >
+//           <div
+//             className="d-flex align-items-center justify-content-center bg-primary text-white rounded-3 fw-bold"
+//             style={{
+//               width: "42px",
+//               height: "42px",
+//             }}
+//           >
+//             M
+//           </div>
+
+//           <div className="lh-sm">
+//             <div className="fw-bold text-dark">
+//               MediFlow
+//             </div>
+
+//             <small className="text-secondary">
+//               Business Management
+//             </small>
+//           </div>
+//         </Link>
+
+//         <button
+//           className="navbar-toggler"
+//           type="button"
+//           aria-controls="mainNavbar"
+//           aria-expanded={open}
+//           aria-label="Toggle navigation"
+//           onClick={() => setOpen((value) => !value)}
+//         >
+//           <span className="navbar-toggler-icon"></span>
+//         </button>
+
+//         <div
+//           className="navbar-collapse"
+//           id="mainNavbar"
+//           style={{
+//             display: open ? "flex" : undefined,
+//             alignItems: "center",
+//           }}
+//         >
+//           <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
+//             <li className="nav-item">
+//               <Link
+//                 to="/"
+//                 className="nav-link px-3"
+//                 onClick={() => setOpen(false)}
+//               >
+//                 Home
+//               </Link>
+//             </li>
+
+//             {!signedIn && (
+//               <>
+//                 <li className="nav-item">
+//                   <Link
+//                     to="/features"
+//                     className="nav-link px-3"
+//                     onClick={() => setOpen(false)}
+//                   >
+//                     Features
+//                   </Link>
+//                 </li>
+
+//                 <li className="nav-item">
+//                   <Link
+//                     to="/pricing"
+//                     className="nav-link px-3"
+//                     onClick={() => setOpen(false)}
+//                   >
+//                     Pricing
+//                   </Link>
+//                 </li>
+
+//                 <li className="nav-item">
+//                   <Link
+//                     to="/about"
+//                     className="nav-link px-3"
+//                     onClick={() => setOpen(false)}
+//                   >
+//                     About
+//                   </Link>
+//                 </li>
+//               </>
+//             )}
+//           </ul>
+
+//           <div
+//             className="d-flex align-items-center gap-2"
+//             style={{
+//               position: "relative",
+//               zIndex: 3000,
+//             }}
+//           >
+//             {signedIn ? (
+//               <>
+//                 <NotificationBell />
+
+//                 <span
+//                   className="badge bg-dark"
+//                   style={{
+//                     fontSize: "12px",
+//                     padding: "8px 10px",
+//                   }}
+//                 >
+//                   {user?.role || "NO ROLE"}
+//                 </span>
+
+//                 {user?.role === "super_admin" && (
+//                   <Link
+//                     to="/superadmin/dashboard"
+//                     className="btn btn-primary"
+//                     onClick={() => setOpen(false)}
+//                   >
+//                     Dashboard
+//                   </Link>
+//                 )}
+
+//                 {user?.role === "company_owner" && (
+//                   <Link
+//                     to="/admin"
+//                     className="btn btn-primary"
+//                     onClick={() => setOpen(false)}
+//                   >
+//                     Dashboard
+//                   </Link>
+//                 )}
+
+//                 <div
+//                   ref={profileRef}
+//                   className="position-relative"
+//                   style={{
+//                     zIndex: 3001,
+//                   }}
+//                 >
+//                   <button
+//                     type="button"
+//                     className="btn p-0 border-0"
+//                     aria-label="Open profile"
+//                     onClick={() =>
+//                       setProfileOpen((value) => !value)
+//                     }
+//                   >
+//                     {avatarUrl ? (
+//                       <img
+//                         src={avatarUrl}
+//                         alt="Profile"
+//                         className="rounded-circle"
+//                         style={{
+//                           width: 40,
+//                           height: 40,
+//                           objectFit: "cover",
+//                         }}
+//                       />
+//                     ) : (
+//                       <span
+//                         className="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-bold"
+//                         style={{
+//                           width: 40,
+//                           height: 40,
+//                         }}
+//                       >
+//                         {initials}
+//                       </span>
+//                     )}
+//                   </button>
+
+//                   {profileOpen && (
+//                     <div
+//                       className="position-absolute bg-white border rounded shadow p-3"
+//                       style={{
+//                         width: "300px",
+//                         right: 0,
+//                         top: "50px",
+//                         zIndex: 9999,
+//                       }}
+//                     >
+//                       <div className="d-flex align-items-center gap-3 mb-3">
+//                         {avatarUrl ? (
+//                           <img
+//                             src={avatarUrl}
+//                             alt="Profile"
+//                             className="rounded-circle"
+//                             style={{
+//                               width: 50,
+//                               height: 50,
+//                               objectFit: "cover",
+//                             }}
+//                           />
+//                         ) : (
+//                           <span
+//                             className="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-bold"
+//                             style={{
+//                               width: 50,
+//                               height: 50,
+//                             }}
+//                           >
+//                             {initials}
+//                           </span>
+//                         )}
+
+//                         <div>
+//                           <div className="fw-bold">
+//                             {user?.name || "User"}
+//                           </div>
+
+//                           <div className="small text-muted">
+//                             {user?.email || "-"}
+//                           </div>
+//                         </div>
+//                       </div>
+
+//                       <hr />
+
+//                       <div className="mb-2">
+//                         <small className="text-muted">
+//                           Name
+//                         </small>
+
+//                         <div className="fw-semibold">
+//                           {user?.name || "-"}
+//                         </div>
+//                       </div>
+
+//                       <div className="mb-2">
+//                         <small className="text-muted">
+//                           Email
+//                         </small>
+
+//                         <div className="text-break">
+//                           {user?.email || "-"}
+//                         </div>
+//                       </div>
+
+//                       <div className="mb-2">
+//                         <small className="text-muted">
+//                           Role
+//                         </small>
+
+//                         <div>
+//                           {formattedRole}
+//                         </div>
+//                       </div>
+
+//                       <div className="mb-2">
+//                         <small className="text-muted">
+//                           Company
+//                         </small>
+
+//                         <div className="text-break">
+//                           {companyDisplay}
+//                         </div>
+//                       </div>
+
+//                       <div className="mb-2">
+//                         <small className="text-muted">
+//                           User ID
+//                         </small>
+
+//                         <div className="small text-break">
+//                           {user?._id || "-"}
+//                         </div>
+//                       </div>
+
+//                       <hr />
+
+//                       <Link
+//                         to="/profile"
+//                         className="btn btn-outline-primary btn-sm w-100"
+//                         onClick={() => {
+//                           setProfileOpen(false);
+//                           setOpen(false);
+//                         }}
+//                       >
+//                         View Profile
+//                       </Link>
+
+//                       <Link
+//                        to="/reset-password" 
+//                        className="btn btn-outline-primary btn-sm w-100 mt-2">
+//                       Reset Password
+//                       </Link>
+
+//                       <button
+//                         type="button"
+//                         className="btn btn-outline-danger btn-sm w-100 mt-2"
+//                         onClick={handleLogout}
+//                       >
+//                         Logout
+//                       </button>
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 <button
+//                   type="button"
+//                   className="btn btn-danger"
+//                   onClick={handleLogout}
+//                 >
+//                   Logout
+//                 </button>
+//               </>
+//             ) : (
+//               <>
+//                 <Link
+//                   to="/login"
+//                   className="btn btn-outline-primary px-4"
+//                   onClick={() => setOpen(false)}
+//                 >
+//                   Login
+//                 </Link>
+
+//                 <Link
+//                   to="/signup"
+//                   className="btn btn-primary px-4"
+//                   onClick={() => setOpen(false)}
+//                 >
+//                   Get Started
+//                 </Link>
+//               </>
+//             )}
+//           </div>
+//         </div>
+//       </div>
+//     </nav>
+//   );
+// };
+
+// export default Header;
+
+
+
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useEffect, useRef } from "react";
@@ -12,14 +473,15 @@ const Header = () => {
   const auth = useSelector((state) => state.auth);
 
   const { user, isAuthenticated } = auth;
-console.log(user, 'in header')
+
   const signedIn = Boolean(isAuthenticated || auth?.token);
- 
+
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState("");
 
   const profileRef = useRef(null);
+  const navbarRef = useRef(null);
 
   useEffect(() => {
     let objectUrl = "";
@@ -31,16 +493,38 @@ console.log(user, 'in header')
     employeeProfileApi
       .getMyProfile()
       .then(async (response) => {
-        const photo = response.profile?.documents?.find(
-          (document) => document.type === "passportPhoto"
-        );
+        const profile = response?.profile;
 
-        if (photo?.url) {
-          const blob =
-            await employeeProfileApi.downloadDocument(photo.url);
+        const photo =
+          profile?.documents?.find(
+            (document) =>
+              document.type === "passportPhoto" ||
+              document.documentType === "passportPhoto"
+          ) ||
+          profile?.profileImage ||
+          profile?.profileData?.profileImage;
 
-          objectUrl = URL.createObjectURL(blob);
-          setAvatarUrl(objectUrl);
+        const photoUrl =
+          typeof photo === "string"
+            ? photo
+            : photo?.url ||
+              photo?.fileUrl ||
+              photo?.path ||
+              photo?.location ||
+              photo?.filePath ||
+              photo?.secure_url ||
+              photo?.secureUrl;
+
+        if (photoUrl) {
+          try {
+            const blob =
+              await employeeProfileApi.downloadDocument(photoUrl);
+
+            objectUrl = URL.createObjectURL(blob);
+            setAvatarUrl(objectUrl);
+          } catch (error) {
+            console.error("Profile photo download error:", error);
+          }
         }
       })
       .catch((error) => {
@@ -55,24 +539,49 @@ console.log(user, 'in header')
   }, [signedIn, user?.role]);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleOutsideClick = (event) => {
       if (
         profileRef.current &&
         !profileRef.current.contains(event.target)
       ) {
         setProfileOpen(false);
       }
+
+      if (
+        navbarRef.current &&
+        !navbarRef.current.contains(event.target)
+      ) {
+        setOpen(false);
+      }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
 
     return () => {
       document.removeEventListener(
         "mousedown",
-        handleClickOutside
+        handleOutsideClick
+      );
+
+      document.removeEventListener(
+        "keydown",
+        handleEscape
       );
     };
   }, []);
+
+  const closeMenus = () => {
+    setOpen(false);
+    setProfileOpen(false);
+  };
 
   const initials = (
     user?.name ||
@@ -109,349 +618,499 @@ console.log(user, 'in header')
       console.error("Logout error:", error);
     } finally {
       dispatch(clearAuth());
-      setProfileOpen(false);
-      setOpen(false);
+      closeMenus();
       navigate("/");
     }
   };
 
   return (
-    <nav
-      className="navbar navbar-expand-lg bg-white border-bottom shadow-sm sticky-top"
-      style={{
-        zIndex: 1100,
-      }}
-    >
-      <div className="container">
-        <Link
-          to="/"
-          className="navbar-brand d-flex align-items-center gap-2"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="d-flex align-items-center justify-content-center bg-primary text-white rounded-3 fw-bold"
-            style={{
-              width: "42px",
-              height: "42px",
-            }}
-          >
-            M
-          </div>
+    <>
+      <nav
+        ref={navbarRef}
+        className="navbar navbar-expand-lg bg-white sticky-top"
+        style={{
+          zIndex: 1100,
+          borderBottom: "1px solid #e9ecef",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div className="container py-1">
 
-          <div className="lh-sm">
-            <div className="fw-bold text-dark">
-              MediFlow
+          <Link
+            to="/"
+            className="navbar-brand d-flex align-items-center gap-2"
+            onClick={closeMenus}
+          >
+            <div
+              className="d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+              style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "12px",
+                background:
+                  "linear-gradient(135deg, #0d6efd, #6610f2)",
+                fontSize: "20px",
+              }}
+            >
+              M
             </div>
 
-            <small className="text-secondary">
-              Business Management
-            </small>
-          </div>
-        </Link>
-
-        <button
-          className="navbar-toggler"
-          type="button"
-          aria-controls="mainNavbar"
-          aria-expanded={open}
-          aria-label="Toggle navigation"
-          onClick={() => setOpen((value) => !value)}
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-
-        <div
-          className="navbar-collapse"
-          id="mainNavbar"
-          style={{
-            display: open ? "flex" : undefined,
-            alignItems: "center",
-          }}
-        >
-          <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
-            <li className="nav-item">
-              <Link
-                to="/"
-                className="nav-link px-3"
-                onClick={() => setOpen(false)}
+            <div className="lh-sm">
+              <div
+                className="fw-bold text-dark"
+                style={{
+                  fontSize: "18px",
+                  letterSpacing: "-0.3px",
+                }}
               >
-                Home
-              </Link>
-            </li>
+                MediFlow
+              </div>
 
-            {!signedIn && (
-              <>
-                <li className="nav-item">
-                  <Link
-                    to="/features"
-                    className="nav-link px-3"
-                    onClick={() => setOpen(false)}
-                  >
-                    Features
-                  </Link>
-                </li>
+              <small
+                className="text-muted"
+                style={{ fontSize: "11px" }}
+              >
+                Business Management
+              </small>
+            </div>
+          </Link>
 
-                <li className="nav-item">
-                  <Link
-                    to="/pricing"
-                    className="nav-link px-3"
-                    onClick={() => setOpen(false)}
-                  >
-                    Pricing
-                  </Link>
-                </li>
-
-                <li className="nav-item">
-                  <Link
-                    to="/about"
-                    className="nav-link px-3"
-                    onClick={() => setOpen(false)}
-                  >
-                    About
-                  </Link>
-                </li>
-              </>
-            )}
-          </ul>
-
-          <div
-            className="d-flex align-items-center gap-2"
-            style={{
-              position: "relative",
-              zIndex: 3000,
+          <button
+            className="navbar-toggler border-0 shadow-none"
+            type="button"
+            aria-controls="mainNavbar"
+            aria-expanded={open}
+            aria-label="Toggle navigation"
+            onClick={() => {
+              setOpen((value) => !value);
+              setProfileOpen(false);
             }}
           >
-            {signedIn ? (
-              <>
-                <NotificationBell />
+            <span className="navbar-toggler-icon"></span>
+          </button>
 
-                <span
-                  className="badge bg-dark"
-                  style={{
-                    fontSize: "12px",
-                    padding: "8px 10px",
-                  }}
+          <div
+            className={`navbar-collapse ${
+              open ? "show" : ""
+            }`}
+            id="mainNavbar"
+          >
+            <ul className="navbar-nav mx-auto mb-3 mb-lg-0 align-items-lg-center">
+
+              <li className="nav-item">
+                <Link
+                  to="/"
+                  className="nav-link px-3 fw-medium"
+                  onClick={closeMenus}
                 >
-                  {user?.role || "NO ROLE"}
-                </span>
+                  <i className="bi bi-house-door me-1"></i>
+                  Home
+                </Link>
+              </li>
 
-                {user?.role === "super_admin" && (
-                  <Link
-                    to="/superadmin/dashboard"
-                    className="btn btn-primary"
-                    onClick={() => setOpen(false)}
+              {!signedIn && (
+                <>
+                  <li className="nav-item">
+                    <Link
+                      to="/features"
+                      className="nav-link px-3 fw-medium"
+                      onClick={closeMenus}
+                    >
+                      <i className="bi bi-grid me-1"></i>
+                      Features
+                    </Link>
+                  </li>
+
+                  <li className="nav-item">
+                    <Link
+                      to="/pricing"
+                      className="nav-link px-3 fw-medium"
+                      onClick={closeMenus}
+                    >
+                      <i className="bi bi-tags me-1"></i>
+                      Pricing
+                    </Link>
+                  </li>
+
+                  <li className="nav-item">
+                    <Link
+                      to="/about"
+                      className="nav-link px-3 fw-medium"
+                      onClick={closeMenus}
+                    >
+                      <i className="bi bi-info-circle me-1"></i>
+                      About
+                    </Link>
+                  </li>
+
+                  <li className="nav-item">
+                    <Link
+                      to="/contact"
+                      className="nav-link px-3 fw-medium"
+                      onClick={closeMenus}
+                    >
+                      <i className="bi bi-envelope me-1"></i>
+                      Contact
+                    </Link>
+                  </li>
+                </>
+              )}
+            </ul>
+
+            <div
+              className="d-flex align-items-center gap-2 flex-wrap justify-content-center"
+              style={{
+                position: "relative",
+                zIndex: 3000,
+              }}
+            >
+              {signedIn ? (
+                <>
+                  <NotificationBell />
+
+                  <span
+                    className="badge rounded-pill text-bg-light border px-3 py-2"
+                    style={{
+                      fontSize: "11px",
+                      color: "#495057",
+                    }}
                   >
-                    Dashboard
-                  </Link>
-                )}
+                    <i className="bi bi-person-badge me-1"></i>
+                    {formattedRole}
+                  </span>
 
-                {user?.role === "company_owner" && (
-                  <Link
-                    to="/admin"
-                    className="btn btn-primary"
-                    onClick={() => setOpen(false)}
+                  {user?.role === "super_admin" && (
+                    <Link
+                      to="/superadmin/dashboard"
+                      className="btn btn-primary rounded-3 px-3"
+                      onClick={closeMenus}
+                    >
+                      <i className="bi bi-speedometer2 me-1"></i>
+                      Dashboard
+                    </Link>
+                  )}
+
+                  {user?.role === "company_owner" && (
+                    <Link
+                      to="/admin"
+                      className="btn btn-primary rounded-3 px-3"
+                      onClick={closeMenus}
+                    >
+                      <i className="bi bi-speedometer2 me-1"></i>
+                      Dashboard
+                    </Link>
+                  )}
+
+                  <div
+                    ref={profileRef}
+                    className="position-relative"
+                    style={{
+                      zIndex: 3001,
+                    }}
                   >
-                    Dashboard
-                  </Link>
-                )}
-
-                <div
-                  ref={profileRef}
-                  className="position-relative"
-                  style={{
-                    zIndex: 3001,
-                  }}
-                >
-                  <button
-                    type="button"
-                    className="btn p-0 border-0"
-                    aria-label="Open profile"
-                    onClick={() =>
-                      setProfileOpen((value) => !value)
-                    }
-                  >
-                    {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt="Profile"
-                        className="rounded-circle"
-                        style={{
-                          width: 40,
-                          height: 40,
-                          objectFit: "cover",
-                        }}
-                      />
-                    ) : (
-                      <span
-                        className="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-bold"
-                        style={{
-                          width: 40,
-                          height: 40,
-                        }}
-                      >
-                        {initials}
-                      </span>
-                    )}
-                  </button>
-
-                  {profileOpen && (
-                    <div
-                      className="position-absolute bg-white border rounded shadow p-3"
-                      style={{
-                        width: "300px",
-                        right: 0,
-                        top: "50px",
-                        zIndex: 9999,
+                    <button
+                      type="button"
+                      className="btn p-0 border-0 shadow-none"
+                      aria-label="Open profile"
+                      onClick={() => {
+                        setProfileOpen((value) => !value);
+                        setOpen(false);
                       }}
                     >
-                      <div className="d-flex align-items-center gap-3 mb-3">
-                        {avatarUrl ? (
-                          <img
-                            src={avatarUrl}
-                            alt="Profile"
-                            className="rounded-circle"
-                            style={{
-                              width: 50,
-                              height: 50,
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <span
-                            className="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-bold"
-                            style={{
-                              width: 50,
-                              height: 50,
-                            }}
-                          >
-                            {initials}
-                          </span>
-                        )}
+                      {avatarUrl ? (
+                        <img
+                          src={avatarUrl}
+                          alt="Profile"
+                          className="rounded-circle"
+                          style={{
+                            width: 42,
+                            height: 42,
+                            objectFit: "cover",
+                            border:
+                              "2px solid #0d6efd",
+                          }}
+                        />
+                      ) : (
+                        <span
+                          className="rounded-circle text-white d-inline-flex align-items-center justify-content-center fw-bold"
+                          style={{
+                            width: 42,
+                            height: 42,
+                            background:
+                              "linear-gradient(135deg, #0d6efd, #6610f2)",
+                            boxShadow:
+                              "0 4px 12px rgba(13,110,253,0.25)",
+                          }}
+                        >
+                          {initials}
+                        </span>
+                      )}
+                    </button>
 
-                        <div>
-                          <div className="fw-bold">
-                            {user?.name || "User"}
-                          </div>
-
-                          <div className="small text-muted">
-                            {user?.email || "-"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <hr />
-
-                      <div className="mb-2">
-                        <small className="text-muted">
-                          Name
-                        </small>
-
-                        <div className="fw-semibold">
-                          {user?.name || "-"}
-                        </div>
-                      </div>
-
-                      <div className="mb-2">
-                        <small className="text-muted">
-                          Email
-                        </small>
-
-                        <div className="text-break">
-                          {user?.email || "-"}
-                        </div>
-                      </div>
-
-                      <div className="mb-2">
-                        <small className="text-muted">
-                          Role
-                        </small>
-
-                        <div>
-                          {formattedRole}
-                        </div>
-                      </div>
-
-                      <div className="mb-2">
-                        <small className="text-muted">
-                          Company
-                        </small>
-
-                        <div className="text-break">
-                          {companyDisplay}
-                        </div>
-                      </div>
-
-                      <div className="mb-2">
-                        <small className="text-muted">
-                          User ID
-                        </small>
-
-                        <div className="small text-break">
-                          {user?._id || "-"}
-                        </div>
-                      </div>
-
-                      <hr />
-
-                      <Link
-                        to="/profile"
-                        className="btn btn-outline-primary btn-sm w-100"
-                        onClick={() => {
-                          setProfileOpen(false);
-                          setOpen(false);
+                    {profileOpen && (
+                      <div
+                        className="position-absolute bg-white rounded-4 shadow-lg border p-3"
+                        style={{
+                          width: "320px",
+                          right: 0,
+                          top: "54px",
+                          zIndex: 9999,
+                          animation:
+                            "profileDropdown 0.18s ease-out",
                         }}
                       >
-                        View Profile
-                      </Link>
+                        <div
+                          className="rounded-4 p-3 mb-3 text-white"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #0d6efd, #6610f2)",
+                          }}
+                        >
+                          <div className="d-flex align-items-center gap-3">
+                            {avatarUrl ? (
+                              <img
+                                src={avatarUrl}
+                                alt="Profile"
+                                className="rounded-circle border border-2 border-white"
+                                style={{
+                                  width: 58,
+                                  height: 58,
+                                  objectFit: "cover",
+                                }}
+                              />
+                            ) : (
+                              <span
+                                className="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center fw-bold"
+                                style={{
+                                  width: 58,
+                                  height: 58,
+                                  fontSize: "21px",
+                                }}
+                              >
+                                {initials}
+                              </span>
+                            )}
 
-                      <Link
-                       to="/reset-password" 
-                       className="btn btn-outline-primary btn-sm w-100 mt-2">
-                      Reset Password
-                      </Link>
+                            <div className="min-width-0">
+                              <div className="fw-bold text-truncate">
+                                {user?.name || "User"}
+                              </div>
 
-                      <button
-                        type="button"
-                        className="btn btn-outline-danger btn-sm w-100 mt-2"
-                        onClick={handleLogout}
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
+                              <div
+                                className="small text-white"
+                                style={{
+                                  opacity: 0.8,
+                                }}
+                              >
+                                {formattedRole}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="btn btn-outline-primary px-4"
-                  onClick={() => setOpen(false)}
-                >
-                  Login
-                </Link>
+                        <div className="px-1">
 
-                <Link
-                  to="/signup"
-                  className="btn btn-primary px-4"
-                  onClick={() => setOpen(false)}
-                >
-                  Get Started
-                </Link>
-              </>
-            )}
+                          <div className="d-flex gap-3 mb-3">
+                            <div className="text-primary">
+                              <i className="bi bi-person fs-5"></i>
+                            </div>
+
+                            <div>
+                              <small className="text-muted d-block">
+                                Name
+                              </small>
+
+                              <div className="fw-semibold text-break">
+                                {user?.name || "-"}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="d-flex gap-3 mb-3">
+                            <div className="text-primary">
+                              <i className="bi bi-envelope fs-5"></i>
+                            </div>
+
+                            <div className="flex-grow-1">
+                              <small className="text-muted d-block">
+                                Email
+                              </small>
+
+                              <div className="text-break">
+                                {user?.email || "-"}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="d-flex gap-3 mb-3">
+                            <div className="text-primary">
+                              <i className="bi bi-building fs-5"></i>
+                            </div>
+
+                            <div>
+                              <small className="text-muted d-block">
+                                Company
+                              </small>
+
+                              <div className="text-break">
+                                {companyDisplay}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="d-flex gap-3 mb-3">
+                            <div className="text-primary">
+                              <i className="bi bi-person-badge fs-5"></i>
+                            </div>
+
+                            <div>
+                              <small className="text-muted d-block">
+                                User ID
+                              </small>
+
+                              <div className="small text-break">
+                                {user?._id || "-"}
+                              </div>
+                            </div>
+                          </div>
+
+                          <hr />
+
+                          <Link
+                            to="/profile"
+                            className="btn btn-light border w-100 rounded-3 mb-2"
+                            onClick={closeMenus}
+                          >
+                            <i className="bi bi-person-circle me-2"></i>
+                            View Profile
+                          </Link>
+
+                          <Link
+                            to="/reset-password"
+                            className="btn btn-light border w-100 rounded-3 mb-2"
+                            onClick={closeMenus}
+                          >
+                            <i className="bi bi-key me-2"></i>
+                            Reset Password
+                          </Link>
+
+                          <button
+                            type="button"
+                            className="btn btn-outline-danger w-100 rounded-3"
+                            onClick={handleLogout}
+                          >
+                            <i className="bi bi-box-arrow-right me-2"></i>
+                            Logout
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger rounded-3 px-3"
+                    onClick={handleLogout}
+                  >
+                    <i className="bi bi-box-arrow-right me-1"></i>
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="btn btn-outline-primary rounded-3 px-4"
+                    onClick={closeMenus}
+                  >
+                    <i className="bi bi-box-arrow-in-right me-1"></i>
+                    Login
+                  </Link>
+
+                  <Link
+                    to="/signup"
+                    className="btn btn-primary rounded-3 px-4 shadow-sm"
+                    onClick={closeMenus}
+                  >
+                    Get Started
+                    <i className="bi bi-arrow-right ms-2"></i>
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      <style>
+        {`
+          .navbar .nav-link {
+            color: #495057;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+          }
+
+          .navbar .nav-link:hover {
+            color: #0d6efd;
+            background: #f3f7ff;
+          }
+
+          .navbar .btn {
+            transition: all 0.2s ease;
+          }
+
+          .navbar .btn:hover {
+            transform: translateY(-1px);
+          }
+
+          @keyframes profileDropdown {
+            from {
+              opacity: 0;
+              transform: translateY(-6px) scale(0.98);
+            }
+
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+
+          @media (max-width: 991px) {
+            .navbar-collapse {
+              padding: 1rem 0;
+            }
+
+            .navbar-nav {
+              width: 100%;
+            }
+
+            .navbar-nav .nav-link {
+              padding: 0.75rem 1rem !important;
+            }
+
+            .navbar-collapse > div:last-child {
+              padding-top: 0.75rem;
+              border-top: 1px solid #eee;
+            }
+          }
+
+          @media (max-width: 576px) {
+            .navbar .container {
+              padding-left: 15px;
+              padding-right: 15px;
+            }
+
+            .navbar-brand small {
+              display: none;
+            }
+
+            .navbar-brand div:last-child {
+              font-size: 17px !important;
+            }
+          }
+        `}
+      </style>
+    </>
   );
 };
 
