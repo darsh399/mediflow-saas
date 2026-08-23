@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import employeeProfileApi from '../../api/employeeProfileApi'
 
 const ProfileReviews = () => {
+  const navigate = useNavigate()
+
   const [profiles, setProfiles] = useState([])
   const [search, setSearch] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [reviewingId, setReviewingId] = useState(null)
-  const [selectedDocument, setSelectedDocument] = useState(null)
-  const [documentUrl, setDocumentUrl] = useState('')
-  const [documentLoading, setDocumentLoading] = useState(false)
 
   const load = async () => {
     try {
@@ -64,65 +64,6 @@ const ProfileReviews = () => {
     }
   }
 
-  const download = async (url, fileName) => {
-    try {
-      setError('')
-
-      const blob = await employeeProfileApi.downloadDocument(url)
-
-      const objectUrl = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-
-      link.href = objectUrl
-      link.download = fileName || url.split('/').pop()
-
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-
-      URL.revokeObjectURL(objectUrl)
-    } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-        'Unable to download document'
-      )
-    }
-  }
-
-  const viewDocument = async document => {
-    try {
-      setDocumentLoading(true)
-      setError('')
-      setSelectedDocument(document)
-
-      const blob = await employeeProfileApi.downloadDocument(
-        document.url
-      )
-
-      const objectUrl = URL.createObjectURL(blob)
-
-      setDocumentUrl(objectUrl)
-    } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-        'Unable to view document'
-      )
-
-      setSelectedDocument(null)
-    } finally {
-      setDocumentLoading(false)
-    }
-  }
-
-  const closeDocument = () => {
-    if (documentUrl) {
-      URL.revokeObjectURL(documentUrl)
-    }
-
-    setDocumentUrl('')
-    setSelectedDocument(null)
-  }
-
   const getInitials = name => {
     if (!name) return 'U'
 
@@ -166,6 +107,24 @@ const ProfileReviews = () => {
     }
   }
 
+  const filteredProfiles = profiles.filter(profile => {
+    const name = profile.userId?.name?.toLowerCase() || ''
+    const email = profile.userId?.email?.toLowerCase() || ''
+    const role = profile.userId?.role?.toLowerCase() || ''
+    const mobile = profile.userId?.mobile?.toLowerCase() || ''
+    const phone = profile.userId?.phone?.toLowerCase() || ''
+
+    const searchValue = search.toLowerCase().trim()
+
+    return (
+      name.includes(searchValue) ||
+      email.includes(searchValue) ||
+      role.includes(searchValue) ||
+      mobile.includes(searchValue) ||
+      phone.includes(searchValue)
+    )
+  })
+
   const submittedCount = profiles.filter(
     profile => profile.status === 'SUBMITTED'
   ).length
@@ -178,144 +137,11 @@ const ProfileReviews = () => {
     profile => profile.status === 'REJECTED'
   ).length
 
-  const filteredProfiles = profiles.filter(profile => {
-    const name =
-      profile.userId?.name?.toLowerCase() || ''
-
-    const email =
-      profile.userId?.email?.toLowerCase() || ''
-
-    const role =
-      profile.userId?.role?.toLowerCase() || ''
-
-    const searchValue = search.toLowerCase().trim()
-
-    return (
-      name.includes(searchValue) ||
-      email.includes(searchValue) ||
-      role.includes(searchValue)
-    )
-  })
-
-  if (selectedDocument) {
-    return (
-      <div className="container-fluid py-4">
-
-        <div className="d-flex align-items-center gap-3 mb-4">
-
-          <button
-            type="button"
-            className="btn btn-outline-secondary"
-            onClick={closeDocument}
-          >
-            ← Back
-          </button>
-
-          <div>
-            <h3 className="fw-bold mb-1">
-              View Document
-            </h3>
-
-            <p className="text-muted mb-0">
-              {selectedDocument.originalName ||
-                selectedDocument.type ||
-                'Employee Document'}
-            </p>
-          </div>
-
-        </div>
-
-        <div className="card border-0 shadow-sm">
-
-          <div className="card-header bg-white d-flex justify-content-between align-items-center">
-
-            <h5 className="fw-bold mb-0">
-              {selectedDocument.originalName ||
-                selectedDocument.type ||
-                'Document'}
-            </h5>
-
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={() =>
-                download(
-                  selectedDocument.url,
-                  selectedDocument.originalName
-                )
-              }
-            >
-              ↓ Download
-            </button>
-
-          </div>
-
-          <div
-            className="card-body p-0 bg-light"
-            style={{ minHeight: '75vh' }}
-          >
-
-            {documentLoading ? (
-
-              <div
-                className="d-flex flex-column align-items-center justify-content-center"
-                style={{ minHeight: '75vh' }}
-              >
-
-                <div
-                  className="spinner-border text-primary mb-3"
-                  role="status"
-                />
-
-                <span className="text-muted">
-                  Loading document...
-                </span>
-
-              </div>
-
-            ) : documentUrl ? (
-
-              <iframe
-                src={documentUrl}
-                title={
-                  selectedDocument.originalName ||
-                  'Employee Document'
-                }
-                style={{
-                  width: '100%',
-                  height: '75vh',
-                  border: 'none'
-                }}
-              />
-
-            ) : (
-
-              <div className="text-center p-5">
-
-                <div className="alert alert-warning">
-                  Unable to display this document.
-                </div>
-
-              </div>
-
-            )}
-
-          </div>
-
-        </div>
-
-      </div>
-    )
-  }
-
   if (loading) {
     return (
       <div className="container-fluid py-4">
-
         <div className="card border-0 shadow-sm">
-
           <div className="card-body text-center py-5">
-
             <div
               className="spinner-border text-primary mb-3"
               role="status"
@@ -324,11 +150,8 @@ const ProfileReviews = () => {
             <h6 className="text-muted mb-0">
               Loading employee profiles...
             </h6>
-
           </div>
-
         </div>
-
       </div>
     )
   }
@@ -339,7 +162,6 @@ const ProfileReviews = () => {
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
 
         <div>
-
           <span className="text-primary fw-semibold small">
             EMPLOYEE MANAGEMENT
           </span>
@@ -349,9 +171,8 @@ const ProfileReviews = () => {
           </h2>
 
           <p className="text-muted mb-0">
-            Review employee profiles and verify submitted documents.
+            Review employee profiles and submitted documents.
           </p>
-
         </div>
 
         <button
@@ -373,11 +194,8 @@ const ProfileReviews = () => {
       <div className="row g-3 mb-4">
 
         <div className="col-xl-3 col-md-6">
-
           <div className="card border-0 shadow-sm h-100">
-
             <div className="card-body p-4">
-
               <p className="text-muted small mb-2">
                 Total Profiles
               </p>
@@ -385,39 +203,27 @@ const ProfileReviews = () => {
               <h3 className="fw-bold mb-0">
                 {profiles.length}
               </h3>
-
             </div>
-
           </div>
-
         </div>
 
         <div className="col-xl-3 col-md-6">
-
           <div className="card border-0 shadow-sm h-100">
-
             <div className="card-body p-4">
-
               <p className="text-muted small mb-2">
                 Pending Review
               </p>
 
-              <h3 className="fw-bold mb-0">
+              <h3 className="fw-bold mb-0 text-warning">
                 {submittedCount}
               </h3>
-
             </div>
-
           </div>
-
         </div>
 
         <div className="col-xl-3 col-md-6">
-
           <div className="card border-0 shadow-sm h-100">
-
             <div className="card-body p-4">
-
               <p className="text-muted small mb-2">
                 Approved
               </p>
@@ -425,19 +231,13 @@ const ProfileReviews = () => {
               <h3 className="fw-bold mb-0 text-success">
                 {approvedCount}
               </h3>
-
             </div>
-
           </div>
-
         </div>
 
         <div className="col-xl-3 col-md-6">
-
           <div className="card border-0 shadow-sm h-100">
-
             <div className="card-body p-4">
-
               <p className="text-muted small mb-2">
                 Rejected
               </p>
@@ -445,178 +245,148 @@ const ProfileReviews = () => {
               <h3 className="fw-bold mb-0 text-danger">
                 {rejectedCount}
               </h3>
-
             </div>
-
           </div>
-
         </div>
 
       </div>
 
-      {!profiles.length ? (
+      <div className="card border-0 shadow-sm">
 
-        <div className="card border-0 shadow-sm">
+        <div className="card-header bg-white border-0 p-4">
 
-          <div className="card-body text-center py-5">
+          <div className="row align-items-center g-3">
 
-            <h5 className="fw-bold">
-              No employee profiles
-            </h5>
+            <div className="col-lg-5">
+              <h5 className="fw-bold mb-1">
+                Employee Profiles
+              </h5>
 
-            <p className="text-muted mb-0">
-              There are no employee profiles available for review.
-            </p>
+              <p className="text-muted small mb-0">
+                Click an employee to view complete details.
+              </p>
+            </div>
 
+            <div className="col-lg-7">
+
+              <div className="input-group">
+
+                <span className="input-group-text bg-white">
+                  🔍
+                </span>
+
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search by name, email, mobile or role..."
+                  value={search}
+                  onChange={event => setSearch(event.target.value)}
+                />
+
+                {search && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setSearch('')}
+                  >
+                    Clear
+                  </button>
+                )}
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="mt-3">
+            <span className="text-muted small">
+              Showing{' '}
+              <strong>{filteredProfiles.length}</strong>{' '}
+              of{' '}
+              <strong>{profiles.length}</strong>{' '}
+              employees
+            </span>
           </div>
 
         </div>
 
-      ) : (
+        <div className="table-responsive">
 
-        <div className="card border-0 shadow-sm">
+          <table className="table align-middle mb-0">
 
-          <div className="card-header bg-white border-0 p-4">
+            <thead className="table-light">
 
-            <div className="row align-items-center g-3">
+              <tr>
+                <th className="px-4 py-3">
+                  Employee
+                </th>
 
-              <div className="col-lg-6">
+                <th className="py-3">
+                  Role
+                </th>
 
-                <h5 className="fw-bold mb-1">
-                  Employee Profiles
-                </h5>
+                <th className="py-3">
+                  Mobile
+                </th>
 
-                <p className="text-muted small mb-0">
-                  Review employee information and uploaded documents.
-                </p>
+                <th className="py-3">
+                  Status
+                </th>
 
-              </div>
+                <th className="py-3 text-end pe-4">
+                  Actions
+                </th>
+              </tr>
 
-              <div className="col-lg-6">
+            </thead>
 
-                <div className="input-group">
+            <tbody>
 
-                  <span className="input-group-text bg-white">
-                    🔍
-                  </span>
-
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Search by employee name, email or role..."
-                    value={search}
-                    onChange={event =>
-                      setSearch(event.target.value)
-                    }
-                  />
-
-                  {search && (
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => setSearch('')}
-                    >
-                      Clear
-                    </button>
-                  )}
-
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="mt-3">
-
-              <span className="text-muted small">
-                Showing{' '}
-                <strong>
-                  {filteredProfiles.length}
-                </strong>{' '}
-                of{' '}
-                <strong>
-                  {profiles.length}
-                </strong>{' '}
-                employees
-              </span>
-
-            </div>
-
-          </div>
-
-          <div className="table-responsive">
-
-            <table className="table align-middle mb-0">
-
-              <thead className="table-light">
+              {filteredProfiles.length === 0 ? (
 
                 <tr>
+                  <td
+                    colSpan="5"
+                    className="text-center py-5"
+                  >
+                    <div
+                      className="mb-2"
+                      style={{ fontSize: '32px' }}
+                    >
+                      🔍
+                    </div>
 
-                  <th className="px-4 py-3">
-                    Employee
-                  </th>
+                    <h6 className="fw-bold">
+                      No employees found
+                    </h6>
 
-                  <th className="py-3">
-                    Role
-                  </th>
-
-                  <th className="py-3">
-                    Status
-                  </th>
-
-                  <th className="py-3">
-                    Documents
-                  </th>
-
-                  <th className="py-3 text-end pe-4">
-                    Actions
-                  </th>
-
+                    <p className="text-muted small mb-0">
+                      Try another search.
+                    </p>
+                  </td>
                 </tr>
 
-              </thead>
+              ) : (
 
-              <tbody>
+                filteredProfiles.map(profile => {
 
-                {filteredProfiles.length === 0 ? (
+                  const employee = profile.userId
 
-                  <tr>
+                  return (
+                    <tr key={profile._id}>
 
-                    <td
-                      colSpan="5"
-                      className="text-center py-5"
-                    >
+                      <td className="px-4">
 
-                      <div
-                        className="mb-2"
-                        style={{ fontSize: '32px' }}
-                      >
-                        🔍
-                      </div>
-
-                      <h6 className="fw-bold">
-                        No employees found
-                      </h6>
-
-                      <p className="text-muted small mb-0">
-                        Try searching with a different name,
-                        email or role.
-                      </p>
-
-                    </td>
-
-                  </tr>
-
-                ) : (
-
-                  filteredProfiles.map(profile => {
-
-                    const employee = profile.userId
-
-                    return (
-                      <tr key={profile._id}>
-
-                        <td className="px-4">
+                        <button
+                          type="button"
+                          className="btn btn-link text-decoration-none p-0"
+                          onClick={() =>
+                            navigate(
+                              `/admin/profile-${profile._id}`
+                            )
+                          }
+                        >
 
                           <div className="d-flex align-items-center gap-3">
 
@@ -630,190 +400,112 @@ const ProfileReviews = () => {
                               {getInitials(employee?.name)}
                             </div>
 
-                            <div>
+                            <div className="text-start">
 
-                              <div className="fw-semibold">
-                                {employee?.name ||
-                                  'Unknown Employee'}
+                              <div className="fw-semibold text-dark">
+                                {employee?.name || 'Unknown Employee'}
                               </div>
 
                               <div className="small text-muted">
-                                {employee?.email ||
-                                  'No email'}
+                                {employee?.email || 'No email'}
                               </div>
 
                             </div>
 
                           </div>
 
-                        </td>
+                        </button>
 
-                        <td>
+                      </td>
 
-                          <span className="text-capitalize">
-                            {employee?.role || 'N/A'}
-                          </span>
+                      <td>
+                        <span className="text-capitalize">
+                          {employee?.role || 'N/A'}
+                        </span>
+                      </td>
 
-                        </td>
+                      <td>
+                        {employee?.mobile ||
+                          employee?.phone ||
+                          'N/A'}
+                      </td>
 
-                        <td>
+                      <td>
+                        {getStatusBadge(profile.status)}
+                      </td>
 
-                          {getStatusBadge(profile.status)}
+                      <td className="text-end pe-4">
 
-                          {profile.rejectionReason && (
-                            <div
-                              className="small text-danger mt-2"
-                              style={{
-                                maxWidth: '220px'
-                              }}
-                            >
-                              <strong>
-                                Reason:
-                              </strong>{' '}
-                              {profile.rejectionReason}
-                            </div>
-                          )}
+                        {profile.status === 'SUBMITTED' ? (
 
-                        </td>
+                          <div className="d-flex justify-content-end gap-2">
 
-                        <td>
-
-                          {profile.documents?.length ? (
-
-                            <div className="d-flex flex-column gap-2">
-
-                              {profile.documents.map(
-                                document => (
-
-                                  <div
-                                    key={document.url}
-                                    className="d-flex align-items-center gap-2"
-                                  >
-
-                                    <span
-                                      className="text-truncate"
-                                      style={{
-                                        maxWidth: '180px'
-                                      }}
-                                    >
-                                      📎{' '}
-                                      {document.originalName ||
-                                        document.type}
-                                    </span>
-
-                                    <button
-                                      type="button"
-                                      className="btn btn-sm btn-outline-primary"
-                                      onClick={() =>
-                                        viewDocument(
-                                          document
-                                        )
-                                      }
-                                    >
-                                      View
-                                    </button>
-
-                                    <button
-                                      type="button"
-                                      className="btn btn-sm btn-outline-secondary"
-                                      onClick={() =>
-                                        download(
-                                          document.url,
-                                          document.originalName
-                                        )
-                                      }
-                                    >
-                                      Download
-                                    </button>
-
-                                  </div>
-
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-success px-3"
+                              disabled={
+                                reviewingId === profile._id
+                              }
+                              onClick={() =>
+                                review(
+                                  profile._id,
+                                  'APPROVED'
                                 )
-                              )}
+                              }
+                            >
+                              {reviewingId === profile._id
+                                ? 'Processing...'
+                                : 'Approve'}
+                            </button>
 
-                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger px-3"
+                              disabled={
+                                reviewingId === profile._id
+                              }
+                              onClick={() =>
+                                review(
+                                  profile._id,
+                                  'REJECTED'
+                                )
+                              }
+                            >
+                              Reject
+                            </button>
 
-                          ) : (
+                          </div>
 
-                            <span className="text-muted small">
-                              No documents
-                            </span>
+                        ) : (
 
-                          )}
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() =>
+                              navigate(
+                                `${profile._id}`
+                              )
+                            }
+                          >
+                            View Profile
+                          </button>
 
-                        </td>
+                        )}
 
-                        <td className="text-end pe-4">
+                      </td>
 
-                          {profile.status === 'SUBMITTED' ? (
+                    </tr>
+                  )
+                })
+              )}
 
-                            <div className="d-flex justify-content-end gap-2">
+            </tbody>
 
-                              <button
-                                type="button"
-                                className="btn btn-sm btn-success px-3"
-                                disabled={
-                                  reviewingId ===
-                                  profile._id
-                                }
-                                onClick={() =>
-                                  review(
-                                    profile._id,
-                                    'APPROVED'
-                                  )
-                                }
-                              >
-                                {reviewingId ===
-                                profile._id
-                                  ? 'Processing...'
-                                  : 'Approve'}
-                              </button>
-
-                              <button
-                                type="button"
-                                className="btn btn-sm btn-outline-danger px-3"
-                                disabled={
-                                  reviewingId ===
-                                  profile._id
-                                }
-                                onClick={() =>
-                                  review(
-                                    profile._id,
-                                    'REJECTED'
-                                  )
-                                }
-                              >
-                                Reject
-                              </button>
-
-                            </div>
-
-                          ) : (
-
-                            <span className="text-muted small">
-                              Reviewed
-                            </span>
-
-                          )}
-
-                        </td>
-
-                      </tr>
-                    )
-
-                  })
-
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
+          </table>
 
         </div>
 
-      )}
+      </div>
 
     </div>
   )

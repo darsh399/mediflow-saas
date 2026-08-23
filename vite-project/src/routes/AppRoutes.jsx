@@ -46,6 +46,7 @@ import ResetPassword from "../pages/ResetPassword";
 
 import EmployeeOnboarding from "../pages/employee/EmployeeOnboarding";
 import ProfileReviews from "../pages/employee/ProfileReviews";
+import ProfileReviewDetails from "../pages/employee/ProfileReviewDetails";
 import MyVisits from "../pages/employee/MyVisits";
 
 import Tasks from "../pages/tasks/Tasks";
@@ -244,6 +245,11 @@ const AppRoutes = () => {
                         <Route
                             index
                             element={<ProfileReviews />}
+                        />
+
+                        <Route
+                        path=":id"
+                        element={<ProfileReviewDetails />}
                         />
                     </Route>
                 </Route>
