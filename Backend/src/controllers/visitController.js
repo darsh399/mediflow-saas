@@ -78,11 +78,20 @@ export const listVisits = async (req, res) => {
   try {
     const companyId = req.user?.companyId;
     const query = companyId ? { companyId } : {};
-    const visits = await Visit.find(query).populate('doctorId patientId', '-password');
+
+    const visits = await Visit.find(query)
+      .populate('employeeId', 'name email role')
+      .populate('doctorId', 'name specialty phone')
+      .populate('medicalId', 'name address phone')
+      .sort({ visitedAt: -1 });
+
     return res.status(200).json({ visits });
   } catch (error) {
     console.error('List visits error:', error);
-    return res.status(500).json({ message: 'Error listing visits', error: error.message });
+    return res.status(500).json({
+      message: 'Error listing visits',
+      error: error.message
+    });
   }
 };
 

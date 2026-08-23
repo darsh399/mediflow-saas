@@ -7,6 +7,7 @@ export async function createDoctor(payload){
 
 export async function listDoctors(){
   const resp = await axios.get('/api/doctors')
+  console.log('get doctors data', resp.data)
   return resp.data
 }
 

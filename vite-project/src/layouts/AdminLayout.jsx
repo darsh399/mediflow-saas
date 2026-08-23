@@ -15,7 +15,7 @@ const AdminLayout = () => {
                 {canManageCompany && <>
                   <li className="nav-item"><Link className="nav-link" to="/admin/doctors">Doctors</Link></li>
                   <li className="nav-item"><Link className="nav-link" to="/admin/medicals">Medicals</Link></li>
-                  <li className="nav-item"><Link className="nav-link" to="/admin/users">Employees</Link></li>
+                  <li className="nav-item"><Link className="nav-link" to="/users">Employees</Link></li>
                   <li className="nav-item"><Link className="nav-link" to="/admin/visits">Visits</Link></li>
                   <li className="nav-item"><Link className="nav-link" to="/hr/leaves">Leaves</Link></li>
                 </>}
@@ -24,7 +24,11 @@ const AdminLayout = () => {
                 <li className="nav-item"><Link className="nav-link" to="/orders">Orders</Link></li>
                 <li className="nav-item"><Link className="nav-link" to="/notifications">Notifications</Link></li>
                 <li className="nav-item"><Link className="nav-link" to="/employee/onboarding">My onboarding</Link></li>
+                <li className="nav-item"><Link className="nav-link" to="/users">Employees</Link></li>
+                 <li className="nav-item"><Link className="nav-link" to="/admin/doctors">Doctors</Link></li>
+                  <li className="nav-item"><Link className="nav-link" to="/admin/medicals">Medicals</Link></li>
                 <li className="nav-item"><Link className="nav-link" to="/employee/activity">Daily activity</Link></li>
+                <li className="nav-item"><Link className="nav-link" to="/employee/visits">My Visits</Link></li>
                 {canReviewProfiles && <li className="nav-item"><Link className="nav-link" to="/employee/profiles">Profile reviews</Link></li>}
               </ul>
             </div>

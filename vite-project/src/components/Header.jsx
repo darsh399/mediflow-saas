@@ -404,6 +404,12 @@ console.log(user, 'in header')
                         View Profile
                       </Link>
 
+                      <Link
+                       to="/reset-password" 
+                       className="btn btn-outline-primary btn-sm w-100 mt-2">
+                      Reset Password
+                      </Link>
+
                       <button
                         type="button"
                         className="btn btn-outline-danger btn-sm w-100 mt-2"

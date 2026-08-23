@@ -3,10 +3,15 @@ import { useDispatch, useSelector } from 'react-redux'
 import { fetchUsers, searchUsers, deleteUser, fetchUser } from '../../redux/slices/userSlice'
 import { Link } from 'react-router-dom'
 
+
+
 const Users = ()=>{
   const dispatch = useDispatch()
   const { items, loading, error } = useSelector(s => s.users)
+  const role = useSelector(s =>s.auth?.user?.role)
+  
   const [q, setQ] = useState('')
+
 
   useEffect(()=>{ dispatch(fetchUsers()) }, [dispatch])
 
@@ -14,14 +19,18 @@ const Users = ()=>{
     dispatch(searchUsers({ name: q }))
   }
 
+  const canManageUsers = ['admin', 'company_owner', 'hr_manager'].includes(role)
+
   const handleDelete = (id)=>{ if(!confirm('Delete user?')) return; dispatch(deleteUser(id)) }
 
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2>Users</h2>
+        { canManageUsers &&
         <Link className="btn btn-primary" to="/admin/users/add">Add Employee</Link>
-      </div>
+        }
+        </div>
 
       <div className="input-group mb-3" style={{maxWidth:480}}>
         <input className="form-control" value={q} onChange={e=>setQ(e.target.value)} placeholder="Search by name" />
@@ -43,10 +52,12 @@ const Users = ()=>{
                 <td>{u.name}</td>
                 <td>{u.email}</td>
                 <td>{u.role}</td>
+                {canManageUsers &&
                 <td>
                   <Link to={`/admin/users/${u._id}`} className="btn btn-sm btn-outline-primary me-2">View</Link>
                   <button className="btn btn-sm btn-danger" onClick={()=>handleDelete(u._id)}>Delete</button>
                 </td>
+                }  
               </tr>
             ))}
           </tbody>
