@@ -14,7 +14,7 @@ const AddEmployee = ()=>{
     e.preventDefault(); setLoading(true); setError(null)
     try{
       await authApi.sendInviteApi({ inviteeEmail: form.email, role: form.role, profileTemplate: { name: form.name, mobile: form.mobile } })
-      nav('/admin/users')
+      nav('/users')
     }catch(err){ setError(err.message || JSON.stringify(err)) }
     setLoading(false)
   }

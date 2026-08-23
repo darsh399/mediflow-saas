@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { doctorVisit, medicalVisit } from '../../redux/slices/visitSlice'
 import doctorApi from '../../api/doctorApi'
 import medicalApi from '../../api/medicalApi'
+import { Link } from 'react-router-dom'
 
 const AddVisit = ()=>{
   const dispatch = useDispatch()
@@ -57,6 +58,11 @@ const AddVisit = ()=>{
           <option value="medical">Medical / Shop</option>
         </select>
       </div>
+
+       <div className="d-flex justify-content-between align-items-center mb-3">
+              <h2>Doctors</h2>
+              <Link className="btn btn-primary" to="/admin/doctors/add">Add Doctor</Link>
+            </div>
 
       <div className="mb-3">
         <label className="form-label">Select {type === 'doctor' ? 'Doctor' : 'Medical'}</label>

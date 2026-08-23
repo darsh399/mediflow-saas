@@ -25,7 +25,7 @@ const AddMedical = ()=>{
     try{
       const payload = { ...form, latitude: Number(form.latitude), longitude: Number(form.longitude) }
       await dispatch(createMedical(payload)).unwrap()
-      nav('/admin/medicals')
+      nav('/medicals')
     }catch(err){ setError(err.message || JSON.stringify(err)) }
     setLoading(false)
   }
