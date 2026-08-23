@@ -493,7 +493,7 @@ const About = () => {
 
               <p className="text-muted mb-4">
                 Bring your employees, field operations, and reporting
-                together with MediFlow.
+                together with MediFlows.
               </p>
 
               <button className="btn btn-primary btn-lg px-5">
