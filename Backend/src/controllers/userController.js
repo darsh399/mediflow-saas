@@ -323,13 +323,12 @@ export const updateProfile = async (req, res) => {
 };
 
 
-
 export const getAllMyVisits = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const employeeId = req.user?.id;
         const companyId = req.user?.companyId;
 
-        if (!userId) {
+        if (!employeeId) {
             return res.status(401).json({
                 message: 'User authentication required'
             });
@@ -343,9 +342,10 @@ export const getAllMyVisits = async (req, res) => {
 
         const visits = await Visit.find({
             companyId,
-            userId
+            employeeId
         })
             .populate('doctorId')
+            .populate('medicalId')
             .sort({ createdAt: -1 });
 
         return res.status(200).json({

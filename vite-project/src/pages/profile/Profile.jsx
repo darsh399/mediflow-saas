@@ -9,7 +9,7 @@ const Profile = ()=>{
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(false)
   const nav = useNavigate()
-
+ console.log(user, 'in profile user')
   useEffect(()=>{
     const fetch = async ()=>{
       if(!user?.id && !user?._id) return
