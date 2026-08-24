@@ -34,6 +34,17 @@ export async function saveProfile(req, res) {
     { $set: { ...(profileData ? { profileData } : {}), ...(experienceType ? { experienceType } : {}), ...(documents ? { documents } : {}), status: 'DRAFT', rejectionReason: undefined } },
     { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
   );
+  // Keep the account summary in sync with the employee's onboarding details.
+  // This lets managers see the correct name and mobile number in user lists.
+  const accountUpdates = {};
+  if (profileData?.fullName?.trim()) accountUpdates.name = profileData.fullName.trim();
+  if (profileData?.mobile?.trim()) accountUpdates.mobile = profileData.mobile.trim();
+  if (Object.keys(accountUpdates).length) {
+    await User.updateOne(
+      { _id: req.user.id, companyId: req.user.companyId },
+      { $set: accountUpdates }
+    );
+  }
   return res.json({ message: 'Profile saved as draft', profile });
 }
 

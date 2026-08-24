@@ -24,7 +24,7 @@ export const sendMail = async (opts = {}) => {
   const t = await initTransporter();
   if (!t) {
     console.log('SMTP not configured — skipping sendMail, opts:', opts);
-    return null;
+    throw new Error('SMTP is not configured. Set SMTP_HOST and SMTP_FROM before sending email.');
   }
   try {
     const info = await t.sendMail({
@@ -33,6 +33,7 @@ export const sendMail = async (opts = {}) => {
       subject: opts.subject || '(no subject)',
       text: opts.text || '',
       html: opts.html || undefined,
+      attachments: opts.attachments || undefined,
     });
     console.log('Mail sent:', info && info.messageId ? info.messageId : '')
     return info;

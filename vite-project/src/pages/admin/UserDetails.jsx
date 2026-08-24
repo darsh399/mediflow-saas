@@ -102,8 +102,20 @@ const UserDetails = () => {
     )
   }
 
-  const joiningDate = current.joiningDate || current.joinedAt
+  // Older employee accounts store this under their onboarding profile. If a
+  // joining date was never entered, the account creation date is the best
+  // available indication of when they joined the company.
+  const joiningDate =
+    current.joiningDate ||
+    current.joinedAt ||
+    current.profile?.jobDetails?.startDate ||
+    current.profile?.startDate ||
+    current.createdAt
   const daysFromJoining = calculateDaysFromJoining(joiningDate)
+  const employeeId = current.employeeId || `EMP-${String(current._id || current.id || '').slice(-6).toUpperCase()}`
+  const onboardingProfile = current.onboardingProfile || {}
+  const displayName = onboardingProfile.fullName || current.name || 'Unknown User'
+  const displayMobile = onboardingProfile.mobile || current.mobile || current.phone || 'N/A'
 
   const isActive = current.active === true
   const isBlocked = current.blocked === true
@@ -175,13 +187,13 @@ const UserDetails = () => {
                   border: '4px solid #fff'
                 }}
               >
-                {getInitials(current.name)}
+                {getInitials(displayName)}
               </div>
 
               <div className="pb-2">
 
                 <h4 className="fw-bold mb-1">
-                  {current.name || 'Unknown User'}
+                  {displayName}
                 </h4>
 
                 <div className="text-muted">
@@ -332,7 +344,7 @@ const UserDetails = () => {
                   </label>
 
                   <div className="fw-semibold mt-1">
-                    {current.name || 'N/A'}
+                    {displayName}
                   </div>
                 </div>
 
@@ -352,7 +364,7 @@ const UserDetails = () => {
                   </label>
 
                   <div className="fw-semibold mt-1">
-                    {current.mobile || current.phone || 'N/A'}
+                    {displayMobile}
                   </div>
                 </div>
 
@@ -374,7 +386,7 @@ const UserDetails = () => {
                   </label>
 
                   <div className="fw-semibold mt-1">
-                    {current.employeeId || 'N/A'}
+                    {employeeId || 'N/A'}
                   </div>
                 </div>
 
@@ -420,6 +432,7 @@ const UserDetails = () => {
 
                   <div className="fw-semibold mt-1">
                     {current.companyId?.name ||
+                      current.companyId?.companyName ||
                       current.companyName ||
                       'N/A'}
                   </div>

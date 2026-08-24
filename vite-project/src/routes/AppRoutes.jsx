@@ -606,6 +606,7 @@ import Notifications from "../pages/notifications/Notifications";
 import Projects from "../pages/projects/Projects";
 
 import DailyActivity from "../pages/employee/DailyActivity";
+import SendMessage from "../pages/messages/SendMessage";
 import ApplyLeave from "../pages/leaves/ApplyLeaves";
 import MyLeaves from "../pages/leaves/MyLeave";
 import LeaveManagement from "../pages/leaves/LeaveManagement";
@@ -696,7 +697,8 @@ const AppRoutes = () => {
                         />
                     }
                 >
-                 <Route path="users" element={<Users/>}/>
+                    <Route element={<AdminLayout />}>
+                    <Route path="users" element={<Users/>}/>
                     {/* ================= DOCTORS ================= */}
 
                     <Route path="doctors">
@@ -738,6 +740,7 @@ const AppRoutes = () => {
                             element={<MedicalDetails />}
                         />
 
+                    </Route>
                     </Route>
 
                 </Route>
@@ -946,6 +949,15 @@ const AppRoutes = () => {
 
                     </Route>
 
+                </Route>
+
+                {/* ================= COMPANY MESSAGES ================= */}
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager"]} />}
+                >
+                    <Route path="messages" element={<AdminLayout />}>
+                        <Route path="send" element={<SendMessage />} />
+                    </Route>
                 </Route>
 
 

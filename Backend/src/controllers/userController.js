@@ -9,6 +9,7 @@ import { canActOn, isPrivilegedRole } from '../utils/authorize.js';
 import AuditLog from '../models/AuditLog.js';
 import Company from '../models/Company.js';
 import Invite from '../models/Invite.js';
+import EmployeeProfile from '../models/EmployeeProfile.js';
 
 
 
@@ -19,9 +20,19 @@ async function fetchAndSendUser(req, res, successMessage = 'User retrieved succe
         if (!userId) return res.status(400).json({ message: 'User id is required' });
         const companyId = req.user?.companyId;
         const findQuery = companyId ? { _id: userId, companyId } : { _id: userId };
-        const user = await User.findOne(findQuery).select('-password');
+        // Populate the company reference so company managers can view the
+        // employee's organisation name on the employee detail page.
+        const user = await User.findOne(findQuery)
+            .select('-password')
+            .populate('companyId', 'name companyName');
         if (!user) return res.status(404).json({ message: 'User not found' });
-        return res.status(200).json({ message: successMessage, user });
+        const employeeProfile = await EmployeeProfile.findOne({
+            userId: user._id,
+            ...(companyId ? { companyId } : {})
+        }).select('profileData experienceType status');
+        const userData = user.toObject();
+        userData.onboardingProfile = employeeProfile?.profileData || {};
+        return res.status(200).json({ message: successMessage, user: userData });
     } catch (error) {
         console.error('Error retrieving user:', error);
         return res.status(500).json({ message: 'Error retrieving user', error: error.message });

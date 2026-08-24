@@ -15,11 +15,12 @@ export const sendInvite = async (req, res) => {
   try {
     const sender = req.user; 
     if (!sender) return res.status(401).json({ message: 'Authentication required' });
-    const allowed = ['admin', 'hr', 'manager', 'company_owner'];
+    const allowed = ['admin', 'hr_manager', 'hr', 'manager', 'company_owner'];
     if (!hasAnyRole(sender, allowed)) return res.status(403).json({ message: 'Insufficient permissions' });
 
     const { inviteeEmail, role = 'employee', profileTemplate, expiresDays = 7 } = req.body;
     if (!inviteeEmail) return res.status(400).json({ message: 'inviteeEmail is required' });
+    if (!sender.companyId) return res.status(400).json({ message: 'Company context is required to invite an employee' });
     const allowedRoles = ['hr_manager', 'hr', 'manager', 'project_manager', 'employee', 'mr', ];
     if (!allowedRoles.includes(role)) return res.status(400).json({ message: 'Invalid employee invitation role' });
     const existingUser = await User.findOne({ email: inviteeEmail.toLowerCase().trim() });
@@ -91,13 +92,14 @@ export const acceptInvite = async (req, res) => {
       // ensure user is associated with the inviting company
       if (invite.companyId) user.companyId = invite.companyId;
       if (invite.role) user.role = invite.role;
+      user.name = profileData.fullName || profileData.name || invite.profileTemplate?.fullName || invite.profileTemplate?.name || user.name;
       if (invite.profileTemplate?.mobile) user.mobile = invite.profileTemplate.mobile;
       await user.save();
     } else {
       const hashedPw = await hashPassword(password);
       const nameFromEmail = invite.inviteeEmail.split('@')[0];
       user = new User({
-        name: profileData.name || nameFromEmail,
+        name: profileData.fullName || profileData.name || invite.profileTemplate?.fullName || invite.profileTemplate?.name || nameFromEmail,
         email: invite.inviteeEmail,
         password: hashedPw,
         role: invite.role || 'employee',

@@ -13,7 +13,7 @@ const AddEmployee = ()=>{
   const handleSubmit = async (e)=>{
     e.preventDefault(); setLoading(true); setError(null)
     try{
-      await authApi.sendInviteApi({ inviteeEmail: form.email, role: form.role, profileTemplate: { name: form.name, mobile: form.mobile } })
+      await authApi.sendInviteApi({ inviteeEmail: form.email, role: form.role, profileTemplate: { fullName: form.name, mobile: form.mobile } })
       nav('/users')
     }catch(err){ setError(err.message || JSON.stringify(err)) }
     setLoading(false)
