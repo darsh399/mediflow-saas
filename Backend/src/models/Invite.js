@@ -38,6 +38,10 @@ const inviteSchema = new mongoose.Schema({
   tokenHash: { type: String, unique: true, sparse: true, select: false },
   status: { type: String, enum: ['pending', 'accepted', 'expired', 'revoked'], default: 'pending' },
   sentAt: { type: Date, default: Date.now },
+  emailStatus: { type: String, enum: ['queued', 'sending', 'sent', 'failed'], default: 'queued' },
+  emailSentAt: { type: Date },
+  emailMessageId: { type: String },
+  emailError: { type: String },
   expiresAt: { type: Date },
   acceptedAt: { type: Date },
   // Optional pre-filled profile fields included in the invite

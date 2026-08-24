@@ -1,5 +1,5 @@
 import express from 'express'
-import { login as superLogin, dashboard as superDashboard, logout as superLogout } from '../controllers/superAdminController.js'
+import { login as superLogin,createCompanyOnboard, dashboard as superDashboard, logout as superLogout } from '../controllers/superAdminController.js'
 import authMiddleware from '../middleware/authMiddleware.js'
 import { requireRole } from '../utils/authorize.js'
 
@@ -15,12 +15,31 @@ router.get('/dashboard', authMiddleware, requireRole('super_admin'), superDashbo
 router.post('/logout', authMiddleware, superLogout)
 
 // Create company + subscription + invite (onboarding) - Super Admin only
-router.post('/companies', authMiddleware, requireRole('super_admin'), async (req, res, next) => {
-	// delegate to controller method
-	try {
-		const result = await import('../controllers/superAdminController.js').then(m=>m.createCompanyOnboard(req, res))
-	} catch (err) { next(err) }
-})
+// router.post('/companies', authMiddleware, requireRole('super_admin'), async (req, res, next) => {
+// 	// delegate to controller method
+// 	try {
+// 		const result = await import('../controllers/superAdminController.js').then(m=>m.createCompanyOnboard(req, res))
+// 	} catch (err) { next(err) }
+// })
+
+router.post(
+  '/companies',
+  authMiddleware,
+  requireRole('super_admin'),
+  (req, res, next) => {
+
+    console.log('');
+    console.log('========================================');
+    console.log('🔥 POST /api/superadmin/companies HIT');
+    console.log('🔥 METHOD:', req.method);
+    console.log('🔥 URL:', req.originalUrl);
+    console.log('🔥 BODY:', req.body);
+    console.log('🔥 USER:', req.user);
+    console.log('========================================');
+
+    createCompanyOnboard(req, res, next);
+  }
+);
 
 // list companies
 router.get('/companies', authMiddleware, requireRole('super_admin'), async (req, res, next) => {

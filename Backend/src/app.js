@@ -31,20 +31,26 @@ const app = express();
 
 
 const corsOptions = {
-    // reflect request origin so dev server ports (5173/5174) work without changing env vars
+    
     origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
-// enable CORS with options and explicit preflight handler
-app.use(cors(corsOptions));
-// note: avoid app.options with '*' to prevent path parsing errors in this router
 
-// Fallback headers middleware to ensure CORS headers are always present
+app.use(cors(corsOptions));
+
+app.use((req, res, next) => {
+  console.log(
+    `➡️ ${req.method} ${req.originalUrl}`
+  );
+
+  next();
+});
+
 app.use((req, res, next) => {
     const origin = req.headers.origin || process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
-    // echo the incoming origin when present so browsers accept credentialed responses
+   
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
@@ -56,7 +62,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
-// Simple test route
+
 app.get('/__ping', (req, res) => res.json({ ok: true }))
 
 // Keep old activation emails usable when they point to the API server.
