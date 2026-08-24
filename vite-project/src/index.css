@@ -10,3 +10,46 @@ body {
     background-color: #F9FAFB; /* equivalent to tailwind's gray-50 */
     color: #1F2937; /* equivalent to tailwind's gray-800 */
 }
+
+body.dark-mode {
+    background-color: #111827;
+    color: #e5e7eb;
+}
+
+body.dark-mode .navbar,
+body.dark-mode .card,
+body.dark-mode .card-header,
+body.dark-mode .modal-content,
+body.dark-mode .dropdown-menu,
+body.dark-mode .bg-white {
+    background-color: #1f2937 !important;
+    color: #e5e7eb;
+}
+
+body.dark-mode .text-dark,
+body.dark-mode .text-muted,
+body.dark-mode .form-label,
+body.dark-mode .table {
+    color: #d1d5db !important;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select,
+body.dark-mode .input-group-text {
+    background-color: #111827;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+body.dark-mode .table,
+body.dark-mode .table > :not(caption) > * > * {
+    --bs-table-bg: #1f2937;
+    --bs-table-color: #e5e7eb;
+    --bs-table-border-color: #374151;
+}
+
+body.dark-mode .border,
+body.dark-mode .border-top,
+body.dark-mode .border-bottom {
+    border-color: #374151 !important;
+}
