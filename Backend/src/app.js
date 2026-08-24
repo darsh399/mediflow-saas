@@ -54,6 +54,7 @@ app.use((req, res, next) => {
 });
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use('/uploads', express.static('uploads'));
 
 // Simple test route
 app.get('/__ping', (req, res) => res.json({ ok: true }))

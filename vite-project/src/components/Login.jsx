@@ -245,7 +245,6 @@ const Login = () => {
     const form = e.target;
     const email = form.querySelector('input[type="email"]').value;
     const password = form.querySelector('input[type="password"]').value;
-
     dispatch(loginThunk({ email, password }))
       .unwrap()
       .then((data) => {

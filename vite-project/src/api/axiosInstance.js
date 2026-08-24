@@ -1,6 +1,10 @@
 import axios from 'axios'
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+// In development, connect directly to the local API. This avoids an outdated
+// Vite proxy process forwarding requests to a different backend instance.
+const baseURL = import.meta.env.DEV
+  ? 'http://127.0.0.1:3000'
+  : (import.meta.env.VITE_API_URL || 'http://localhost:3000')
 
 const axiosInstance = axios.create({
   baseURL,
