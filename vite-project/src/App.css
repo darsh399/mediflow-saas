@@ -14,3 +14,24 @@
 
 .card { border-radius: 8px }
 .table-responsive { overflow-x: auto }
+.global-loader {
+  position: fixed;
+  z-index: 2000;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.global-loader__spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-width: 0.16em;
+}

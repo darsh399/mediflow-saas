@@ -610,6 +610,7 @@ import SendMessage from "../pages/messages/SendMessage";
 import ApplyLeave from "../pages/leaves/ApplyLeaves";
 import MyLeaves from "../pages/leaves/MyLeave";
 import LeaveManagement from "../pages/leaves/LeaveManagement";
+import NotFound from "../pages/NotFound";
 
 
 const AppRoutes = () => {
@@ -1257,6 +1258,8 @@ const AppRoutes = () => {
                     </Route>
 
                 </Route>
+
+                <Route path="*" element={<NotFound />} />
 
 
             </Route>

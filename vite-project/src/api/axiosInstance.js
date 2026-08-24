@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { notifyApiLoading } from '../components/GlobalLoader'
 
 // In development, connect directly to the local API. This avoids an outdated
 // Vite proxy process forwarding requests to a different backend instance.
@@ -14,9 +15,24 @@ const axiosInstance = axios.create({
   }
 })
 
-axiosInstance.interceptors.response.use(
-  response => response,
+axiosInstance.interceptors.request.use(
+  config => {
+    notifyApiLoading(true)
+    return config
+  },
   error => {
+    notifyApiLoading(false)
+    return Promise.reject(error)
+  }
+)
+
+axiosInstance.interceptors.response.use(
+  response => {
+    notifyApiLoading(false)
+    return response
+  },
+  error => {
+    notifyApiLoading(false)
     const status = error.response?.status
     const message = error.response?.data?.message || ''
     if (status === 401 || (status === 403 && /disabled|blocked|company account|inactive/i.test(message))) {
