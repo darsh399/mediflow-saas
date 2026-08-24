@@ -5,6 +5,8 @@ const AdminLayout = () => {
   const role = useSelector(state => state.auth.user?.role)
   const canManageCompany = ['admin', 'company_owner', 'manager', 'project_manager'].includes(role)
   const canReviewProfiles = ['admin', 'company_owner', 'hr_manager', 'hr', 'manager'].includes(role)
+  const canApplyLeave = ['admin', 'company_owner', 'hr_manager', 'hr', 'manager', 'project_manager', 'employee', 'mr'].includes(role)
+  const canReviewLeaves = ['admin', 'company_owner', 'hr_manager', 'hr', 'manager', 'project_manager'].includes(role)
   return (
     <div>
       <div className="container-fluid">
@@ -17,8 +19,12 @@ const AdminLayout = () => {
                   <li className="nav-item"><Link className="nav-link" to="/medicals">Medicals</Link></li>
                   <li className="nav-item"><Link className="nav-link" to="/users">Employees</Link></li>
                   <li className="nav-item"><Link className="nav-link" to="/admin/visits">Visits</Link></li>
-                  <li className="nav-item"><Link className="nav-link" to="/hr/leaves">Leaves</Link></li>
                 </>}
+                {canApplyLeave && <>
+                  <li className="nav-item"><Link className="nav-link" to="/leaves/apply">Apply Leave</Link></li>
+                  <li className="nav-item"><Link className="nav-link" to="/leaves/my">My Leave Status</Link></li>
+                </>}
+                {canReviewLeaves && <li className="nav-item"><Link className="nav-link" to="/leaves/manage">Manage Leave Requests</Link></li>}
                 <li className="nav-item"><Link className="nav-link" to="/tasks">Tasks</Link></li>
                 <li className="nav-item"><Link className="nav-link" to="/projects">Projects</Link></li>
                 <li className="nav-item"><Link className="nav-link" to="/orders">Orders</Link></li>

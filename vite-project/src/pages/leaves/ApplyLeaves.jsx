@@ -8,6 +8,7 @@ const ApplyLeave = () => {
     toDate: "",
     reason: "",
   });
+  const [documentFile, setDocumentFile] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [loadingLeaves, setLoadingLeaves] = useState(true);
@@ -19,7 +20,7 @@ const ApplyLeave = () => {
     try {
       setLoadingLeaves(true);
 
-      const response = await leaveApi.listLeaves();
+      const response = await leaveApi.listMyLeaves();
 
       setLeaves(response.leaves || []);
     } catch (err) {
@@ -79,12 +80,13 @@ const ApplyLeave = () => {
     try {
       setLoading(true);
 
-      await leaveApi.applyLeave({
-        leaveType: form.leaveType,
-        fromDate: form.fromDate,
-        toDate: form.toDate,
-        reason: form.reason.trim(),
-      });
+      const payload = new FormData();
+      payload.append("leaveType", form.leaveType);
+      payload.append("fromDate", form.fromDate);
+      payload.append("toDate", form.toDate);
+      payload.append("reason", form.reason.trim());
+      if (documentFile) payload.append("document", documentFile);
+      await leaveApi.applyLeave(payload);
 
       setMessage(
         "Leave application submitted successfully."
@@ -96,6 +98,7 @@ const ApplyLeave = () => {
         toDate: "",
         reason: "",
       });
+      setDocumentFile(null);
 
       await loadLeaves();
     } catch (err) {
@@ -438,6 +441,19 @@ const ApplyLeave = () => {
                 </div>
 
                 <div className="col-12">
+                  <label className="form-label fw-semibold">
+                    Reference document <span className="text-muted fw-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    accept=".pdf,image/jpeg,image/png,image/webp"
+                    onChange={(e) => setDocumentFile(e.target.files?.[0] || null)}
+                  />
+                  <div className="form-text">Upload a PDF or image up to 5 MB, for example a medical certificate.</div>
+                </div>
+
+                <div className="col-12">
                   <button
                     type="submit"
                     className="btn btn-primary px-4 py-2 rounded-3"
@@ -518,6 +534,7 @@ const ApplyLeave = () => {
                     <th className="py-3 border-0">
                       Status
                     </th>
+                    <th className="py-3 border-0">Document</th>
                   </tr>
                 </thead>
 
@@ -571,6 +588,13 @@ const ApplyLeave = () => {
 
                             {leave.status || "Pending"}
                           </span>
+                        </td>
+                        <td>
+                          {leave.document?.url ? (
+                            <a className="btn btn-sm btn-outline-primary" href={leave.document.url} target="_blank" rel="noreferrer">
+                              <i className="bi bi-paperclip me-1"></i>View
+                            </a>
+                          ) : <span className="text-muted small">—</span>}
                         </td>
                       </tr>
                     );

@@ -515,6 +515,8 @@ const LeaveManagement = () => {
                       STATUS
                     </th>
 
+                    <th className="py-3 border-0">DOCUMENT</th>
+
                     <th className="py-3 border-0 pe-4">
                       ACTION
                     </th>
@@ -635,6 +637,14 @@ const LeaveManagement = () => {
                               {leave.status ||
                                 "Pending"}
                             </span>
+                          </td>
+
+                          <td className="py-4">
+                            {leave.document?.url ? (
+                              <a className="btn btn-sm btn-outline-primary" href={leave.document.url} target="_blank" rel="noreferrer">
+                                <i className="bi bi-paperclip me-1"></i>View
+                              </a>
+                            ) : <span className="text-muted small">—</span>}
                           </td>
 
                           <td className="py-4 pe-4">

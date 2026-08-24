@@ -14,7 +14,7 @@ const MyLeaves = () => {
       setLoading(true);
       setError("");
 
-      const response = await leaveApi.listLeaves();
+      const response = await leaveApi.listMyLeaves();
 
       setLeaves(response.leaves || []);
     } catch (err) {

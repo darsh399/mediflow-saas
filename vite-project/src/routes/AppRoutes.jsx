@@ -606,6 +606,9 @@ import Notifications from "../pages/notifications/Notifications";
 import Projects from "../pages/projects/Projects";
 
 import DailyActivity from "../pages/employee/DailyActivity";
+import ApplyLeave from "../pages/leaves/ApplyLeaves";
+import MyLeaves from "../pages/leaves/MyLeave";
+import LeaveManagement from "../pages/leaves/LeaveManagement";
 
 
 const AppRoutes = () => {
@@ -1196,6 +1199,23 @@ const AppRoutes = () => {
 
 
                 {/* ================= HR AREA ================= */}
+
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager", "employee", "mr"]} />}
+                >
+                    <Route path="leaves" element={<AdminLayout />}>
+                        <Route path="apply" element={<ApplyLeave />} />
+                        <Route path="my" element={<MyLeaves />} />
+                    </Route>
+                </Route>
+
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager"]} />}
+                >
+                    <Route path="leaves" element={<AdminLayout />}>
+                        <Route path="manage" element={<LeaveManagement />} />
+                    </Route>
+                </Route>
 
                 <Route
                     element={
