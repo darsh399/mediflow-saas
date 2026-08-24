@@ -9,6 +9,7 @@ import hashPassword from '../utils/hashPassword.js';
 import createToken from '../utils/createToken.js';
 import getCookieOptions from '../utils/getCookieOptions.js'
 import { requireRole } from '../utils/authorize.js';
+import bcrypt from 'bcrypt';
 
 export const sendInvite = async (req, res) => {
   try {
@@ -163,22 +164,6 @@ export const resetPassword = async (req, res) => {
   return res.json({ message: 'Password reset successfully' });
 };
 
-export const changePassword = async (req, res) => {
-  const { currentPassword, password } = req.body;
-  if (!currentPassword || !password || password.length < 8) return res.status(400).json({ message: 'Current password and a new password of at least 8 characters are required' });
-  const user = await User.findById(req.user.id);
-  if (!user || !(await bcrypt.compare(currentPassword, user.password))) return res.status(401).json({ message: 'Current password is incorrect' });
-  user.password = await hashPassword(password);
-  user.passwordChangeRequired = false;
-  await user.save();
-  return res.json({ message: 'Password changed successfully' });
-};
-
-// export const currentUser = async (req, res) => {
-//   const user = await User.findById(req.user.id).select('-password');
-//   if (!user) return res.status(401).json({ message: 'User account not found' });
-//   return res.json({ user });
-// };
 
 export const currentUser = async (req, res) => {
   try {
@@ -205,6 +190,65 @@ export const currentUser = async (req, res) => {
     return res.status(500).json({
       message: "Failed to fetch current user",
       error: error.message,
+    });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: "Current password and new password are required",
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        message: "New password must be at least 8 characters",
+      });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({
+        message: "New password must be different from current password",
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
+
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        message: "Current password is incorrect",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+
+    await user.save();
+
+    return res.status(200).json({
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
+
+    return res.status(500).json({
+      message: "Unable to change password",
     });
   }
 };

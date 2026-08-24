@@ -479,6 +479,9 @@ const Header = () => {
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
 
   const profileRef = useRef(null);
   const navbarRef = useRef(null);
@@ -577,6 +580,14 @@ const Header = () => {
       );
     };
   }, []);
+
+  useEffect(() => {
+    const theme = isDarkMode ? "dark" : "light";
+
+    document.documentElement.setAttribute("data-bs-theme", theme);
+    document.body.classList.toggle("dark-mode", isDarkMode);
+    localStorage.setItem("theme", theme);
+  }, [isDarkMode]);
 
   const closeMenus = () => {
     setOpen(false);
@@ -764,6 +775,27 @@ const Header = () => {
                 zIndex: 3000,
               }}
             >
+              <button
+                type="button"
+                className="btn dark-mode-toggle rounded-circle d-inline-flex align-items-center justify-content-center"
+                aria-label={`Switch to ${
+                  isDarkMode ? "light" : "dark"
+                } mode`}
+                aria-pressed={isDarkMode}
+                title={`Switch to ${
+                  isDarkMode ? "light" : "dark"
+                } mode`}
+                onClick={() => setIsDarkMode((value) => !value)}
+              >
+                <i
+                  className={`bi bi-${
+                    isDarkMode
+                      ? "brightness-high-fill"
+                      : "moon-stars-fill"
+                  }`}
+                ></i>
+              </button>
+
               {signedIn ? (
                 <>
                   <NotificationBell />
@@ -1061,6 +1093,28 @@ const Header = () => {
 
           .navbar .btn:hover {
             transform: translateY(-1px);
+          }
+
+          .dark-mode-toggle {
+            width: 42px;
+            height: 42px;
+            border: 1px solid #dee2e6;
+            background: #fff;
+            color: #495057;
+            font-size: 18px;
+            transition: all 0.2s ease;
+          }
+
+          .dark-mode-toggle:hover {
+            border-color: #0d6efd;
+            background: #f3f7ff;
+            color: #0d6efd;
+          }
+
+          body.dark-mode .dark-mode-toggle {
+            border-color: #4b5563;
+            background: #111827;
+            color: #fbbf24;
           }
 
           @keyframes profileDropdown {

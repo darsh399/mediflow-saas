@@ -8,8 +8,6 @@ export function hasAnyRole(user, roles = []) {
 export function requireRole(...roles) {
   return (req, res, next) => {
     const user = req.user;
-    console.log('getting roles', ...roles)
-    console.log(user, 'for sending requies')
     if (!user) return res.status(401).json({ message: 'Authentication required' });
     if (!hasAnyRole(user, roles)) return res.status(403).json({ message: 'Insufficient permissions' });
     return next();
