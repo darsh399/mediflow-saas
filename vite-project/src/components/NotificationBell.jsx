@@ -17,11 +17,11 @@ const NotificationBell = ()=>{
 
   return (
     <div className="dropdown position-relative">
-      <button className="btn btn-outline-secondary position-relative" onClick={()=>setOpen(value => !value)}>
+      <button className="btn btn-outline-secondary position-relative" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`} aria-expanded={open} onClick={()=>setOpen(value => !value)}>
         🔔
         {unread>0 && <span className="badge bg-danger position-absolute" style={{top:-6,right:-6}}>{unread}</span>}
       </button>
-      {open && <ul className="dropdown-menu dropdown-menu-end show" style={{minWidth:300}}>
+      {open && <ul className="dropdown-menu dropdown-menu-end show notification-menu">
         <li className="dropdown-header">Notifications</li>
         {items.length===0 && <li className="dropdown-item text-muted">No notifications</li>}
         {items.map(n=> (

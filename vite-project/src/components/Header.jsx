@@ -592,6 +592,15 @@ const Header = () => {
   const closeMenus = () => {
     setOpen(false);
     setProfileOpen(false);
+    window.dispatchEvent(new CustomEvent("mediflow:close-sidebar"));
+  };
+
+  const toggleNavigation = () => {
+    setOpen((value) => !value);
+    setProfileOpen(false);
+    if (signedIn && user?.role !== "super_admin") {
+      window.dispatchEvent(new CustomEvent("mediflow:toggle-sidebar"));
+    }
   };
 
   const initials = (
@@ -692,10 +701,7 @@ const Header = () => {
             aria-controls="mainNavbar"
             aria-expanded={open}
             aria-label="Toggle navigation"
-            onClick={() => {
-              setOpen((value) => !value);
-              setProfileOpen(false);
-            }}
+            onClick={toggleNavigation}
           >
             <span className="navbar-toggler-icon"></span>
           </button>
@@ -811,28 +817,6 @@ const Header = () => {
                     {formattedRole}
                   </span>
 
-                  {user?.role === "super_admin" && (
-                    <Link
-                      to="/superadmin/dashboard"
-                      className="btn btn-primary rounded-3 px-3"
-                      onClick={closeMenus}
-                    >
-                      <i className="bi bi-speedometer2 me-1"></i>
-                      Dashboard
-                    </Link>
-                  )}
-
-                  {user?.role === "company_owner" && (
-                    <Link
-                      to="/admin"
-                      className="btn btn-primary rounded-3 px-3"
-                      onClick={closeMenus}
-                    >
-                      <i className="bi bi-speedometer2 me-1"></i>
-                      Dashboard
-                    </Link>
-                  )}
-
                   <div
                     ref={profileRef}
                     className="position-relative"
@@ -881,7 +865,7 @@ const Header = () => {
 
                     {profileOpen && (
                       <div
-                        className="position-absolute bg-white rounded-4 shadow-lg border p-3"
+                        className="profile-menu position-absolute bg-white rounded-4 shadow-lg border p-3"
                         style={{
                           width: "320px",
                           right: 0,
