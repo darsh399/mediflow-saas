@@ -84,47 +84,485 @@ export const dashboard = async (req, res) => {
   }
 }
 
+// export const createCompanyOnboard = async (req, res) => {
+//   try {
+//     const { companyName, companyEmail, companyMobile, companyAddress, companyWebsite, ownerName, ownerEmail, ownerMobile, role = 'company_owner', plan, startDate, endDate, expiresDays = 2 } = req.body
+
+//     if (!ownerName || !ownerEmail || !ownerMobile) return res.status(400).json({ message: 'ownerName, ownerEmail and ownerMobile are required' })
+//     const allowedRoles = ['company_owner', 'hr_manager', 'hr', 'manager', 'project_manager', 'employee']
+//     if (!allowedRoles.includes(role)) return res.status(400).json({ message: 'Invalid invitation role' })
+//     const existingUser = await User.findOne({ email: ownerEmail.toLowerCase().trim() })
+//     if (existingUser) return res.status(409).json({ message: 'Owner email already exists' })
+//     const resolvedCompanyName = companyName?.trim() || `${ownerName.trim()}'s Company`
+//     // create company with contact fields if provided
+//     const company = await companyService.createCompany({ companyName: resolvedCompanyName, ownerId: null, status: 'PENDING_APPROVAL', companyEmail, companyMobile, companyAddress, companyWebsite })
+
+//     // create subscription
+//     const start = startDate ? new Date(startDate) : new Date()
+//     const end = endDate ? new Date(endDate) : new Date(Date.now() + 365*24*60*60*1000)
+//     const subscription = await subscriptionService.createSubscription({ companyId: company._id, plan: plan || '1_YEAR', startDate: start, endDate: end })
+
+//     // create invite for owner (owner will accept and become user)
+//     const token = generateInviteToken()
+//     const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+//     const expiresAt = new Date(Date.now() + Number(expiresDays) * 24 * 60 * 60 * 1000)
+//     const invite = new Invite({ inviter: req.user.id, companyId: company._id, inviteeEmail: ownerEmail, role, tokenHash, expiresAt, profileTemplate: { name: ownerName, mobile: ownerMobile } })
+//     await invite.save()
+
+//     // send email
+//     const base = req.headers.origin || process.env.FRONTEND_INVITE_URL || process.env.CLIENT_URL || 'http://localhost:5173'
+//     const inviteLink = `${base.replace(/\/$/, '')}/activate-account?token=${token}`
+
+//     try {
+//       await mailService.sendMail({ to: ownerEmail, subject: `Invitation to join ${resolvedCompanyName}`, text: `You have been invited as ${role} to join ${resolvedCompanyName}. Activate: ${inviteLink}`, html: `<p>You have been invited as <strong>${role.replace('_', ' ')}</strong> to join <strong>${resolvedCompanyName}</strong>.</p><p><a href="${inviteLink}">Activate account</a></p>` })
+//     } catch (err) {
+//       console.error('Failed to send invite email via mailService:', err && err.message ? err.message : err)
+//     }
+
+//     return res.status(201).json({ message: 'Company created and invitation sent', company, subscription, role })
+//   } catch (err) {
+//     console.error('Onboard create error:', err)
+//     return res.status(500).json({ message: 'Server error', error: err.message })
+//   }
+// }
+
 export const createCompanyOnboard = async (req, res) => {
+  console.log("🔥🔥🔥 CREATE COMPANY CONTROLLER HIT 🔥🔥🔥");
+
   try {
-    const { companyName, companyEmail, companyMobile, companyAddress, companyWebsite, ownerName, ownerEmail, ownerMobile, role = 'company_owner', plan, startDate, endDate, expiresDays = 2 } = req.body
+    console.log("📦 Request body:", req.body);
 
-    if (!ownerName || !ownerEmail || !ownerMobile) return res.status(400).json({ message: 'ownerName, ownerEmail and ownerMobile are required' })
-    const allowedRoles = ['company_owner', 'hr_manager', 'hr', 'manager', 'project_manager', 'employee']
-    if (!allowedRoles.includes(role)) return res.status(400).json({ message: 'Invalid invitation role' })
-    const existingUser = await User.findOne({ email: ownerEmail.toLowerCase().trim() })
-    if (existingUser) return res.status(409).json({ message: 'Owner email already exists' })
-    const resolvedCompanyName = companyName?.trim() || `${ownerName.trim()}'s Company`
-    // create company with contact fields if provided
-    const company = await companyService.createCompany({ companyName: resolvedCompanyName, ownerId: null, status: 'PENDING_APPROVAL', companyEmail, companyMobile, companyAddress, companyWebsite })
+    const {
+      companyName,
+      companyEmail,
+      companyMobile,
+      companyAddress,
+      companyWebsite,
+      ownerName,
+      ownerEmail,
+      ownerMobile,
+      role = "company_owner",
+      plan,
+      startDate,
+      endDate,
+      expiresDays = 2,
+    } = req.body;
 
-    // create subscription
-    const start = startDate ? new Date(startDate) : new Date()
-    const end = endDate ? new Date(endDate) : new Date(Date.now() + 365*24*60*60*1000)
-    const subscription = await subscriptionService.createSubscription({ companyId: company._id, plan: plan || '1_YEAR', startDate: start, endDate: end })
+    // --------------------------------
+    // VALIDATION
+    // --------------------------------
 
-    // create invite for owner (owner will accept and become user)
-    const token = generateInviteToken()
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
-    const expiresAt = new Date(Date.now() + Number(expiresDays) * 24 * 60 * 60 * 1000)
-    const invite = new Invite({ inviter: req.user.id, companyId: company._id, inviteeEmail: ownerEmail, role, tokenHash, expiresAt, profileTemplate: { name: ownerName, mobile: ownerMobile } })
-    await invite.save()
-
-    // send email
-    const base = req.headers.origin || process.env.FRONTEND_INVITE_URL || process.env.CLIENT_URL || 'http://localhost:5173'
-    const inviteLink = `${base.replace(/\/$/, '')}/activate-account?token=${token}`
-
-    try {
-      await mailService.sendMail({ to: ownerEmail, subject: `Invitation to join ${resolvedCompanyName}`, text: `You have been invited as ${role} to join ${resolvedCompanyName}. Activate: ${inviteLink}`, html: `<p>You have been invited as <strong>${role.replace('_', ' ')}</strong> to join <strong>${resolvedCompanyName}</strong>.</p><p><a href="${inviteLink}">Activate account</a></p>` })
-    } catch (err) {
-      console.error('Failed to send invite email via mailService:', err && err.message ? err.message : err)
+    if (!ownerName || !ownerEmail || !ownerMobile) {
+      return res.status(400).json({
+        message: "Owner name, email and mobile are required",
+      });
     }
 
-    return res.status(201).json({ message: 'Company created and invitation sent', company, subscription, role })
+    const allowedRoles = [
+      "company_owner",
+      "hr_manager",
+      "hr",
+      "manager",
+      "project_manager",
+      "employee",
+    ];
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        message: "Invalid invitation role",
+      });
+    }
+
+    const normalizedOwnerEmail = ownerEmail
+      .toLowerCase()
+      .trim();
+
+    // --------------------------------
+    // CHECK EXISTING USER
+    // --------------------------------
+
+    const existingUser = await User.findOne({
+      email: normalizedOwnerEmail,
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        message: "Owner email already exists",
+      });
+    }
+
+    // --------------------------------
+    // CREATE COMPANY
+    // --------------------------------
+
+    const resolvedCompanyName =
+      companyName?.trim() ||
+      `${ownerName.trim()}'s Company`;
+
+    console.log("🏢 Creating company...");
+
+    const company =
+      await companyService.createCompany({
+        companyName: resolvedCompanyName,
+        ownerId: null,
+        status: "PENDING_APPROVAL",
+        companyEmail,
+        companyMobile,
+        companyAddress,
+        companyWebsite,
+      });
+
+    console.log(
+      "✅ Company created:",
+      company._id
+    );
+
+    // --------------------------------
+    // CREATE SUBSCRIPTION
+    // --------------------------------
+
+    const start = startDate
+      ? new Date(startDate)
+      : new Date();
+
+    const end = endDate
+      ? new Date(endDate)
+      : new Date(
+          Date.now() +
+            365 *
+              24 *
+              60 *
+              60 *
+              1000
+        );
+
+    console.log("💳 Creating subscription...");
+
+    const subscription =
+      await subscriptionService.createSubscription({
+        companyId: company._id,
+        plan: plan || "1_YEAR",
+        startDate: start,
+        endDate: end,
+      });
+
+    console.log("✅ Subscription created");
+
+    // --------------------------------
+    // GENERATE INVITATION TOKEN
+    // --------------------------------
+
+    const token = generateInviteToken();
+
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    const expiresAt =
+      new Date(
+        Date.now() +
+          Number(expiresDays) *
+            24 *
+            60 *
+            60 *
+            1000
+      );
+
+    // --------------------------------
+    // CREATE INVITE
+    // --------------------------------
+
+    console.log("📨 Creating invitation...");
+
+    const invite = new Invite({
+      inviter: req.user.id,
+
+      companyId: company._id,
+
+      inviteeEmail: normalizedOwnerEmail,
+
+      role,
+
+      tokenHash,
+
+      expiresAt,
+
+      emailStatus: "queued",
+
+      profileTemplate: {
+        name: ownerName,
+        mobile: ownerMobile,
+      },
+    });
+
+    await invite.save();
+
+    console.log("✅ Invitation created");
+
+    // --------------------------------
+    // INVITATION LINK
+    // --------------------------------
+
+    const base =
+      process.env.FRONTEND_INVITE_URL ||
+      process.env.CLIENT_URL ||
+      req.headers.origin ||
+      "http://localhost:5173";
+
+    const inviteLink =
+      `${base.replace(/\/$/, "")}/activate-account?token=${token}`;
+
+    const invitationEmail = { status: "queued" };
+
+    // --------------------------------
+    // Return immediately; delivery is tracked on the invitation record.
+    // --------------------------------
+
+    const sendResponse = () => res.status(201).json({
+      message: "Company created. Invitation email is being sent.",
+      company,
+      subscription,
+      role,
+      invitationEmail,
+    });
+
+    // --------------------------------
+    // Send after the response so SMTP latency does not delay company creation.
+    // --------------------------------
+
+    setImmediate(() => Promise.resolve().then(async () => {
+      try {
+        await Invite.findByIdAndUpdate(invite._id, {
+          emailStatus: "sending",
+          emailError: undefined,
+        });
+        console.log("");
+        console.log("========================================");
+        console.log("📧 BACKGROUND EMAIL PROCESS STARTED");
+        console.log("========================================");
+
+        console.log(
+          "Recipient:",
+          normalizedOwnerEmail
+        );
+
+        console.log(
+          "Company:",
+          resolvedCompanyName
+        );
+
+        let info;
+        let sendError;
+        const retryDelays = [0, 5000, 15000];
+
+        for (const [attempt, retryDelay] of retryDelays.entries()) {
+          if (retryDelay) {
+            await new Promise((resolve) => setTimeout(resolve, retryDelay));
+          }
+
+          try {
+            info = await mailService.sendMail({
+            to: normalizedOwnerEmail,
+
+            subject:
+              `Invitation to join ${resolvedCompanyName}`,
+
+            text: `
+Hello ${ownerName},
+
+You have been invited as ${role.replace(
+              "_",
+              " "
+            )} to join ${resolvedCompanyName}.
+
+Please activate your account using the link below:
+
+${inviteLink}
+
+This invitation will expire in ${expiresDays} day(s).
+
+Regards,
+MediFlow
+            `.trim(),
+
+            html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Company Invitation</title>
+</head>
+
+<body
+  style="
+    margin:0;
+    padding:0;
+    background:#f5f7fb;
+    font-family:Arial,Helvetica,sans-serif;
+  "
+>
+
+  <div
+    style="
+      max-width:600px;
+      margin:40px auto;
+      background:#ffffff;
+      padding:35px;
+      border-radius:12px;
+      border:1px solid #e5e7eb;
+    "
+  >
+
+    <h2
+      style="
+        margin-top:0;
+        color:#212529;
+      "
+    >
+      You're invited to join ${resolvedCompanyName}
+    </h2>
+
+    <p>
+      Hello <strong>${ownerName}</strong>,
+    </p>
+
+    <p>
+      You have been invited as
+      <strong>
+        ${role.replace("_", " ")}
+      </strong>
+      to join
+      <strong>
+        ${resolvedCompanyName}
+      </strong>.
+    </p>
+
+    <p>
+      Click the button below to activate your account.
+    </p>
+
+    <p style="margin:30px 0;">
+      <a
+        href="${inviteLink}"
+        style="
+          display:inline-block;
+          padding:13px 22px;
+          background:#0d6efd;
+          color:#ffffff;
+          text-decoration:none;
+          border-radius:7px;
+          font-weight:bold;
+        "
+      >
+        Activate Account
+      </a>
+    </p>
+
+    <p>
+      If the button does not work, copy and paste this link:
+    </p>
+
+    <p
+      style="
+        word-break:break-all;
+        color:#0d6efd;
+      "
+    >
+      ${inviteLink}
+    </p>
+
+    <p
+      style="
+        margin-top:30px;
+        color:#6c757d;
+        font-size:14px;
+      "
+    >
+      This invitation will expire in
+      ${expiresDays} day(s).
+    </p>
+
+    <hr
+      style="
+        border:none;
+        border-top:1px solid #eeeeee;
+        margin:30px 0;
+      "
+    />
+
+    <p
+      style="
+        color:#6c757d;
+        font-size:13px;
+      "
+    >
+      Regards,<br/>
+      MediFlow
+    </p>
+
+  </div>
+
+</body>
+</html>
+            `,
+            });
+            break;
+          } catch (error) {
+            sendError = error;
+            console.error(`Invitation email attempt ${attempt + 1}/${retryDelays.length} failed for ${normalizedOwnerEmail}:`, error?.message);
+          }
+        }
+
+        if (!info) throw sendError;
+
+        await Invite.findByIdAndUpdate(invite._id, {
+          emailStatus: "sent",
+          emailSentAt: new Date(),
+          emailMessageId: info?.messageId || undefined,
+          emailError: undefined,
+        });
+
+        console.log("");
+        console.log("========================================");
+        console.log("✅ INVITATION EMAIL SENT");
+        console.log("Message ID:", info?.messageId);
+        console.log("To:", normalizedOwnerEmail);
+        console.log("========================================");
+        console.log("");
+      } catch (err) {
+        await Invite.findByIdAndUpdate(invite._id, {
+          emailStatus: "failed",
+          emailError: err?.message || "Unknown email delivery error",
+        });
+        console.error("");
+        console.error("========================================");
+        console.error("❌ INVITATION EMAIL FAILED");
+        console.error("========================================");
+        console.error("To:", normalizedOwnerEmail);
+        console.error("Message:", err?.message);
+        console.error("Code:", err?.code);
+        console.error("Response:", err?.response);
+        console.error("Command:", err?.command);
+        console.error("========================================");
+        console.error("");
+      }
+    }));
+
+    return sendResponse();
+
   } catch (err) {
-    console.error('Onboard create error:', err)
-    return res.status(500).json({ message: 'Server error', error: err.message })
+    console.error(
+      "❌ Onboard create error:",
+      err
+    );
+
+    return res.status(500).json({
+      message: "Server error",
+      error: err.message,
+    });
   }
-}
+};
 
 export const listCompanies = async (req, res) => {
   try {

@@ -180,7 +180,7 @@ const Profile = () => {
 
           <button
             className="btn btn-primary rounded-3 px-4 shadow-sm"
-            onClick={() => nav("/profile/edit")}
+            onClick={() => nav("/admin/profile/edit")}
           >
             <i className="bi bi-pencil-square me-2"></i>
             Edit Profile

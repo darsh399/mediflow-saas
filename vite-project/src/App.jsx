@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { validateSession } from './redux/slices/authSlice';
 import './App.css';
+import GlobalLoader from './components/GlobalLoader';
 const App = () => {
   const dispatch = useDispatch()
   const token = useSelector(state => state.auth.token)
@@ -16,6 +17,7 @@ const App = () => {
 
   return(
     <div className="App">
+      <GlobalLoader />
       <AppRoutes/>
     </div>
   )
