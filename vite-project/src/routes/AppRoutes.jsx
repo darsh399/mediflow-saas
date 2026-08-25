@@ -579,6 +579,7 @@ import AddMedical from "../pages/admin/AddMedical";
 import MedicalDetails from "../pages/admin/MedicalDetails";
 
 import VisitRecords from "../pages/admin/VisitRecords";
+import TopPerformers from "../pages/admin/TopPerformers";
 
 import AddVisit from "../pages/mr/AddVisit";
 
@@ -621,6 +622,7 @@ import AuditLog from "../pages/audit/AuditLog";
 import Billing from "../pages/billing/Billing";
 import NotFound from "../pages/NotFound";
 import Attendance from "../pages/attendance/Attendance";
+import EmployeeAttendanceHistory from "../pages/attendance/EmployeeAttendanceHistory";
 import Calendar from "../pages/calendar/Calendar";
 import SalaryPortal from "../pages/salary/SalaryPortal";
 
@@ -829,6 +831,7 @@ const AppRoutes = () => {
                 >
                     <Route path="attendance" element={<AdminLayout />}>
                         <Route index element={<Attendance />} />
+                        <Route path=":employeeId" element={<EmployeeAttendanceHistory />} />
                     </Route>
                 </Route>
 
@@ -1184,6 +1187,11 @@ const AppRoutes = () => {
                         <Route
                             path="visits/:employeeId"
                             element={<VisitRecords />}
+                        />
+
+                        <Route
+                            path="top-performers"
+                            element={<TopPerformers />}
                         />
 
                         <Route

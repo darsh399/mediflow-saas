@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchUser, changeUserStatus, promoteEmployee } from '../../redux/slices/userSlice'
-import { useNavigate, useParams } from 'react-router-dom'
+import { fetchTopPerformers } from '../../redux/slices/visitSlice'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 
 const PROMOTERS = ['admin', 'company_owner', 'hr_manager', 'hr']
+const TOP_PERFORMER_VIEWERS = ['admin', 'company_owner', 'hr_manager']
+const TOP_PERFORMER_RANGES = [['TODAY', 'Today'], ['THIS_WEEK', 'This week'], ['THIS_MONTH', 'This month']]
 const errorMessage = (error) => error?.message || error?.response?.data?.message || 'Unable to promote employee'
 
 const UserDetails = () => {
@@ -14,9 +17,12 @@ const UserDetails = () => {
   const { current, loading, error } = useSelector((state) => state.users)
   const actorRole = useSelector((state) => state.auth.user?.role)
   const canPromote = PROMOTERS.includes(actorRole)
+  const canViewTopPerformer = TOP_PERFORMER_VIEWERS.includes(actorRole)
+  const topPerformer = useSelector((state) => state.visits.topPerformers)
   const [promoteForm, setPromoteForm] = useState({ designation: '', department: '', note: '', effectiveDate: '' })
   const [promoting, setPromoting] = useState(false)
   const [promoteError, setPromoteError] = useState('')
+  const [performerRange, setPerformerRange] = useState('THIS_WEEK')
 
   useEffect(() => {
     if (id) {
@@ -25,6 +31,10 @@ const UserDetails = () => {
       return () => window.clearInterval(refresh)
     }
   }, [dispatch, id])
+
+  useEffect(() => {
+    if (id && canViewTopPerformer) dispatch(fetchTopPerformers({ employeeId: id, range: performerRange, limit: 5 }))
+  }, [dispatch, id, canViewTopPerformer, performerRange])
 
   useEffect(() => {
     if (current) {
@@ -766,6 +776,45 @@ const UserDetails = () => {
                 </form>
               </div>
 
+            </div>
+          )}
+
+          {/* Top Performer */}
+          {canViewTopPerformer && (
+            <div className="card border-0 shadow-sm mb-4">
+              <div className="card-header bg-white border-0 pt-4 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                  <h5 className="fw-bold mb-1"><i className="bi bi-trophy text-warning me-1" />Top Performer</h5>
+                  <p className="text-muted small mb-0">Work visits completed by this employee</p>
+                </div>
+                <select className="form-select form-select-sm w-auto" value={performerRange} onChange={(event) => setPerformerRange(event.target.value)}>
+                  {TOP_PERFORMER_RANGES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
+              </div>
+
+              <div className="card-body px-4">
+                {topPerformer.loading ? (
+                  <div className="text-muted small">Loading...</div>
+                ) : topPerformer.error ? (
+                  <div className="text-muted small">Visit stats are not available for this employee.</div>
+                ) : (
+                  <>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <span className="text-muted">Rank</span>
+                      <span className="fw-semibold">{topPerformer.employee?.rank ? `#${topPerformer.employee.rank} of ${topPerformer.totalRanked}` : 'Unranked'}</span>
+                    </div>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <span className="text-muted">Completed visits</span>
+                      <span className="fw-semibold text-success">{topPerformer.employee?.completedCount ?? 0}</span>
+                    </div>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <span className="text-muted">Total visits</span>
+                      <span className="fw-semibold">{topPerformer.employee?.visitCount ?? 0}</span>
+                    </div>
+                    <Link to="/admin/top-performers" className="btn btn-sm btn-outline-primary w-100">View full leaderboard</Link>
+                  </>
+                )}
+              </div>
             </div>
           )}
 

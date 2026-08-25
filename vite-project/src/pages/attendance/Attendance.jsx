@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import attendanceApi from '../../api/attendanceApi'
-import userApi from '../../api/userApi'
 
 const REVIEWER_ROLES = ['admin', 'company_owner', 'hr_manager', 'hr']
 
@@ -34,15 +34,13 @@ function requestMessage(requestError, fallback) {
 
 export default function Attendance() {
   const role = useSelector((state) => state.auth.user?.role)
+  const navigate = useNavigate()
   const isReviewer = REVIEWER_ROLES.includes(role)
   const [today, setToday] = useState(null)
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
-  const [selectedRecord, setSelectedRecord] = useState(null)
-  const [selectedEmployee, setSelectedEmployee] = useState(null)
-  const [detailsLoading, setDetailsLoading] = useState(false)
   const [month, setMonth] = useState('')
   const [year, setYear] = useState('')
 
@@ -83,19 +81,8 @@ export default function Attendance() {
     </div>
   )
 
-  async function showDetails(record) {
-    setSelectedRecord(record)
-    setSelectedEmployee(null)
-    if (!record.employeeId?._id) return
-    try {
-      setDetailsLoading(true)
-      const response = await userApi.fetchUser(record.employeeId._id)
-      setSelectedEmployee(response.user || response)
-    } catch (requestError) {
-      setError(requestMessage(requestError, 'Unable to load employee details'))
-    } finally {
-      setDetailsLoading(false)
-    }
+  function viewEmployeeHistory(employeeId) {
+    if (employeeId) navigate(`/attendance/${employeeId}`)
   }
 
   async function runAction(action) {
@@ -136,9 +123,8 @@ export default function Attendance() {
         {error && <div className="alert alert-danger" role="alert">{error}</div>}
         {monthYearFilter}
         {loading ? <div className="alert alert-info">Loading company attendance...</div> : (
-          <div className="card border-0 shadow-sm"><div className="card-body"><h5 className="fw-bold mb-3">Recent attendance</h5><div className="table-responsive"><table className="table align-middle mb-0"><thead><tr><th>Employee</th><th>Role</th><th>Date</th><th>Status</th><th>Check-in</th><th>Check-out</th><th>Total hours</th></tr></thead><tbody>{records.length ? records.map((record) => { const employee = record.employeeId || {}; const recordSessions = record.sessions?.length ? record.sessions : record.checkIn ? [{ checkIn: record.checkIn, checkOut: record.checkOut }] : []; const firstSession = recordSessions[0]; const lastSession = recordSessions[recordSessions.length - 1]; return <tr key={record._id} role="button" tabIndex="0" onClick={() => showDetails(record)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') showDetails(record) }}><td><button type="button" className="btn btn-link p-0 fw-semibold text-start" onClick={(event) => { event.stopPropagation(); showDetails(record) }}>{employee.name || 'Unknown employee'}</button><div className="small text-muted">{employee.email || 'No email'}</div></td><td>{String(employee.role || '-').replace(/_/g, ' ')}</td><td>{new Date(record.date).toLocaleDateString()}</td><td>{record.status || '-'}</td><td>{formatTime(firstSession?.checkIn)}</td><td>{formatTime(lastSession?.checkOut)}</td><td>{formatDuration(record.totalWorkingHours)}</td></tr> }) : <tr><td colSpan="7" className="text-center text-muted py-4">No attendance records yet.</td></tr>}</tbody></table></div></div></div>
+          <div className="card border-0 shadow-sm"><div className="card-body"><h5 className="fw-bold mb-3">Recent attendance</h5><div className="table-responsive"><table className="table align-middle mb-0"><thead><tr><th>Employee</th><th>Role</th><th>Date</th><th>Status</th><th>Check-in</th><th>Check-out</th><th>Total hours</th><th /></tr></thead><tbody>{records.length ? records.map((record) => { const employee = record.employeeId || {}; const recordSessions = record.sessions?.length ? record.sessions : record.checkIn ? [{ checkIn: record.checkIn, checkOut: record.checkOut }] : []; const firstSession = recordSessions[0]; const lastSession = recordSessions[recordSessions.length - 1]; return <tr key={record._id} role="button" tabIndex="0" onClick={() => viewEmployeeHistory(employee._id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') viewEmployeeHistory(employee._id) }}><td><button type="button" className="btn btn-link p-0 fw-semibold text-start" onClick={(event) => { event.stopPropagation(); viewEmployeeHistory(employee._id) }}>{employee.name || 'Unknown employee'}</button><div className="small text-muted">{employee.email || 'No email'}</div></td><td>{String(employee.role || '-').replace(/_/g, ' ')}</td><td>{new Date(record.date).toLocaleDateString()}</td><td>{record.status || '-'}</td><td>{formatTime(firstSession?.checkIn)}</td><td>{formatTime(lastSession?.checkOut)}</td><td>{formatDuration(record.totalWorkingHours)}</td><td className="text-end"><button type="button" className="btn btn-sm btn-outline-primary" onClick={(event) => { event.stopPropagation(); viewEmployeeHistory(employee._id) }}>View full history</button></td></tr> }) : <tr><td colSpan="8" className="text-center text-muted py-4">No attendance records yet.</td></tr>}</tbody></table></div></div></div>
         )}
-        {selectedRecord && <div className="modal d-block" tabIndex="-1" role="dialog" onClick={() => setSelectedRecord(null)}><div className="modal-dialog modal-lg modal-dialog-centered" role="document" onClick={(event) => event.stopPropagation()}><div className="modal-content"><div className="modal-header"><h5 className="modal-title">Attendance details</h5><button type="button" className="btn-close" aria-label="Close" onClick={() => setSelectedRecord(null)} /></div><div className="modal-body">{detailsLoading ? <div className="text-center py-4"><span className="spinner-border text-primary" /></div> : <><h5>{selectedEmployee?.name || selectedRecord.employeeId?.name || 'Unknown employee'}</h5><p className="text-muted mb-3">{selectedEmployee?.email || selectedRecord.employeeId?.email || 'No email'} · {String(selectedEmployee?.role || selectedRecord.employeeId?.role || '-').replace(/_/g, ' ')}</p><dl className="row mb-3"><dt className="col-sm-4">Date</dt><dd className="col-sm-8">{new Date(selectedRecord.date).toLocaleDateString()}</dd><dt className="col-sm-4">Status</dt><dd className="col-sm-8">{selectedRecord.status || '-'}</dd><dt className="col-sm-4">Total working hours</dt><dd className="col-sm-8">{formatDuration(selectedRecord.totalWorkingHours)}</dd></dl><h6 className="fw-bold">Sessions and breaks</h6>{(selectedRecord.sessions?.length ? selectedRecord.sessions : selectedRecord.checkIn ? [{ checkIn: selectedRecord.checkIn, checkOut: selectedRecord.checkOut, breaks: selectedRecord.breaks || [] }] : []).length ? (selectedRecord.sessions?.length ? selectedRecord.sessions : [{ checkIn: selectedRecord.checkIn, checkOut: selectedRecord.checkOut, breaks: selectedRecord.breaks || [] }]).map((session, index) => <div className="border rounded p-3 mb-2" key={`${selectedRecord._id}-session-${index}`}><div>{formatTime(session.checkIn)} - {formatTime(session.checkOut)}</div>{session.breaks?.length ? <div className="small text-muted">Breaks: {session.breaks.map((item) => `${formatTime(item.startedAt)} - ${formatTime(item.endedAt)}`).join(', ')}</div> : <div className="small text-muted">No breaks recorded</div>}</div>) : <p className="text-muted">No session details recorded.</p>}</>}</div></div></div></div>}
       </div>
     )
   }

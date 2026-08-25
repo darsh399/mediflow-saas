@@ -53,14 +53,14 @@ export async function generateSalarySlipPdf({ slip, employee, company }) {
   sectionDivider(doc)
 
   const bank = slip.bankDetailsSnapshot
-  if (bank?.accountNumberMasked) {
+  if (bank?.accountNumber) {
     doc.font('Helvetica-Bold').fontSize(11).text('Bank Details', 50, doc.y)
     doc.y += 18
     const bankRow1 = doc.y
     doc.font('Helvetica-Bold').fontSize(10).text('Bank:', 50, bankRow1)
     doc.font('Helvetica').text(bank.bankName || '-', 170, bankRow1)
     doc.font('Helvetica-Bold').text('Account:', 320, bankRow1)
-    doc.font('Helvetica').text(bank.accountNumberMasked || '-', 380, bankRow1)
+    doc.font('Helvetica').text(bank.accountNumber || '-', 380, bankRow1)
     const bankRow2 = bankRow1 + 20
     doc.font('Helvetica-Bold').text('IFSC:', 50, bankRow2)
     doc.font('Helvetica').text(bank.ifscCode || '-', 170, bankRow2)

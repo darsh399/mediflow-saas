@@ -44,3 +44,8 @@ export async function markNotificationRead(req, res) {
   if (!notification) return res.status(404).json({ message: 'Notification not found' });
   return res.json({ notification });
 }
+
+export async function markAllNotificationsRead(req, res) {
+  await Notification.updateMany({ recipientId: req.user.id, readAt: null }, { readAt: new Date() });
+  return res.json({ message: 'All notifications marked as read' });
+}

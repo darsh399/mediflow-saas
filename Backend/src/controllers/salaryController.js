@@ -10,7 +10,6 @@ import { calculateSalary, buildLopDeduction } from '../services/salaryService.js
 import mailService from '../services/mailService.js'
 import { offerLetterTemplate, salarySlipTemplate } from '../services/emailTemplateService.js'
 import { generateSalarySlipPdf, generateOfferLetterPdf } from '../services/pdfService.js'
-import { maskAccountNumber } from './employeeProfileController.js'
 
 const MANAGERS = ['admin', 'company_owner', 'hr_manager']
 const isManager = (user) => MANAGERS.includes(user?.role)
@@ -92,7 +91,7 @@ async function resolveSlipCalculation(req, { employeeId, month, year }) {
   const bankDetails = profile?.bankDetails ? {
     accountHolderName: profile.bankDetails.accountHolderName,
     bankName: profile.bankDetails.bankName,
-    accountNumberMasked: maskAccountNumber(profile.bankDetails.accountNumber),
+    accountNumber: profile.bankDetails.accountNumber,
     ifscCode: profile.bankDetails.ifscCode,
     branchName: profile.bankDetails.branchName,
     accountType: profile.bankDetails.accountType,

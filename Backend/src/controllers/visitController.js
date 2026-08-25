@@ -206,6 +206,41 @@ export const listEmployeeVisitSummary = async (req, res) => {
   }
 };
 
+export const listTopPerformers = async (req, res) => {
+  try {
+    if (!canViewEmployeeVisitRecords(req.user)) return res.status(403).json({ message: 'Insufficient permissions to view top performers' });
+    const { start, end, startDate, endDate } = getVisitDateRange(req.query);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 5, 1), 20);
+    const employeeMatch = { companyId: req.user.companyId, role: { $nin: ['admin', 'company_owner', 'super_admin', 'superadmin'] } };
+    const ranked = await User.aggregate([
+      { $match: employeeMatch },
+      { $lookup: { from: 'visits', let: { employeeId: '$_id', companyId: '$companyId' }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ['$companyId', '$$companyId'] }, { $eq: ['$employeeId', '$$employeeId'] }, { $gte: ['$visitedAt', startDate] }, { $lt: ['$visitedAt', endDate] }] } } }, { $project: { status: 1 } }], as: 'periodVisits' } },
+      { $addFields: { visitCount: { $size: '$periodVisits' }, completedCount: { $size: { $filter: { input: '$periodVisits', as: 'visit', cond: { $in: ['$$visit.status', ['completed', 'approved']] } } } } } },
+      { $match: { visitCount: { $gt: 0 } } },
+      { $sort: { completedCount: -1, visitCount: -1, name: 1 } },
+      { $project: { _id: 1, name: 1, firstName: 1, lastName: 1, employeeId: 1, email: 1, role: 1, visitCount: 1, completedCount: 1 } },
+    ]);
+    const topPerformers = ranked.slice(0, limit).map((item, index) => ({ ...item, rank: index + 1 }));
+
+    let employee = null;
+    if (req.query.employeeId) {
+      if (!mongoose.isValidObjectId(req.query.employeeId)) return res.status(400).json({ message: 'Invalid employee id' });
+      const index = ranked.findIndex((item) => String(item._id) === String(req.query.employeeId));
+      if (index >= 0) employee = { ...ranked[index], rank: index + 1 };
+      else {
+        const found = await User.findOne({ _id: req.query.employeeId, ...employeeMatch }).select('_id name firstName lastName employeeId email role').lean();
+        if (!found) return res.status(404).json({ message: 'Employee not found in this company' });
+        employee = { ...found, visitCount: 0, completedCount: 0, rank: null };
+      }
+    }
+
+    return res.status(200).json({ topPerformers, employee, totalRanked: ranked.length, dateRange: { startDate: start, endDate: end } });
+  } catch (error) {
+    console.error('Top performers error:', error);
+    return res.status(400).json({ message: error.message || 'Unable to load top performers' });
+  }
+};
+
 export const listEmployeeVisits = async (req, res) => {
   try {
     if (!canViewEmployeeVisitRecords(req.user)) return res.status(403).json({ message: 'Insufficient permissions to view employee visit records' });

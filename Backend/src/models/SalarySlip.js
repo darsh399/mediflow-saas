@@ -13,12 +13,12 @@ const salarySlipSchema = new mongoose.Schema({
   netSalary: { type: Number, required: true, min: 0 },
   lopDays: { type: Number, min: 0, default: 0 },
   lopDeduction: { type: Number, min: 0, default: 0 },
-  // Frozen at generation time so later bank-detail edits don't retroactively change a
-  // historical slip. Already masked — never store a raw account number here.
+  // Frozen at generation time so later bank-detail edits don't retroactively
+  // change a historical slip. Shown in full (not masked) on the slip itself.
   bankDetailsSnapshot: {
     accountHolderName: String,
     bankName: String,
-    accountNumberMasked: String,
+    accountNumber: String,
     ifscCode: String,
     branchName: String,
     accountType: String,
