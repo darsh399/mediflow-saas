@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import leaveApi from "../../api/leaveApi";
+import { downloadBlob } from "../../utils/downloadBlob";
 
 const LeaveManagement = () => {
   const [leaves, setLeaves] = useState([]);
@@ -9,6 +10,7 @@ const LeaveManagement = () => {
   const [dateFilter, setDateFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [policyTypes, setPolicyTypes] = useState([]);
@@ -198,6 +200,18 @@ const LeaveManagement = () => {
       );
     } finally {
       setReviewingId(null);
+    }
+  };
+
+  const exportCsv = async () => {
+    try {
+      setExporting(true);
+      const blob = await leaveApi.exportLeaves(statusFilter !== "all" ? { status: statusFilter } : {});
+      downloadBlob(blob, "leave-requests.csv");
+    } catch (err) {
+      setError(err?.response?.data?.message || "Unable to export leave requests");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -513,9 +527,15 @@ const LeaveManagement = () => {
                 </p>
               </div>
 
-              <span className="badge bg-primary rounded-pill px-3 py-2">
-                {pending} Pending
-              </span>
+              <div className="d-flex align-items-center gap-2">
+                <button type="button" className="btn btn-outline-secondary btn-sm rounded-3" disabled={exporting} onClick={exportCsv}>
+                  {exporting ? <span className="spinner-border spinner-border-sm me-2"></span> : <i className="bi bi-download me-2"></i>}
+                  Export CSV
+                </button>
+                <span className="badge bg-primary rounded-pill px-3 py-2">
+                  {pending} Pending
+                </span>
+              </div>
             </div>
           </div>
 

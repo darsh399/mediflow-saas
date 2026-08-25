@@ -83,7 +83,7 @@ async function mergeAndSaveProfile(userId, data, companyId) {
 
 export const createUser = async (req, res) => {
    try{
-    const {name, email, password, mobile, role, employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus, personalEmail} = req.body;
+    const {name, email, password, mobile, role, employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus, personalEmail, companyName} = req.body;
 
         const isManagedCreation = Boolean(req.user);
         const companyId = req.user?.companyId || null;
@@ -138,7 +138,7 @@ export const createUser = async (req, res) => {
         const hashedPw = await hashPassword(finalPassword);
         const userRole = isManagedCreation ? (role || 'employee') : 'user';
         const employeeFields = isManagedCreation ? { employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus, personalEmail } : {};
-        const newUser = new User({ name: finalName, email: finalEmail, password: hashedPw, mobile, companyId, role: userRole, passwordChangeRequired: autoProvisioned, ...(isManagedCreation ? { createdBy: req.user.id } : {}), ...employeeFields });
+        const newUser = new User({ name: finalName, email: finalEmail, password: hashedPw, mobile, companyId, role: userRole, passwordChangeRequired: autoProvisioned, ...(isManagedCreation ? { createdBy: req.user.id } : { requestedCompanyName: companyName?.trim() || undefined }), ...employeeFields });
 
         const savedUser = await newUser.save();
 

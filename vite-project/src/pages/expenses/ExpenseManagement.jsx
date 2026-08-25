@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import expenseApi from "../../api/expenseApi";
+import { downloadBlob } from "../../utils/downloadBlob";
 
 const CATEGORY_LABELS = {
   TRAVEL: "Travel",
@@ -16,6 +17,7 @@ const ExpenseManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -89,6 +91,18 @@ const ExpenseManagement = () => {
       setError(err?.response?.data?.message || "Unable to update expense");
     } finally {
       setReviewingId(null);
+    }
+  };
+
+  const exportCsv = async () => {
+    try {
+      setExporting(true);
+      const blob = await expenseApi.exportExpenses(statusFilter !== "all" ? { status: statusFilter } : {});
+      downloadBlob(blob, "expense-claims.csv");
+    } catch (err) {
+      setError(err?.response?.data?.message || "Unable to export expense claims");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -246,7 +260,13 @@ const ExpenseManagement = () => {
                 <h5 className="fw-bold mb-1">Expense Claims</h5>
                 <p className="text-muted small mb-0">Showing {filteredExpenses.length} of {expenses.length} claims</p>
               </div>
-              <span className="badge bg-primary rounded-pill px-3 py-2">{pending} Pending</span>
+              <div className="d-flex align-items-center gap-2">
+                <button type="button" className="btn btn-outline-secondary btn-sm rounded-3" disabled={exporting} onClick={exportCsv}>
+                  {exporting ? <span className="spinner-border spinner-border-sm me-2"></span> : <i className="bi bi-download me-2"></i>}
+                  Export CSV
+                </button>
+                <span className="badge bg-primary rounded-pill px-3 py-2">{pending} Pending</span>
+              </div>
             </div>
           </div>
 

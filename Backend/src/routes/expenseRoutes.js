@@ -3,7 +3,7 @@ import multer from 'multer';
 import authMiddleware from '../middleware/authMiddleware.js';
 import companyMiddleware from '../middleware/companyMiddleware.js';
 import authorize from '../middleware/permissionMiddleware.js';
-import { applyExpense, listExpenses, reviewExpense } from '../controllers/expenseController.js';
+import { applyExpense, listExpenses, exportExpenses, reviewExpense } from '../controllers/expenseController.js';
 
 const upload = multer({
   dest: 'uploads/expenses/',
@@ -21,6 +21,7 @@ router.use(authMiddleware, companyMiddleware);
 // or without a "receipt" file attached.
 router.post('/', authorize('expense.apply'), upload.single('receipt'), applyExpense);
 router.get('/', authorize('expense.view'), listExpenses);
+router.get('/export', authorize('expense.view'), exportExpenses);
 router.post('/:id/review', authorize('expense.approve'), reviewExpense);
 
 export default router;

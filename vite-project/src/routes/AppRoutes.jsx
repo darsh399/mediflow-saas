@@ -617,6 +617,8 @@ import Products from "../pages/products/Products";
 import AddProduct from "../pages/products/AddProduct";
 import EditProduct from "../pages/products/EditProduct";
 import ProductDetails from "../pages/products/ProductDetails";
+import AuditLog from "../pages/audit/AuditLog";
+import Billing from "../pages/billing/Billing";
 import NotFound from "../pages/NotFound";
 import Attendance from "../pages/attendance/Attendance";
 import Calendar from "../pages/calendar/Calendar";
@@ -1337,6 +1339,26 @@ const AppRoutes = () => {
                     <Route path="products" element={<AdminLayout />}>
                         <Route path="add" element={<AddProduct />} />
                         <Route path=":id/edit" element={<EditProduct />} />
+                    </Route>
+                </Route>
+
+                {/* ================= AUDIT LOG ================= */}
+
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager"]} />}
+                >
+                    <Route path="audit-log" element={<AdminLayout />}>
+                        <Route index element={<AuditLog />} />
+                    </Route>
+                </Route>
+
+                {/* ================= BILLING ================= */}
+
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner"]} />}
+                >
+                    <Route path="billing" element={<AdminLayout />}>
+                        <Route index element={<Billing />} />
                     </Route>
                 </Route>
 

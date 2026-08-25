@@ -24,6 +24,10 @@ const EXPENSE_APPROVER_ROLES = ["admin", "company_owner", "hr_manager"];
 // company_owner/hr_manager/admin can add/edit/delete products.
 const PRODUCT_VIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager", "employee", "mr"];
 const PRODUCT_MANAGER_ROLES = ["admin", "company_owner", "hr_manager"];
+// Matches the audit.view permission (company_owner/hr_manager/admin only).
+const AUDIT_VIEWER_ROLES = ["admin", "company_owner", "hr_manager"];
+// Matches the subscription.view permission (company_owner/admin only).
+const BILLING_VIEWER_ROLES = ["admin", "company_owner"];
 
 const AdminLayout = () => {
   const role = useSelector((state) => state.auth.user?.role);
@@ -39,6 +43,8 @@ const AdminLayout = () => {
   const canReviewExpenses = EXPENSE_APPROVER_ROLES.includes(role);
   const canViewProducts = PRODUCT_VIEWER_ROLES.includes(role);
   const canManageProducts = PRODUCT_MANAGER_ROLES.includes(role);
+  const canViewAuditLog = AUDIT_VIEWER_ROLES.includes(role);
+  const canViewBilling = BILLING_VIEWER_ROLES.includes(role);
   const [leavesOpen, setLeavesOpen] = useState(location.pathname.startsWith("/leaves"));
   const [expensesOpen, setExpensesOpen] = useState(location.pathname.startsWith("/expenses"));
   const [productsOpen, setProductsOpen] = useState(location.pathname.startsWith("/products"));
@@ -149,6 +155,8 @@ const AdminLayout = () => {
             <NavLink className={navClass} to="/medicals"><i className="bi bi-hospital"></i> Medicals</NavLink>
             <NavLink className={navClass} to="/admin/visits"><i className="bi bi-clipboard-data"></i> MR Visit Records</NavLink>
           </>}
+          {canViewAuditLog && <NavLink className={navClass} to="/audit-log" onClick={closeSidebar}><i className="bi bi-clock-history"></i> Audit Log</NavLink>}
+          {canViewBilling && <NavLink className={navClass} to="/billing" onClick={closeSidebar}><i className="bi bi-credit-card"></i> Billing</NavLink>}
         </nav>
       </aside>
       <main className="app-content"><Outlet /></main>
