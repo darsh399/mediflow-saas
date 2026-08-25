@@ -13,6 +13,8 @@ const UserDetails = () => {
   useEffect(() => {
     if (id) {
       dispatch(fetchUser(id))
+      const refresh = window.setInterval(() => dispatch(fetchUser(id)), 30000)
+      return () => window.clearInterval(refresh)
     }
   }, [dispatch, id])
 
@@ -117,8 +119,14 @@ const UserDetails = () => {
   const displayName = onboardingProfile.fullName || current.name || 'Unknown User'
   const displayMobile = onboardingProfile.mobile || current.mobile || current.phone || 'N/A'
 
+  const formatDuration = (hours) => {
+    const totalMinutes = Math.max(0, Math.round(Number(hours || 0) * 60))
+    return `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
+  }
+
   const isActive = current.active === true
   const isBlocked = current.blocked === true
+  const attendanceSummary = current.attendanceSummary
 
   return (
     <div className="container-fluid py-4">
@@ -313,6 +321,24 @@ const UserDetails = () => {
 
         </div>
 
+      </div>
+
+      <div className="card border-0 shadow-sm mb-4">
+        <div className="card-body">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+              <div className="text-muted small mb-2">Live attendance</div>
+              <h5 className="fw-bold mb-1">{attendanceSummary?.status || 'NOT_STARTED'}</h5>
+              <div className="text-muted small">{attendanceSummary?.checkedIn ? 'Currently checked in' : 'No active session'}</div>
+            </div>
+            <div className="text-start text-md-end">
+              <div className="text-muted small">Today&apos;s total</div>
+              <h5 className="fw-bold mb-0">{formatDuration(attendanceSummary?.totalWorkingHours)}</h5>
+              <div className="text-muted small">{attendanceSummary?.sessions?.length || 0} session(s)</div>
+            </div>
+          </div>
+          {attendanceSummary?.sessions?.length ? <div className="table-responsive mt-3"><table className="table table-sm mb-0"><thead><tr><th>Session</th><th>Check in</th><th>Check out</th></tr></thead><tbody>{attendanceSummary.sessions.map((session, index) => <tr key={session._id || index}><td>{index + 1}</td><td>{session.checkIn ? new Date(session.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td><td>{session.checkOut ? new Date(session.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Working now'}</td></tr>)}</tbody></table></div> : null}
+        </div>
       </div>
 
       <div className="row g-4">

@@ -29,4 +29,24 @@ export async function updateCompanyStatus(id, payload){
   return resp.data
 }
 
-export default { login, dashboard, createCompany, updateCompanyStatus, getCompany, deleteCompany }
+export async function updateCompanySubscription(id, payload){
+  const resp = await axios.patch(`/api/superadmin/companies/${id}/subscription`, payload)
+  return resp.data
+}
+
+export async function updateCompanyModules(id, enabledModules){
+  const resp = await axios.patch(`/api/superadmin/companies/${id}/modules`, { enabledModules })
+  return resp.data
+}
+
+export async function getCompanyUsage(id){
+  const resp = await axios.get(`/api/superadmin/companies/${id}/usage`)
+  return resp.data
+}
+
+export async function listAuditLogs(params){
+  const resp = await axios.get('/api/superadmin/audit-logs', { params })
+  return resp.data
+}
+
+export default { login, dashboard, createCompany, updateCompanyStatus, updateCompanySubscription, updateCompanyModules, getCompanyUsage, listAuditLogs, getCompany, deleteCompany }

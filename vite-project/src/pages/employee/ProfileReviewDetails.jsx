@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import employeeProfileApi from '../../api/employeeProfileApi'
 
@@ -14,6 +15,8 @@ const ProfileReviewDetails = () => {
   const [selectedDocument, setSelectedDocument] = useState(null)
   const [documentUrl, setDocumentUrl] = useState('')
   const [documentLoading, setDocumentLoading] = useState(false)
+  const role = useSelector(state => state.auth.user?.role)
+  const canVerify = ['admin', 'company_owner', 'hr_manager', 'hr'].includes(role)
 
   useEffect(() => {
     loadProfile()
@@ -141,6 +144,16 @@ const ProfileReviewDetails = () => {
 
     setDocumentUrl('')
     setSelectedDocument(null)
+  }
+
+  const verify = async documentItem => {
+    if (!documentItem._id) return
+    try {
+      await employeeProfileApi.verifyDocument(profile.userId._id, documentItem._id, !documentItem.verified)
+      await loadProfile()
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Unable to update document verification')
+    }
   }
 
   const getInitials = name => {
@@ -628,7 +641,7 @@ const ProfileReviewDetails = () => {
                         </div>
 
                         <small className="text-muted">
-                          {document.type || 'Uploaded document'}
+                          {document.type || 'Uploaded document'}{document.expiresAt ? ` · Expires ${new Date(document.expiresAt).toLocaleDateString()}` : ''}
                         </small>
 
                       </div>
@@ -646,6 +659,8 @@ const ProfileReviewDetails = () => {
                       >
                         View
                       </button>
+
+                      {canVerify && document._id && <button type="button" className={`btn btn-sm ${document.verified ? 'btn-success' : 'btn-outline-success'}`} onClick={() => verify(document)}>{document.verified ? 'Verified' : 'Verify'}</button>}
 
                       <button
                         type="button"

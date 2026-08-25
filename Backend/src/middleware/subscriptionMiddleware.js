@@ -1,12 +1,12 @@
-import Subscription from '../models/Subscription.js';
+import subscriptionService from '../services/subscriptionService.js';
 
 export default async function subscriptionMiddleware(req, res, next) {
   try {
     const companyId = req.user?.companyId;
     if (!companyId) return res.status(400).json({ message: 'Company context missing' });
-    const subscription = await Subscription.findOne({ companyId }).sort({ endDate: -1 });
+    const subscription = await subscriptionService.getLatestSubscription(companyId);
     if (!subscription) return res.status(403).json({ message: 'Subscription not found' });
-    if (subscription.status !== 'ACTIVE' || (subscription.endDate && subscription.endDate < new Date())) {
+    if (!['ACTIVE', 'TRIAL', 'GRACE'].includes(subscription.status)) {
       return res.status(403).json({ message: 'Subscription expired' });
     }
     req.subscription = subscription;

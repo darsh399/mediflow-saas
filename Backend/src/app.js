@@ -19,6 +19,9 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import activityRoutes from './routes/activityRoutes.js';
 import superadminRoutes from './routes/superadminRoutes.js';
+import attendanceRoutes from './routes/attendanceRoutes.js';
+import organizationRoutes from './routes/organizationRoutes.js';
+import holidayRoutes from './routes/holidayRoutes.js';
 import errorMiddleware from './middleware/errorMiddleware.js';
 
 dotenv.config();
@@ -89,6 +92,9 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/activities', activityRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/organization', organizationRoutes);
+app.use('/api/calendar/holidays', holidayRoutes);
 // Keep legacy /superadmin route
 app.use('/superadmin', superadminRoutes);
 // Also expose superadmin API under /api/superadmin so frontend dev proxy can forward API calls

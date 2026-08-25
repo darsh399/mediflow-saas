@@ -50,6 +50,17 @@ const userSchema = new mongoose.Schema({
         default: 'user'
     },
     mobile: { type: String, required: false, unique: false },
+    employeeId: { type: String, trim: true, sparse: true },
+    firstName: { type: String, trim: true },
+    lastName: { type: String, trim: true },
+    joiningDate: { type: Date },
+    departmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'OrganizationUnit' },
+    designationId: { type: mongoose.Schema.Types.ObjectId, ref: 'OrganizationUnit' },
+    reportingManagerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    branchId: { type: mongoose.Schema.Types.ObjectId, ref: 'OrganizationUnit' },
+    employmentType: { type: String, enum: ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN', 'CONSULTANT'] },
+    probationStatus: { type: String, enum: ['NOT_APPLICABLE', 'IN_PROGRESS', 'COMPLETED'] },
+    employeeStatus: { type: String, enum: ['ACTIVE', 'ON_LEAVE', 'PROBATION', 'RESIGNED', 'TERMINATED', 'INACTIVE'], default: 'ACTIVE' },
     isVerified: { type: Boolean, default: false },
     active: { type: Boolean, default: true },
     blocked: { type: Boolean, default: false },
@@ -60,5 +71,8 @@ const userSchema = new mongoose.Schema({
     // If user was invited, store reference to invite
     invite: { type: mongoose.Schema.Types.ObjectId, ref: 'Invite' }
 }, { timestamps: true });
+
+userSchema.index({ companyId: 1, employeeId: 1 }, { unique: true, sparse: true });
+userSchema.index({ companyId: 1, employeeStatus: 1 });
 
 export default mongoose.model('User', userSchema);

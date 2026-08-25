@@ -611,6 +611,8 @@ import ApplyLeave from "../pages/leaves/ApplyLeaves";
 import MyLeaves from "../pages/leaves/MyLeave";
 import LeaveManagement from "../pages/leaves/LeaveManagement";
 import NotFound from "../pages/NotFound";
+import Attendance from "../pages/attendance/Attendance";
+import Calendar from "../pages/calendar/Calendar";
 
 
 const AppRoutes = () => {
@@ -690,6 +692,8 @@ const AppRoutes = () => {
                             rolesAllowed={[
                                 "admin",
                                 "company_owner",
+                                "hr_manager",
+                                "hr",
                                 "manager",
                                 "project_manager",
                                 "mr",
@@ -785,6 +789,38 @@ const AppRoutes = () => {
                 <Route
                     element={
                         <ProtectedRoute
+                            rolesAllowed={["admin", "company_owner", "hr_manager", "hr", "manager", "employee", "mr", "user"]}
+                        />
+                    }
+                >
+                    <Route path="calendar" element={<AdminLayout />}>
+                        <Route index element={<Calendar />} />
+                    </Route>
+                </Route>
+
+                <Route
+                    element={
+                        <ProtectedRoute
+                            rolesAllowed={[
+                                "admin",
+                                "company_owner",
+                                "hr_manager",
+                                "hr",
+                                "manager",
+                                "employee",
+                                "mr"
+                            ]}
+                        />
+                    }
+                >
+                    <Route path="attendance" element={<AdminLayout />}>
+                        <Route index element={<Attendance />} />
+                    </Route>
+                </Route>
+
+                <Route
+                    element={
+                        <ProtectedRoute
                             rolesAllowed={[
                                 "admin",
                                 "company_owner",
@@ -807,6 +843,11 @@ const AppRoutes = () => {
                         <Route
                             index
                             element={<Profile />}
+                        />
+
+                        <Route
+                            path="edit"
+                            element={<EditProfile />}
                         />
 
                     </Route>
@@ -1104,6 +1145,8 @@ const AppRoutes = () => {
                             rolesAllowed={[
                                 "admin",
                                 "company_owner",
+                                "hr_manager",
+                                "hr",
                                 "manager",
                                 "project_manager"
                             ]}
@@ -1148,6 +1191,14 @@ const AppRoutes = () => {
 
                     </Route>
 
+                </Route>
+
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager"]} />}
+                >
+                    <Route path="employee/profile/:id" element={<AdminLayout />}>
+                        <Route index element={<UserDetails />} />
+                    </Route>
                 </Route>
 
 

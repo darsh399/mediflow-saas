@@ -6,10 +6,12 @@ import getCookieOptions from '../utils/getCookieOptions.js'
 import bcrypt from 'bcrypt';
 import { validateProfile } from '../validators/userValidator.js';
 import { canActOn, isPrivilegedRole } from '../utils/authorize.js';
-import AuditLog from '../models/AuditLog.js';
 import Company from '../models/Company.js';
 import Invite from '../models/Invite.js';
 import EmployeeProfile from '../models/EmployeeProfile.js';
+import Attendance from '../models/Attendance.js';
+import { hasPermission } from '../config/permissions.js';
+import recordAudit from '../utils/audit.js';
 
 
 
@@ -32,6 +34,22 @@ async function fetchAndSendUser(req, res, successMessage = 'User retrieved succe
         }).select('profileData experienceType status');
         const userData = user.toObject();
         userData.onboardingProfile = employeeProfile?.profileData || {};
+        if (user.companyId && (String(req.user.id) === String(user._id) || hasPermission(req.user, 'attendance.view'))) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const attendance = await Attendance.findOne({ companyId: user.companyId, employeeId: user._id, date: { $gte: today, $lt: tomorrow } }).lean();
+            const sessions = attendance?.sessions?.length ? attendance.sessions : attendance?.checkIn ? [{ checkIn: attendance.checkIn, checkOut: attendance.checkOut, breaks: attendance.breaks || [] }] : [];
+            const activeSession = sessions.find(session => !session.checkOut) || null;
+            userData.attendanceSummary = {
+                status: activeSession ? 'WORKING' : attendance ? 'OFFLINE' : 'NOT_STARTED',
+                checkedIn: Boolean(activeSession),
+                totalWorkingHours: attendance?.totalWorkingHours || 0,
+                sessions,
+                lastActivityAt: activeSession?.checkIn || sessions.at(-1)?.checkOut || null,
+            };
+        }
         return res.status(200).json({ message: successMessage, user: userData });
     } catch (error) {
         console.error('Error retrieving user:', error);
@@ -55,7 +73,7 @@ async function mergeAndSaveProfile(userId, data, companyId) {
 
 export const createUser = async (req, res) => {
    try{
-    const {name, email, password, mobile, role} = req.body;
+    const {name, email, password, mobile, role, employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus} = req.body;
         if (!name || !email || !password) {
             return res.status(400).json({ message: 'name, email and password are required' });
         }
@@ -86,7 +104,8 @@ export const createUser = async (req, res) => {
 
         const hashedPw = await hashPassword(password);
         const userRole = isManagedCreation ? (role || 'employee') : 'user';
-        const newUser = new User({ name, email, password: hashedPw, mobile, companyId, role: userRole });
+        const employeeFields = isManagedCreation ? { employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus } : {};
+        const newUser = new User({ name, email, password: hashedPw, mobile, companyId, role: userRole, ...employeeFields });
 
         const savedUser = await newUser.save();
         const token = createToken({ id: savedUser._id, email: savedUser.email, role: savedUser.role, companyId: savedUser.companyId });
@@ -185,12 +204,15 @@ export const updateUser = async (req, res) => {
             const oldRole = existingUser.role;
             const newRole = updateData.role;
             existingUser.role = newRole;
-            await new AuditLog({ actorId: req.user.id, actorRole: req.user.role, action: 'role_change', targetUserId: existingUser._id, targetUserRole: oldRole, companyId: existingUser.companyId, meta: { oldRole, newRole } }).save();
+            await recordAudit(req, 'role_change', { targetUserId: existingUser._id, targetUserRole: oldRole, companyId: existingUser.companyId, entityId: existingUser._id, module: 'employees', oldValue: { role: oldRole }, newValue: { role: newRole } });
             // remove role from updateData to avoid double-assign
             delete updateData.role;
         }
 
-        Object.assign(existingUser, updateData);
+        const editableFields = ['name', 'email', 'mobile', 'employeeId', 'firstName', 'lastName', 'joiningDate', 'departmentId', 'designationId', 'reportingManagerId', 'branchId', 'employmentType', 'probationStatus', 'employeeStatus', 'active', 'blocked'];
+        for (const field of editableFields) {
+            if (Object.prototype.hasOwnProperty.call(updateData, field)) existingUser[field] = updateData[field];
+        }
         const saved = await existingUser.save();
         const userObj = saved.toObject(); delete userObj.password;
         res.status(200).json({ message: 'User updated successfully', user: userObj });
@@ -215,7 +237,7 @@ export const deleteUser = async (req, res) => {
 
         const deletedUser = await User.findByIdAndDelete(targetUser._id).select('-password');
         // audit
-        await new AuditLog({ actorId: req.user.id, actorRole: req.user.role, action: 'delete_user', targetUserId: deletedUser._id, targetUserRole: deletedUser.role, companyId: deletedUser.companyId, meta: {} }).save();
+        await recordAudit(req, 'delete_user', { targetUserId: deletedUser._id, targetUserRole: deletedUser.role, companyId: deletedUser.companyId, entityId: deletedUser._id, module: 'employees' });
         res.status(200).json({ message: 'User deleted successfully', user: deletedUser });
     }catch(error){
         console.error("Error deleting user:", error);
@@ -245,7 +267,7 @@ export const changeUserStatus = async (req, res) => {
 
         await targetUser.save();
         // audit
-        await new AuditLog({ actorId: req.user.id, actorRole: req.user.role, action: `status_${action}`, targetUserId: targetUser._id, targetUserRole: targetUser.role, companyId: targetUser.companyId, meta: { action } }).save();
+        await recordAudit(req, `status_${action}`, { targetUserId: targetUser._id, targetUserRole: targetUser.role, companyId: targetUser.companyId, entityId: targetUser._id, module: 'employees', newValue: { active: targetUser.active, blocked: targetUser.blocked } }, { action });
         const userObj = targetUser.toObject(); delete userObj.password;
         return res.status(200).json({ message: 'User status updated', user: userObj });
     } catch (error) {

@@ -1,5 +1,5 @@
 import express from 'express'
-import { login as superLogin,createCompanyOnboard, dashboard as superDashboard, logout as superLogout } from '../controllers/superAdminController.js'
+import { login as superLogin, createCompanyOnboard, dashboard as superDashboard, logout as superLogout, updateCompanySubscription, updateCompanyModules, getCompanyUsage, listAuditLogs } from '../controllers/superAdminController.js'
 import authMiddleware from '../middleware/authMiddleware.js'
 import { requireRole } from '../utils/authorize.js'
 
@@ -10,6 +10,7 @@ router.post('/login', superLogin)
 
 // Protected: dashboard
 router.get('/dashboard', authMiddleware, requireRole('super_admin'), superDashboard)
+router.get('/audit-logs', authMiddleware, requireRole('super_admin'), listAuditLogs)
 
 // logout
 router.post('/logout', authMiddleware, superLogout)
@@ -28,14 +29,6 @@ router.post(
   requireRole('super_admin'),
   (req, res, next) => {
 
-    console.log('');
-    console.log('========================================');
-    console.log('🔥 POST /api/superadmin/companies HIT');
-    console.log('🔥 METHOD:', req.method);
-    console.log('🔥 URL:', req.originalUrl);
-    console.log('🔥 BODY:', req.body);
-    console.log('🔥 USER:', req.user);
-    console.log('========================================');
 
     createCompanyOnboard(req, res, next);
   }
@@ -55,6 +48,10 @@ router.get('/companies/:id', authMiddleware, requireRole('super_admin'), async (
 router.patch('/companies/:id/status', authMiddleware, requireRole('super_admin'), async (req, res, next) => {
 	try { await import('../controllers/superAdminController.js').then(m=>m.updateCompanyStatus(req, res)) } catch(err){ next(err) }
 })
+
+router.patch('/companies/:id/subscription', authMiddleware, requireRole('super_admin'), updateCompanySubscription)
+router.patch('/companies/:id/modules', authMiddleware, requireRole('super_admin'), updateCompanyModules)
+router.get('/companies/:id/usage', authMiddleware, requireRole('super_admin'), getCompanyUsage)
 
 // delete company
 router.delete('/companies/:id', authMiddleware, requireRole('super_admin'), async (req, res, next) => {

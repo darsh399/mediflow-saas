@@ -51,6 +51,9 @@ const SuperAdminDashboard = ()=>{
         <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Pending Companies</h6><h4>{data.pendingCompanies}</h4></div></div>
         <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Expired Subscriptions</h6><h4>{data.expiredSubs}</h4></div></div>
         <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Active Subscriptions</h6><h4>{data.activeSubs}</h4></div></div>
+        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Trial Companies</h6><h4>{data.trialSubs ?? 0}</h4></div></div>
+        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>New This Month</h6><h4>{data.newCompaniesThisMonth ?? 0}</h4></div></div>
+        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Monthly Revenue</h6><h4>{Number(data.monthlyRevenue ?? 0).toLocaleString()}</h4></div></div>
         <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Total Users</h6><h4>{data.totalUsers}</h4></div></div>
         <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Employees</h6><h4>{data.totalEmployees}</h4></div></div>
         <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>HR</h6><h4>{data.totalHR}</h4></div></div>
@@ -61,8 +64,8 @@ const SuperAdminDashboard = ()=>{
           <div className="card p-3">
             <h6>Companies by Status</h6>
             <Bar data={{
-              labels: ['Active','Suspended','Blocked'],
-              datasets: [{ label: 'Companies', data: [data.activeCompanies, data.suspendedCompanies, data.blockedCompanies], backgroundColor: ['#4caf50','#ff9800','#f44336'] }]
+              labels: ['Active','Pending','Suspended','Blocked','Rejected'],
+              datasets: [{ label: 'Companies', data: [data.activeCompanies, data.pendingCompanies, data.suspendedCompanies, data.blockedCompanies, data.rejectedCompanies ?? 0], backgroundColor: ['#4caf50','#ffc107','#ff9800','#f44336','#6c757d'] }]
             }} />
           </div>
         </div>

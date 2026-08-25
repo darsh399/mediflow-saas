@@ -8,6 +8,7 @@ const Visits = () => {
 
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [photoLoading, setPhotoLoading] = useState(false);
 
   useEffect(() => {
     const loadVisits = async () => {
@@ -81,6 +82,20 @@ const Visits = () => {
   const clearFilters = () => {
     setSearch("");
     setDateFilter("");
+  };
+
+  const viewPhoto = async (visit) => {
+    try {
+      setPhotoLoading(true);
+      const blob = await visitApi.downloadVisitPhoto(visit._id);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Unable to load visit photo');
+    } finally {
+      setPhotoLoading(false);
+    }
   };
 
   const formatDate = (date) => {
@@ -477,6 +492,10 @@ const Visits = () => {
                     <th>
                       Location
                     </th>
+
+                    <th>
+                      Photo
+                    </th>
                   </tr>
                 </thead>
 
@@ -644,6 +663,10 @@ const Visits = () => {
 
                           )}
 
+                        </td>
+
+                        <td>
+                          {visit.visitPhoto?.storageName ? <button type="button" className="btn btn-sm btn-outline-primary" disabled={photoLoading} onClick={() => viewPhoto(visit)}><i className="bi bi-camera me-1"></i>View</button> : <span className="text-muted">-</span>}
                         </td>
 
                       </tr>

@@ -14,6 +14,8 @@ const upload = multer({
 
 export const uploadSingle = upload.single("file");
 
+export const uploadVisitPhoto = upload.single("visitPhoto");
+
 export const uploadMultiple = upload.array("files", 5);
 
 export const uploadFields = upload.fields([

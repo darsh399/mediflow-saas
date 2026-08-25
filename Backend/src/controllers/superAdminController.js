@@ -20,8 +20,11 @@ import Notification from '../models/Notification.js'
 import AuditLog from '../models/AuditLog.js'
 import generateInviteToken from '../utils/generateInviteToken.js'
 import mailService from '../services/mailService.js'
-import subscriptionService from '../services/subscriptionService.js'
+import subscriptionService, { PLAN_DEFAULTS } from '../services/subscriptionService.js'
 import companyService from '../services/companyService.js'
+import SubscriptionHistory from '../models/SubscriptionHistory.js'
+import { normalizeModules } from '../config/modules.js'
+import recordAudit from '../utils/audit.js'
 import fs from 'fs/promises'
 import path from 'path'
 
@@ -62,21 +65,31 @@ export const logout = async (req, res) => {
 export const dashboard = async (req, res) => {
   try {
     // Require super_admin role from middleware
-    const totalCompanies = await Company.countDocuments()
-    const activeCompanies = await Company.countDocuments({ status: 'ACTIVE' })
-    const suspendedCompanies = await Company.countDocuments({ status: 'SUSPENDED' })
-    const blockedCompanies = await Company.countDocuments({ status: 'BLOCKED' })
-    const pendingCompanies = await Company.countDocuments({ status: { $in: ['PENDING', 'PENDING_APPROVAL', 'PENDING_ACTIVATION'] } })
-    const expiredSubs = await Subscription.countDocuments({ status: 'EXPIRED' })
-    const activeSubs = await Subscription.countDocuments({ status: 'ACTIVE' })
-    const totalUsers = await User.countDocuments()
-    const totalEmployees = await User.countDocuments({ role: 'employee' })
-    const totalHR = await User.countDocuments({ role: 'hr' })
-    const totalMR = await User.countDocuments({ role: 'mr' })
+    const monthStart = new Date()
+    monthStart.setDate(1)
+    monthStart.setHours(0, 0, 0, 0)
+    const [totalCompanies, activeCompanies, suspendedCompanies, blockedCompanies, rejectedCompanies, pendingCompanies, expiredSubs, activeSubs, trialSubs, totalUsers, totalEmployees, totalHR, totalMR, newCompaniesThisMonth, revenue] = await Promise.all([
+      Company.countDocuments(),
+      Company.countDocuments({ status: 'ACTIVE' }),
+      Company.countDocuments({ status: 'SUSPENDED' }),
+      Company.countDocuments({ status: 'BLOCKED' }),
+      Company.countDocuments({ status: 'REJECTED' }),
+      Company.countDocuments({ status: { $in: ['PENDING', 'PENDING_APPROVAL', 'PENDING_ACTIVATION'] } }),
+      Subscription.countDocuments({ status: 'EXPIRED' }),
+      Subscription.countDocuments({ status: { $in: ['ACTIVE', 'TRIAL', 'GRACE'] } }),
+      Subscription.countDocuments({ status: 'TRIAL' }),
+      User.countDocuments(),
+      User.countDocuments({ role: 'employee' }),
+      User.countDocuments({ role: 'hr' }),
+      User.countDocuments({ role: 'mr' }),
+      Company.countDocuments({ createdAt: { $gte: monthStart } }),
+      Subscription.aggregate([{ $match: { createdAt: { $gte: monthStart }, status: { $in: ['ACTIVE', 'TRIAL', 'GRACE'] } } }, { $group: { _id: null, total: { $sum: '$price' } } }]),
+    ])
 
     return res.status(200).json({
       totalCompanies, activeCompanies, suspendedCompanies, blockedCompanies, pendingCompanies,
-      expiredSubs, activeSubs, totalUsers, totalEmployees, totalHR, totalMR
+      expiredSubs, activeSubs, trialSubs, rejectedCompanies, totalUsers, totalEmployees, totalHR, totalMR,
+      newCompaniesThisMonth, monthlyRevenue: revenue[0]?.total || 0
     })
   } catch (err) {
     console.error('Superadmin dashboard error:', err)
@@ -566,13 +579,21 @@ MediFlow
 
 export const listCompanies = async (req, res) => {
   try {
-    const companies = await Company.find().populate('ownerId','name email mobile role').lean()
+    const page = Math.max(Number(req.query.page) || 1, 1)
+    const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100)
+    const filter = {}
+    if (req.query.status) filter.status = req.query.status
+    if (req.query.search) filter.$or = [{ companyName: { $regex: req.query.search.trim(), $options: 'i' } }, { companyEmail: { $regex: req.query.search.trim(), $options: 'i' } }]
+    const [companies, total] = await Promise.all([
+      Company.find(filter).populate('ownerId','name email mobile role').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      Company.countDocuments(filter),
+    ])
     // attach latest subscription for each company
     const results = await Promise.all(companies.map(async (c) => {
       const sub = await subscriptionService.getLatestSubscription(c._id)
       return { ...c, subscription: sub }
     }))
-    return res.status(200).json({ companies: results })
+    return res.status(200).json({ companies: results, pagination: { page, limit, total, pages: Math.ceil(total / limit) } })
   } catch (err) {
     console.error('List companies error:', err)
     return res.status(500).json({ message: 'Server error', error: err.message })
@@ -588,7 +609,7 @@ export const getCompanyDetails = async (req, res) => {
     const subscriptions = await Subscription.find({ companyId: id }).sort({ endDate: -1 }).lean()
     // count users associated with this company
     const employeeCount = await User.countDocuments({ companyId: id })
-    return res.status(200).json({ company, owner, subscriptions, employeeCount })
+    return res.status(200).json({ company, owner, subscriptions, employeeCount, enabledModules: normalizeModules(company.enabledModules) })
   } catch (err) {
     console.error('Get company details error:', err)
     return res.status(500).json({ message: 'Server error', error: err.message })
@@ -604,14 +625,80 @@ export const updateCompanyStatus = async (req, res) => {
     if (!allowed.includes(status)) return res.status(400).json({ message: 'Invalid status' })
     const company = await Company.findById(id)
     if (!company) return res.status(404).json({ message: 'Company not found' })
+    const oldStatus = company.status
     company.status = status
     company.isActive = status === 'ACTIVE'
     await company.save()
+    await recordAudit(req, 'company_status_changed', { companyId: company._id, entityId: company._id, module: 'company', oldValue: { status: oldStatus }, newValue: { status } })
     return res.status(200).json({ message: 'Company status updated', company })
   } catch (err) {
     console.error('Update company status error:', err)
     return res.status(500).json({ message: 'Server error', error: err.message })
   }
+}
+
+export const updateCompanySubscription = async (req, res) => {
+  try {
+    const company = await Company.findById(req.params.id)
+    if (!company) return res.status(404).json({ message: 'Company not found' })
+    const current = await subscriptionService.getLatestSubscription(company._id)
+    const plan = req.body.plan || current?.plan || 'TRIAL'
+    const defaults = PLAN_DEFAULTS[plan]
+    if (!defaults) return res.status(400).json({ message: 'Unsupported subscription plan' })
+    if (!current) {
+      const subscription = await subscriptionService.createSubscription({ companyId: company._id, plan, startDate: req.body.startDate, endDate: req.body.endDate, autoRenew: req.body.autoRenew, price: req.body.price, durationMonths: req.body.durationMonths, employeeLimit: req.body.employeeLimit, storageLimit: req.body.storageLimit, enabledModules: req.body.enabledModules, gracePeriodDays: req.body.gracePeriodDays, changedBy: req.user.id })
+      await recordAudit(req, 'subscription_created', { companyId: company._id, entityId: subscription._id, module: 'subscription', newValue: { plan, endDate: subscription.endDate } })
+      return res.status(201).json({ subscription })
+    }
+    const oldValue = { plan: current.plan, startDate: current.startDate, endDate: current.endDate, employeeLimit: current.employeeLimit, storageLimit: current.storageLimit }
+    const endDate = req.body.endDate ? new Date(req.body.endDate) : new Date(current.endDate)
+    if (req.body.extendMonths) endDate.setMonth(endDate.getMonth() + Number(req.body.extendMonths))
+    if (endDate <= new Date(current.startDate)) return res.status(400).json({ message: 'Subscription end date must be after its start date' })
+    current.plan = plan
+    current.endDate = endDate
+    current.autoRenew = req.body.autoRenew ?? current.autoRenew
+    current.price = req.body.price ?? defaults.price
+    current.durationMonths = req.body.durationMonths ?? defaults.durationMonths
+    current.employeeLimit = req.body.employeeLimit ?? defaults.employeeLimit
+    current.storageLimit = req.body.storageLimit ?? defaults.storageLimit
+    current.enabledModules = normalizeModules(req.body.enabledModules ?? current.enabledModules)
+    current.gracePeriodDays = req.body.gracePeriodDays ?? current.gracePeriodDays
+    current.status = plan === 'TRIAL' ? 'TRIAL' : 'ACTIVE'
+    await current.save()
+    await Company.findByIdAndUpdate(company._id, { employeeLimit: current.employeeLimit, storageLimit: current.storageLimit, enabledModules: current.enabledModules })
+    await SubscriptionHistory.create({ companyId: company._id, subscriptionId: current._id, action: req.body.extendMonths ? 'EXTENDED' : 'UPGRADED', plan: current.plan, startDate: current.startDate, endDate: current.endDate, price: current.price, changedBy: req.user.id })
+    await recordAudit(req, 'subscription_updated', { companyId: company._id, entityId: current._id, module: 'subscription', oldValue, newValue: { plan: current.plan, endDate: current.endDate, employeeLimit: current.employeeLimit, storageLimit: current.storageLimit } })
+    return res.status(200).json({ subscription: current })
+  } catch (error) {
+    return res.status(400).json({ message: error.message })
+  }
+}
+
+export const updateCompanyModules = async (req, res) => {
+  const enabledModules = normalizeModules(req.body.enabledModules)
+  if (!Array.isArray(req.body.enabledModules)) return res.status(400).json({ message: 'enabledModules must be an array' })
+  const company = await Company.findByIdAndUpdate(req.params.id, { enabledModules }, { new: true, runValidators: true })
+  if (!company) return res.status(404).json({ message: 'Company not found' })
+  await recordAudit(req, 'company_modules_updated', { companyId: company._id, entityId: company._id, module: 'company', newValue: { enabledModules } })
+  return res.status(200).json({ enabledModules: company.enabledModules })
+}
+
+export const getCompanyUsage = async (req, res) => {
+  const company = await Company.findById(req.params.id).select('employeeLimit storageLimit enabledModules')
+  if (!company) return res.status(404).json({ message: 'Company not found' })
+  const employees = await User.countDocuments({ companyId: req.params.id, role: { $ne: 'super_admin' } })
+  return res.status(200).json({ employees: { used: employees, limit: company.employeeLimit, percentage: company.employeeLimit ? Math.round((employees / company.employeeLimit) * 100) : 0 }, storage: { used: null, limit: company.storageLimit, percentage: null, measured: false }, enabledModules: normalizeModules(company.enabledModules) })
+}
+
+export const listAuditLogs = async (req, res) => {
+  const page = Math.max(Number(req.query.page) || 1, 1)
+  const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100)
+  const filter = req.query.companyId ? { companyId: req.query.companyId } : {}
+  const [logs, total] = await Promise.all([
+    AuditLog.find(filter).populate('actorId', 'name email role').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    AuditLog.countDocuments(filter),
+  ])
+  return res.status(200).json({ logs, pagination: { page, limit, total, pages: Math.ceil(total / limit) } })
 }
 
 export const deleteCompany = async (req, res) => {
