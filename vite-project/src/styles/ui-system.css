@@ -16,6 +16,13 @@ body.mf-drawer-open { overflow: hidden; }
 .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .table-responsive > .table { min-width: 640px; }
 .dropdown-menu { max-width: min(320px, calc(100vw - 1.5rem)); }
+/* Directory-header search bars (Doctors/Medicals/etc.): full width when
+   stacked under the title on mobile, a fixed comfortable width once the
+   header switches to a single row (matches the flex-lg-row breakpoint used
+   alongside this class). A hardcoded min-width here previously overflowed
+   narrow (320-360px) phones since it applied even while stacked. */
+.search-bar-wrap { width: 100%; }
+@media (min-width: 992px) { .search-bar-wrap { width: auto; min-width: 300px; } }
 .profile-menu, .notification-menu { width: min(320px, calc(100vw - 1.5rem)); }
 .notification-menu { max-height: min(420px, calc(100vh - 5rem)); overflow-y: auto; }
 .modal-dialog { margin: .75rem; }

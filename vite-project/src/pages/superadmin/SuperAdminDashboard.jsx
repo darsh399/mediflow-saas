@@ -32,14 +32,14 @@ const SuperAdminDashboard = ()=>{
   if(!data) return <div className="container my-4">Loading...</div>
   return (
     <div className="container my-4">
-      <div className="d-flex align-items-center justify-content-between">
-        <div className="d-flex align-items-center">
+      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div className="d-flex align-items-center flex-wrap gap-2">
           <BackButton />
           <h3 className="mb-0">Super Admin Dashboard</h3>
         </div>
-        <div>
-          <Link to="/superadmin/companies" className="btn btn-sm btn-outline-primary me-2">Create Company</Link>
-          <Link to="/superadmin/companies/list" className="btn btn-sm btn-outline-secondary me-2">View Companies</Link>
+        <div className="d-flex flex-wrap gap-2">
+          <Link to="/superadmin/companies" className="btn btn-sm btn-outline-primary">Create Company</Link>
+          <Link to="/superadmin/companies/list" className="btn btn-sm btn-outline-secondary">View Companies</Link>
           <button className="btn btn-sm btn-danger" onClick={async ()=>{ try{ await axios.post('/api/superadmin/logout'); dispatch(clearAuth()); navigate('/superadmin/login') }catch(e){ console.error(e); dispatch(clearAuth()); navigate('/superadmin/login') } }}>Logout</button>
         </div>
       </div>
