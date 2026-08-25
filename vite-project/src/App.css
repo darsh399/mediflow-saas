@@ -35,3 +35,89 @@
   height: 1.1rem;
   border-width: 0.16em;
 }
+
+.visit-calendar-weekdays,
+.visit-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.visit-calendar-day {
+  min-width: 0;
+  min-height: 72px;
+  padding: 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: #fff;
+  color: #212529;
+  text-align: left;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.visit-calendar-day:hover {
+  border-color: #0d6efd;
+  background: #f5f9ff;
+}
+
+.visit-calendar-day.muted {
+  color: #adb5bd;
+  background: #f8f9fa;
+}
+
+.visit-calendar-day.selected {
+  border: 2px solid #0d6efd;
+  padding: 7px;
+  background: #e8f1ff;
+}
+
+.visit-calendar-day.today > span:first-child {
+  display: inline-flex;
+  min-width: 24px;
+  min-height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dc3545;
+  border-radius: 50%;
+  color: #dc3545;
+}
+
+.visit-calendar-day small {
+  display: block;
+  margin-top: 10px;
+  color: #0d6efd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calendar-month-title {
+  min-width: 170px;
+  text-align: center;
+}
+
+@media (max-width: 575px) {
+  .visit-calendar-weekdays,
+  .visit-month-grid {
+    gap: 2px;
+  }
+
+  .visit-calendar-day {
+    min-height: 52px;
+    padding: 5px;
+    font-size: 0.85rem;
+  }
+
+  .visit-calendar-day.selected {
+    padding: 4px;
+  }
+
+  .visit-calendar-day small {
+    margin-top: 4px;
+    font-size: 0.65rem;
+  }
+
+  .calendar-month-title {
+    min-width: 130px;
+  }
+}

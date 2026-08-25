@@ -35,6 +35,21 @@ export async function listVisits(){
   return resp.data
 }
 
+export async function listEmployeeVisitSummary(params) {
+  const resp = await axios.get('/api/visits/employee-summary', { params })
+  return resp.data
+}
+
+export async function listEmployeeVisits(employeeId, params) {
+  const resp = await axios.get(`/api/visits/employee/${employeeId}`, { params })
+  return resp.data
+}
+
+export async function getVisitCalendarSummary(params) {
+  const resp = await axios.get('/api/visits/calendar-summary', { params })
+  return resp.data
+}
+
 export async function getVisit(id){
   const resp = await axios.get(`/api/visits/${id}`)
   return resp.data
@@ -50,4 +65,4 @@ export async function deleteVisit(id){
   return resp.data
 }
 
-export default { createVisit, doctorVisit, medicalVisit, downloadVisitPhoto, listVisits, getVisit, updateVisit, deleteVisit }
+export default { createVisit, doctorVisit, medicalVisit, downloadVisitPhoto, listVisits, listEmployeeVisitSummary, listEmployeeVisits, getVisitCalendarSummary, getVisit, updateVisit, deleteVisit }

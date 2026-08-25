@@ -1,8 +1,6 @@
 import User from '../models/User.js';
 import Visit from '../models/Visit.js'
 import hashPassword from '../utils/hashPassword.js';
-import createToken from '../utils/createToken.js';
-import getCookieOptions from '../utils/getCookieOptions.js'
 import bcrypt from 'bcrypt';
 import { validateProfile } from '../validators/userValidator.js';
 import { canActOn, isPrivilegedRole } from '../utils/authorize.js';
@@ -12,6 +10,7 @@ import EmployeeProfile from '../models/EmployeeProfile.js';
 import Attendance from '../models/Attendance.js';
 import { hasPermission } from '../config/permissions.js';
 import recordAudit from '../utils/audit.js';
+import { issueSession, revokeRefreshToken, clearSessionCookies } from '../services/sessionService.js';
 
 
 
@@ -108,11 +107,9 @@ export const createUser = async (req, res) => {
         const newUser = new User({ name, email, password: hashedPw, mobile, companyId, role: userRole, ...employeeFields });
 
         const savedUser = await newUser.save();
-        const token = createToken({ id: savedUser._id, email: savedUser.email, role: savedUser.role, companyId: savedUser.companyId });
+        const token = await issueSession(res, savedUser);
         const userObj = savedUser.toObject();
         delete userObj.password;
-        // set HTTP-only cookie so client receives token automatically
-        res.cookie('token', token, getCookieOptions())
         return res.status(201).json({ message: 'User created successfully', user: userObj, token });
     }catch(error){
         console.error("Error creating user:", error);
@@ -152,11 +149,10 @@ export const loginUser = async (req, res) => {
             }
         }
 
-        const token = createToken({ id: userExists._id, email: userExists.email, role: userExists.role, companyId: userExists.companyId });
+        const token = await issueSession(res, userExists);
         const userObj = userExists.toObject();
         delete userObj.password;
         // Set HTTP-only cookie with JWT for client to send on subsequent requests
-        res.cookie('token', token, getCookieOptions());
         res.status(200).json({ message: 'Login successful', user: userObj, token });
     }catch(error){
         console.error("Error retrieving user:", error);
@@ -166,8 +162,8 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
     try {
-        const opts = { ...getCookieOptions(), maxAge: undefined }
-        res.clearCookie('token', opts)
+        await revokeRefreshToken(req)
+        clearSessionCookies(res)
         return res.status(200).json({ message: 'Logged out' })
     } catch (err) {
         console.error('Logout error:', err)

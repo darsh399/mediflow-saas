@@ -6,8 +6,7 @@ import { hasAnyRole } from '../utils/authorize.js';
 import User from '../models/User.js';
 import Company from '../models/Company.js';
 import hashPassword from '../utils/hashPassword.js';
-import createToken from '../utils/createToken.js';
-import getCookieOptions from '../utils/getCookieOptions.js'
+import { clearSessionCookies, refreshSession, issueSession } from '../services/sessionService.js';
 import { requireRole } from '../utils/authorize.js';
 import bcrypt from 'bcrypt';
 
@@ -118,11 +117,9 @@ export const acceptInvite = async (req, res) => {
       await Company.findByIdAndUpdate(invite.companyId, { ownerId: user._id });
     }
 
-    const tokenJwt = createToken({ id: user._id, email: user.email, role: user.role, companyId: user.companyId });
+    const tokenJwt = await issueSession(res, user);
     const userObj = user.toObject();
     delete userObj.password;
-    // set HTTP-only cookie so clients receive the token for subsequent requests
-    res.cookie('token', tokenJwt, getCookieOptions())
     return res.status(200).json({ message: 'Invite accepted', user: userObj, token: tokenJwt });
   } catch (error) {
     console.error('Error accepting invite:', error);
@@ -196,6 +193,22 @@ export const currentUser = async (req, res) => {
   }
 };
 
+export const refreshAccessToken = async (req, res) => {
+  try {
+    const session = await refreshSession(req, res);
+    if (!session) {
+      clearSessionCookies(res);
+      return res.status(401).json({ message: 'Refresh token is invalid or expired', code: 'REFRESH_TOKEN_INVALID' });
+    }
+    const user = session.user.toObject();
+    delete user.password;
+    return res.status(200).json({ token: session.accessToken, user });
+  } catch (error) {
+    console.error('Token refresh error:', error.message);
+    return res.status(401).json({ message: 'Unable to refresh session', code: 'REFRESH_TOKEN_INVALID' });
+  }
+};
+
 export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -255,4 +268,4 @@ export const changePassword = async (req, res) => {
   }
 };
 
-export default { sendInvite, acceptInvite, forgotPassword, resetPassword, changePassword, currentUser };
+export default { sendInvite, acceptInvite, forgotPassword, resetPassword, changePassword, currentUser, refreshAccessToken };

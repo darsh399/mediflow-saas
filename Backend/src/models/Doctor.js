@@ -9,6 +9,7 @@ const doctorSchema = new mongoose.Schema({
   specialty: { type: String },
   email: { type: String },
   phone: { type: String },
+  dateOfBirth: { type: Date },
   active: { type: Boolean, default: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });

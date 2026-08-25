@@ -13,7 +13,7 @@ router.get('/dashboard', authMiddleware, requireRole('super_admin'), superDashbo
 router.get('/audit-logs', authMiddleware, requireRole('super_admin'), listAuditLogs)
 
 // logout
-router.post('/logout', authMiddleware, superLogout)
+router.post('/logout', superLogout)
 
 // Create company + subscription + invite (onboarding) - Super Admin only
 // router.post('/companies', authMiddleware, requireRole('super_admin'), async (req, res, next) => {

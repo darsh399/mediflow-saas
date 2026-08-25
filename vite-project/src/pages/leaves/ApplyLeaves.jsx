@@ -13,6 +13,8 @@ const ApplyLeave = () => {
   const [loading, setLoading] = useState(false);
   const [loadingLeaves, setLoadingLeaves] = useState(true);
   const [leaves, setLeaves] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  const [balances, setBalances] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -20,9 +22,12 @@ const ApplyLeave = () => {
     try {
       setLoadingLeaves(true);
 
-      const response = await leaveApi.listMyLeaves();
-
+      const [response, policyResponse, balanceResponse] = await Promise.all([leaveApi.listMyLeaves(), leaveApi.getPolicy(), leaveApi.getMyBalances()]);
       setLeaves(response.leaves || []);
+      setLeaveTypes((policyResponse.policy?.leaveTypes || []).filter(type => type.enabled));
+      setBalances(balanceResponse.balances || []);
+      const configuredTypes = (policyResponse.policy?.leaveTypes || []).filter(type => type.enabled);
+      if (configuredTypes.length && !configuredTypes.some(type => type.code === form.leaveType)) setForm(current => ({ ...current, leaveType: configuredTypes[0].code }));
     } catch (err) {
       setError(
         err?.response?.data?.message ||
@@ -55,6 +60,7 @@ const ApplyLeave = () => {
   };
 
   const days = calculateDays();
+  const selectedPolicy = leaveTypes.find(type => type.code === form.leaveType);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -318,29 +324,7 @@ const ApplyLeave = () => {
                     }
                     required
                   >
-                    <option value="CASUAL">
-                      Casual Leave
-                    </option>
-
-                    <option value="SICK">
-                      Sick Leave
-                    </option>
-
-                    <option value="EARNED">
-                      Earned Leave
-                    </option>
-
-                    <option value="PAID">
-                      Paid Leave
-                    </option>
-
-                    <option value="UNPAID">
-                      Unpaid Leave
-                    </option>
-
-                    <option value="OTHER">
-                      Other
-                    </option>
+                    {leaveTypes.map(type => <option value={type.code} key={type._id}>{type.name}</option>)}
                   </select>
                 </div>
 
@@ -442,11 +426,12 @@ const ApplyLeave = () => {
 
                 <div className="col-12">
                   <label className="form-label fw-semibold">
-                    Reference document <span className="text-muted fw-normal">(optional)</span>
+                    Reference document <span className="text-muted fw-normal">({selectedPolicy?.documentRequired ? "required" : "optional"})</span>
                   </label>
                   <input
                     type="file"
                     className="form-control"
+                    required={Boolean(selectedPolicy?.documentRequired)}
                     accept=".pdf,image/jpeg,image/png,image/webp"
                     onChange={(e) => setDocumentFile(e.target.files?.[0] || null)}
                   />
@@ -475,6 +460,13 @@ const ApplyLeave = () => {
 
               </div>
             </form>
+          </div>
+        </div>
+
+        <div className="card border-0 shadow-sm rounded-4 mb-4">
+          <div className="card-body p-4">
+            <h5 className="fw-bold mb-3">My Leave Balance</h5>
+            <div className="row g-3">{balances.length ? balances.map(balance => <div className="col-sm-6 col-lg-4" key={balance._id}><div className="border rounded p-3"><div className="fw-semibold">{leaveTypes.find(type => type.code === balance.leaveTypeCode)?.name || balance.leaveTypeCode}</div><div className="small text-muted mt-2">Available: {balance.available} · Pending: {balance.pending} · Used: {balance.used}</div></div></div>) : <div className="col-12 text-muted">No leave balances configured.</div>}</div>
           </div>
         </div>
 
