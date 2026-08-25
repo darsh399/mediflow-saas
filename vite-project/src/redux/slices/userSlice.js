@@ -109,6 +109,20 @@ export const changeUserStatus = createAsyncThunk(
   }
 )
 
+export const promoteEmployee = createAsyncThunk(
+  'users/promote',
+  async ({ id, data: body }, { rejectWithValue }) => {
+    try {
+      const data = await userApi.promoteEmployee(id, body)
+      return data
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data || { message: err.message }
+      )
+    }
+  }
+)
+
 // Get visits created by logged-in employee
 export const getAllMyVisits = createAsyncThunk(
   'users/myvisits',
@@ -192,6 +206,11 @@ const slice = createSlice({
       // Status
       .addCase(changeUserStatus.fulfilled, (s, a) => {
         s.current = a.payload
+      })
+
+      // Promotion
+      .addCase(promoteEmployee.fulfilled, (s, a) => {
+        s.current = a.payload.user
       })
 
       // My visits

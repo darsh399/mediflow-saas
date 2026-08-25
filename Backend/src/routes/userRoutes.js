@@ -12,7 +12,8 @@ import {
   profileComplete,
   updateProfile,
   logoutUser,
-  changeUserStatus
+  changeUserStatus,
+  promoteEmployee
 } from '../controllers/userController.js';
 
 import authMiddleware from '../middleware/authMiddleware.js';
@@ -106,6 +107,15 @@ router.patch(
   requireRole('admin', 'company_owner', 'hr_manager', 'hr'),
   authorize('employee.update'),
   changeUserStatus
+);
+
+// Promotion route
+router.post(
+  '/users/:id/promote',
+  authMiddleware,
+  requireRole('admin', 'company_owner', 'hr_manager', 'hr'),
+  authorize('employee.update'),
+  promoteEmployee
 );
 
 export default router;

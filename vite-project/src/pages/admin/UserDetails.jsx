@@ -1,7 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchUser, changeUserStatus } from '../../redux/slices/userSlice'
+import { fetchUser, changeUserStatus, promoteEmployee } from '../../redux/slices/userSlice'
 import { useNavigate, useParams } from 'react-router-dom'
+
+const PROMOTERS = ['admin', 'company_owner', 'hr_manager', 'hr']
+const errorMessage = (error) => error?.message || error?.response?.data?.message || 'Unable to promote employee'
 
 const UserDetails = () => {
   const { id } = useParams()
@@ -9,6 +12,11 @@ const UserDetails = () => {
   const dispatch = useDispatch()
 
   const { current, loading, error } = useSelector((state) => state.users)
+  const actorRole = useSelector((state) => state.auth.user?.role)
+  const canPromote = PROMOTERS.includes(actorRole)
+  const [promoteForm, setPromoteForm] = useState({ designation: '', department: '', note: '', effectiveDate: '' })
+  const [promoting, setPromoting] = useState(false)
+  const [promoteError, setPromoteError] = useState('')
 
   useEffect(() => {
     if (id) {
@@ -18,10 +26,37 @@ const UserDetails = () => {
     }
   }, [dispatch, id])
 
+  useEffect(() => {
+    if (current) {
+      setPromoteForm({
+        designation: current.profile?.jobDetails?.designation || '',
+        department: current.profile?.jobDetails?.department || '',
+        note: '',
+        effectiveDate: '',
+      })
+    }
+  }, [current?._id])
+
   const handleStatus = (action) => {
     if (!window.confirm(`Perform ${action}?`)) return
 
     dispatch(changeUserStatus({ id, action }))
+  }
+
+  const handlePromote = async (event) => {
+    event.preventDefault()
+    if (!promoteForm.designation.trim()) return
+    if (!window.confirm(`Promote ${displayName} to "${promoteForm.designation}"?`)) return
+    setPromoting(true)
+    setPromoteError('')
+    try {
+      const result = await dispatch(promoteEmployee({ id, data: promoteForm })).unwrap()
+      alert(`Employee promoted successfully.${result.emailSent ? ' Notification and email sent.' : ' Notification sent, but the email could not be delivered.'}`)
+    } catch (promoteErr) {
+      setPromoteError(errorMessage(promoteErr))
+    } finally {
+      setPromoting(false)
+    }
   }
 
   // Calculate days from joining date
@@ -671,6 +706,68 @@ const UserDetails = () => {
             </div>
 
           </div>
+
+          {/* Promote Employee */}
+          {canPromote && (
+            <div className="card border-0 shadow-sm mb-4">
+
+              <div className="card-header bg-white border-0 pt-4 px-4">
+                <h5 className="fw-bold mb-1">Promote Employee</h5>
+                <p className="text-muted small mb-0">Update title and notify the employee by app and email</p>
+              </div>
+
+              <div className="card-body px-4">
+                <form onSubmit={handlePromote}>
+                  {promoteError && <div className="alert alert-danger py-2 small">{promoteError}</div>}
+
+                  <div className="mb-3">
+                    <label className="text-muted small">New Designation</label>
+                    <input
+                      required
+                      className="form-control"
+                      placeholder="e.g. Senior Software Engineer"
+                      value={promoteForm.designation}
+                      onChange={(event) => setPromoteForm({ ...promoteForm, designation: event.target.value })}
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="text-muted small">Department (optional)</label>
+                    <input
+                      className="form-control"
+                      value={promoteForm.department}
+                      onChange={(event) => setPromoteForm({ ...promoteForm, department: event.target.value })}
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="text-muted small">Effective Date (optional)</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={promoteForm.effectiveDate}
+                      onChange={(event) => setPromoteForm({ ...promoteForm, effectiveDate: event.target.value })}
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="text-muted small">Note to employee (optional)</label>
+                    <textarea
+                      className="form-control"
+                      rows="2"
+                      value={promoteForm.note}
+                      onChange={(event) => setPromoteForm({ ...promoteForm, note: event.target.value })}
+                    />
+                  </div>
+
+                  <button className="btn btn-success w-100" disabled={promoting}>
+                    {promoting ? 'Promoting...' : 'Promote Employee'}
+                  </button>
+                </form>
+              </div>
+
+            </div>
+          )}
 
           {/* Employee Summary */}
           <div className="card border-0 shadow-sm">
