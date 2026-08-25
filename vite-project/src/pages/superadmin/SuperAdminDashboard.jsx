@@ -44,20 +44,39 @@ const SuperAdminDashboard = ()=>{
         </div>
       </div>
       <div className="row g-3 mt-3">
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Total Companies</h6><h4>{data.totalCompanies}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Active Companies</h6><h4>{data.activeCompanies}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Suspended Companies</h6><h4>{data.suspendedCompanies}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Blocked Companies</h6><h4>{data.blockedCompanies}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Pending Companies</h6><h4>{data.pendingCompanies}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Expired Subscriptions</h6><h4>{data.expiredSubs}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Active Subscriptions</h6><h4>{data.activeSubs}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Trial Companies</h6><h4>{data.trialSubs ?? 0}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>New This Month</h6><h4>{data.newCompaniesThisMonth ?? 0}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Monthly Revenue</h6><h4>{Number(data.monthlyRevenue ?? 0).toLocaleString()}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Total Users</h6><h4>{data.totalUsers}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>Employees</h6><h4>{data.totalEmployees}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>HR</h6><h4>{data.totalHR}</h4></div></div>
-        <div className="col-sm-6 col-md-4"><div className="card p-3"><h6>MRs</h6><h4>{data.totalMR}</h4></div></div>
+        {[
+          { label: 'Total Companies', value: data.totalCompanies, color: '#0d6efd', icon: 'bi-building' },
+          { label: 'Active Companies', value: data.activeCompanies, color: '#198754', icon: 'bi-check-circle' },
+          { label: 'Suspended Companies', value: data.suspendedCompanies, color: '#fd7e14', icon: 'bi-pause-circle' },
+          { label: 'Blocked Companies', value: data.blockedCompanies, color: '#dc3545', icon: 'bi-slash-circle' },
+          { label: 'Pending Companies', value: data.pendingCompanies, color: '#ffc107', icon: 'bi-hourglass-split' },
+          { label: 'Expired Subscriptions', value: data.expiredSubs, color: '#dc3545', icon: 'bi-calendar-x' },
+          { label: 'Active Subscriptions', value: data.activeSubs, color: '#198754', icon: 'bi-credit-card' },
+          { label: 'Trial Companies', value: data.trialSubs ?? 0, color: '#0dcaf0', icon: 'bi-stopwatch' },
+          { label: 'New This Month', value: data.newCompaniesThisMonth ?? 0, color: '#6610f2', icon: 'bi-graph-up-arrow' },
+          { label: 'Monthly Revenue', value: Number(data.monthlyRevenue ?? 0).toLocaleString(), color: '#20c997', icon: 'bi-currency-rupee' },
+          { label: 'Total Users', value: data.totalUsers, color: '#0d6efd', icon: 'bi-people' },
+          { label: 'Employees', value: data.totalEmployees, color: '#6f42c1', icon: 'bi-person-badge' },
+          { label: 'HR', value: data.totalHR, color: '#d63384', icon: 'bi-person-workspace' },
+          { label: 'MRs', value: data.totalMR, color: '#fd7e14', icon: 'bi-briefcase' },
+        ].map((stat) => (
+          <div className="col-sm-6 col-md-4" key={stat.label}>
+            <div className="card p-3 h-100" style={{ borderLeft: `4px solid ${stat.color}` }}>
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 className="text-muted mb-1">{stat.label}</h6>
+                  <h4 className="fw-bold mb-0">{stat.value}</h4>
+                </div>
+                <div
+                  className="rounded-circle d-flex align-items-center justify-content-center"
+                  style={{ width: '42px', height: '42px', backgroundColor: `${stat.color}1a`, color: stat.color }}
+                >
+                  <i className={`bi ${stat.icon}`}></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
       <div className="row mt-4">
         <div className="col-md-6">

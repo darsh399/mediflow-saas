@@ -9,8 +9,12 @@ export const PLAN_DEFAULTS = {
   BASIC: { price: 29, durationMonths: 1, employeeLimit: 25, storageLimit: 5 },
   PROFESSIONAL: { price: 99, durationMonths: 1, employeeLimit: 100, storageLimit: 10 },
   ENTERPRISE: { price: 0, durationMonths: 12, employeeLimit: 1000, storageLimit: 100 },
+  '1_MONTH': { price: 0, durationMonths: 1, employeeLimit: 100, storageLimit: 10 },
+  '3_MONTHS': { price: 0, durationMonths: 3, employeeLimit: 100, storageLimit: 10 },
   '6_MONTHS': { price: 0, durationMonths: 6, employeeLimit: 100, storageLimit: 10 },
   '1_YEAR': { price: 0, durationMonths: 12, employeeLimit: 100, storageLimit: 10 },
+  '2_YEAR': { price: 0, durationMonths: 24, employeeLimit: 100, storageLimit: 10 },
+  '3_YEAR': { price: 0, durationMonths: 36, employeeLimit: 100, storageLimit: 10 },
 };
 
 function dateAfterMonths(date, months) {
