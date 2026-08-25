@@ -16,7 +16,9 @@ const days = [
 
 export default function Calendar() {
   const role = useSelector((state) => state.auth.user?.role)
-  const canManage = ['admin', 'company_owner', 'hr_manager', 'hr'].includes(role)
+  // Only hr_manager/company_owner/admin can add/remove holidays or set working
+  // days — normal hr can view the calendar but not manage it.
+  const canManage = ['admin', 'company_owner', 'hr_manager'].includes(role)
   const [holidays, setHolidays] = useState([])
   const [workingDays, setWorkingDays] = useState([])
   const [form, setForm] = useState({ name: '', date: '', endDate: '', type: 'COMPANY', description: '' })

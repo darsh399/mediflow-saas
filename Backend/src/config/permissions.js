@@ -26,13 +26,21 @@ const rolePermissions = {
     'calendar.view', 'calendar.manage',
     'salary.view', 'salary.manage', 'salary_slip.view', 'salary_slip.manage', 'offer.view', 'offer.manage',
   ],
+  // Normal HR: can view employees, leave requests, and onboarding
+  // documents/profiles company-wide (including checking off individual
+  // documents as verified), but intentionally excludes salary/offer/
+  // salary_slip permissions and final approval authority — only
+  // company_owner and hr_manager may approve/reject leave, review/approve
+  // onboarding profiles, or manage salary, offer letters, and salary slips.
   hr: [
     'employee.view', 'employee.create', 'employee.update',
-    'leave.view', 'leave.apply', 'leave.update', 'leave.cancel', 'leave.approve', 'leave.reject', 'leave.view_ledger', 'leave.view_history',
-    'attendance.view', 'attendance.create', 'document.view', 'document.upload',
+    'leave.view', 'leave.apply', 'leave.update', 'leave.cancel', 'leave.view_ledger', 'leave.view_history',
+    'attendance.view', 'attendance.create', 'document.view', 'document.upload', 'document.verify',
     'report.view', 'performance.view',
     'organization.view', 'organization.manage',
-    'calendar.view', 'calendar.manage', 'salary.view', 'salary.manage', 'salary_slip.view', 'salary_slip.manage', 'offer.view', 'offer.manage',
+    // Can view the calendar/holidays declared by hr_manager/company_owner,
+    // but cannot add/remove holidays or change working days — no calendar.manage.
+    'calendar.view',
   ],
   manager: [
     'employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.approve', 'leave.reject', 'leave.view_history', 'leave.view_ledger',

@@ -530,7 +530,7 @@ const ProfileReviewDetails = () => {
 
             <div className="card-header bg-white border-0 p-4">
               <h5 className="fw-bold mb-0">
-                Employment Summary
+                Employment Information
               </h5>
             </div>
 
@@ -564,7 +564,7 @@ const ProfileReviewDetails = () => {
 
               </div>
 
-              <div>
+              <div className="mb-4">
 
                 <small className="text-muted">
                   Experience
@@ -575,6 +575,143 @@ const ProfileReviewDetails = () => {
                 </div>
 
               </div>
+
+              <div>
+
+                <small className="text-muted">
+                  Employment Type
+                </small>
+
+                <div className="fw-bold mt-1 text-capitalize">
+                  {employee?.employmentType?.toLowerCase().replace(/_/g, ' ') || 'N/A'}
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div className="row g-4 mb-4">
+
+        <div className="col-xl-6">
+
+          <div className="card border-0 shadow-sm h-100">
+
+            <div className="card-header bg-white border-0 p-4">
+              <h5 className="fw-bold mb-0">
+                Onboarding Status
+              </h5>
+            </div>
+
+            <div className="card-body p-4">
+
+              <div className="mb-4">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <small className="text-muted">Profile Completion</small>
+                  <small className="fw-bold">{profile?.completion?.percentage || 0}%</small>
+                </div>
+                <div className="progress" style={{ height: '8px' }}>
+                  <div
+                    className={`progress-bar ${(profile?.completion?.percentage || 0) >= 100 ? 'bg-success' : 'bg-primary'}`}
+                    style={{ width: `${profile?.completion?.percentage || 0}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="row g-4">
+
+                <div className="col-md-6">
+                  <small className="text-muted">Review Status</small>
+                  <div className="fw-semibold mt-1">
+                    {profile?.status || 'N/A'}
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <small className="text-muted">Submitted At</small>
+                  <div className="fw-semibold mt-1">
+                    {profile?.submittedAt ? new Date(profile.submittedAt).toLocaleDateString() : 'N/A'}
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <small className="text-muted">Created By</small>
+                  <div className="fw-semibold mt-1">
+                    {employee?.createdBy?.name || employee?.createdBy?.email || 'Self-registered'}
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <small className="text-muted">Reviewed By</small>
+                  <div className="fw-semibold mt-1">
+                    {profile?.reviewedBy?.name || profile?.reviewedBy?.email || 'Not yet reviewed'}
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="col-xl-6">
+
+          <div className="card border-0 shadow-sm h-100">
+
+            <div className="card-header bg-white border-0 p-4">
+              <h5 className="fw-bold mb-0">
+                Bank Details
+              </h5>
+            </div>
+
+            <div className="card-body p-4">
+
+              {profile?.bankDetails ? (
+                <div className="row g-4">
+
+                  <div className="col-md-6">
+                    <small className="text-muted">Account Holder</small>
+                    <div className="fw-semibold mt-1">{profile.bankDetails.accountHolderName || 'N/A'}</div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <small className="text-muted">Bank Name</small>
+                    <div className="fw-semibold mt-1">{profile.bankDetails.bankName || 'N/A'}</div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <small className="text-muted">Account Number</small>
+                    <div className="fw-semibold mt-1">{profile.bankDetails.accountNumberMasked || 'N/A'}</div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <small className="text-muted">IFSC Code</small>
+                    <div className="fw-semibold mt-1">{profile.bankDetails.ifscCode || 'N/A'}</div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <small className="text-muted">Branch</small>
+                    <div className="fw-semibold mt-1">{profile.bankDetails.branchName || 'N/A'}</div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <small className="text-muted">Account Type</small>
+                    <div className="fw-semibold mt-1 text-capitalize">{profile.bankDetails.accountType?.toLowerCase() || 'N/A'}</div>
+                  </div>
+
+                </div>
+              ) : (
+                <div className="text-center py-3">
+                  <p className="text-muted mb-0">No bank details on file.</p>
+                </div>
+              )}
 
             </div>
 
@@ -706,7 +843,15 @@ const ProfileReviewDetails = () => {
         </div>
       )}
 
-      {profile?.status === 'SUBMITTED' && (
+      {profile?.status === 'SUBMITTED' && !profile?.reviewEligibility?.canReview && profile?.reviewEligibility?.reason && (
+
+        <div className="alert alert-info border-0 shadow-sm">
+          {profile.reviewEligibility.reason}
+        </div>
+
+      )}
+
+      {profile?.status === 'SUBMITTED' && profile?.reviewEligibility?.canReview && (
 
         <div className="card border-0 shadow-sm">
 

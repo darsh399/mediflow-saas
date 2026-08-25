@@ -10,7 +10,7 @@ const Projects = () => {
 
   const load = async () => {
     try {
-      const [projectResponse, userResponse] = await Promise.all([projectApi.listProjects(), userApi.listUsers()])
+      const [projectResponse, userResponse] = await Promise.all([projectApi.listProjects(), userApi.listColleagues()])
       setProjects(projectResponse.projects || [])
       setUsers(userResponse.users || [])
     } catch (err) { setError(err?.response?.data?.message || 'Unable to load projects') }
@@ -18,7 +18,7 @@ const Projects = () => {
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([projectApi.listProjects(), userApi.listUsers()]).then(([projectResponse, userResponse]) => {
+    Promise.all([projectApi.listProjects(), userApi.listColleagues()]).then(([projectResponse, userResponse]) => {
       if (cancelled) return
       setProjects(projectResponse.projects || [])
       setUsers(userResponse.users || [])

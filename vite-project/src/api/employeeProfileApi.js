@@ -2,6 +2,7 @@ import axios from './axiosInstance'
 
 export async function getMyProfile(){ return (await axios.get('/api/employee-profiles/me')).data }
 export async function saveProfile(data){ return (await axios.put('/api/employee-profiles/me', data)).data }
+export async function saveBankDetails(data){ return (await axios.put('/api/employee-profiles/me/bank-details', data)).data }
 export async function submitProfile(){ return (await axios.post('/api/employee-profiles/me/submit')).data }
 export async function uploadDocuments(formData){ return (await axios.post('/api/employee-profiles/me/documents', formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data }
 export async function listProfiles(){ return (await axios.get('/api/employee-profiles')).data }
@@ -13,4 +14,4 @@ export async function downloadDocument(storageName){
 export async function verifyDocument(userId, documentId, verified){ return (await axios.patch(`/api/employee-profiles/documents/employee/${userId}/${documentId}/verify`, { verified })).data }
 export async function deleteDocument(userId, documentId){ return (await axios.delete(`/api/employee-profiles/documents/employee/${userId}/${documentId}`)).data }
 
-export default { getMyProfile, saveProfile, submitProfile, uploadDocuments, listProfiles, reviewProfile, downloadDocument, verifyDocument, deleteDocument }
+export default { getMyProfile, saveProfile, saveBankDetails, submitProfile, uploadDocuments, listProfiles, reviewProfile, downloadDocument, verifyDocument, deleteDocument }

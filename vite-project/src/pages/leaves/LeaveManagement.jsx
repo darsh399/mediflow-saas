@@ -14,7 +14,11 @@ const LeaveManagement = () => {
   const [policyTypes, setPolicyTypes] = useState([]);
   const [savingPolicy, setSavingPolicy] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState(null);
-  const canManagePolicy = ["admin", "company_owner", "hr_manager", "hr"].includes(useSelector(state => state.auth.user?.role));
+  const role = useSelector(state => state.auth.user?.role);
+  const canManagePolicy = ["admin", "company_owner", "hr_manager", "hr"].includes(role);
+  // Normal hr can view every leave request and its document, but only
+  // company_owner/hr_manager (and people managers) can approve/reject.
+  const canApproveLeave = ["admin", "company_owner", "hr_manager", "manager", "project_manager", "superadmin", "super_admin"].includes(role);
 
   const loadLeaves = async () => {
     try {
@@ -694,7 +698,9 @@ const LeaveManagement = () => {
 
                           <td className="py-4 pe-4">
                             <button type="button" className="btn btn-sm btn-outline-primary mb-2" onClick={() => showHistory(leave._id)}>History</button>
-                            {isPending ? (
+                            {isPending && !canApproveLeave ? (
+                              <span className="text-muted small d-block">View only</span>
+                            ) : isPending ? (
                               <div className="d-flex flex-column flex-xl-row gap-2">
                                 <button
                                   className="btn btn-success btn-sm rounded-3"

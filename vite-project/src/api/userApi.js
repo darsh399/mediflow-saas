@@ -20,6 +20,14 @@ export async function listUsers() {
   return resp.data
 }
 
+// Minimal, PII-free colleague list (id + name + role) for pickers such as
+// task assignee / project manager / message recipient. Any authenticated
+// company member can call this, unlike listUsers() which is restricted.
+export async function listColleagues() {
+  const resp = await axios.get('/api/users/colleagues')
+  return resp.data
+}
+
 export async function searchUsers(query) {
   const params = new URLSearchParams(query || {}).toString()
   const resp = await axios.get(`/api/users/search?${params}`)
@@ -57,6 +65,7 @@ export default {
   createUser,
   updateUser,
   listUsers,
+  listColleagues,
   changeUserStatus,
   promoteEmployee,
   searchUsers,

@@ -7,9 +7,17 @@ import leaveService from '../services/leaveService.js';
 import recordAudit from '../utils/audit.js';
 import { hasAnyRole } from '../utils/authorize.js';
 
-const REVIEWER_ROLES = ['admin', 'company_owner', 'hr_manager', 'hr', 'manager', 'project_manager', 'superadmin', 'super_admin'];
+// Who can see every leave request in the company. Leave review is reserved for
+// hr_manager, company_owner and admin (plus people managers over their own
+// reports) — normal hr gets none of this, same as a plain employee: they only
+// see their own leave requests.
+const VIEWER_ROLES = ['admin', 'company_owner', 'hr_manager', 'manager', 'project_manager', 'superadmin', 'super_admin'];
+// Who can actually approve/reject/cancel a leave request. Same set as
+// VIEWER_ROLES — reviewing implies acting here.
+const APPROVER_ROLES = VIEWER_ROLES;
 
-const isReviewer = (user) => hasAnyRole(user, REVIEWER_ROLES);
+const isViewer = (user) => hasAnyRole(user, VIEWER_ROLES);
+const isApprover = (user) => hasAnyRole(user, APPROVER_ROLES);
 
 export const applyLeave = async (req, res) => {
   try {
@@ -77,7 +85,7 @@ export const listLeaves = async (req, res) => {
     const companyId = req.user?.companyId;
     const query = companyId ? { companyId } : {};
     // The personal endpoint is also used by reviewers on their own leave pages.
-    if (req.query.mine === 'true' || !isReviewer(req.user)) query.userId = req.user.id;
+    if (req.query.mine === 'true' || !isViewer(req.user)) query.userId = req.user.id;
     if (req.query.status) query.status = String(req.query.status).toLowerCase();
     if (req.query.leaveType) query.leaveType = String(req.query.leaveType).toUpperCase();
     if (req.query.from || req.query.to) {
@@ -105,7 +113,7 @@ export const reviewLeave = async (req, res) => {
     const companyId = req.user?.companyId;
     const leave = await Leave.findOne(companyId ? { _id: id, companyId } : { _id: id });
     if (!leave) return res.status(404).json({ message: 'Leave not found' });
-    if (!isReviewer(req.user)) return res.status(403).json({ message: 'Insufficient permissions to review leave' });
+    if (!isApprover(req.user)) return res.status(403).json({ message: 'Insufficient permissions to review leave' });
     if (leave.status !== 'pending' && !(action === 'cancel' && leave.status === 'approved')) return res.status(409).json({ message: 'This leave request has already been processed' });
     const actor = await User.findById(req.user.id).select('name role');
     const previousStatus = leave.status;

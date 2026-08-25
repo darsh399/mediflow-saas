@@ -207,6 +207,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { login as loginThunk } from "../redux/slices/authSlice";
 import { useNotify } from "./NotificationProvider";
+import { getDashboardRoute } from "../utils/dashboardRoute";
 import {
   Container,
   Row,
@@ -220,25 +221,6 @@ import {
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
 
-  const getDashboardPath = (role) => {
-    switch (role) {
-      case "super_admin":
-        return "/superadmin/dashboard";
-      case "company_owner":
-      case "manager":
-      case "project_manager":
-        return "/admin";
-      case "hr":
-      case "hr_manager":
-        return "/hr/leaves";
-      case "employee":
-      case "mr":
-        return "/mr/add-visit";
-      default:
-        return "/";
-    }
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -248,7 +230,7 @@ const Login = () => {
     dispatch(loginThunk({ email, password }))
       .unwrap()
       .then((data) => {
-        navigate(getDashboardPath(data?.user?.role));
+        navigate(getDashboardRoute(data?.user?.role));
       })
       .catch((err) => {
         console.error("Login failed", err);

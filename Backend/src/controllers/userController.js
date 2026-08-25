@@ -13,7 +13,9 @@ import { hasPermission } from '../config/permissions.js';
 import recordAudit from '../utils/audit.js';
 import { issueSession, revokeRefreshToken, clearSessionCookies } from '../services/sessionService.js';
 import mailService from '../services/mailService.js';
-import { promotionTemplate } from '../services/emailTemplateService.js';
+import { promotionTemplate, employeeOnboardingTemplate } from '../services/emailTemplateService.js';
+import { generateTempPassword } from '../utils/generatePassword.js';
+import { generateCompanyEmail } from '../utils/companyEmail.js';
 
 
 
@@ -30,6 +32,12 @@ async function fetchAndSendUser(req, res, successMessage = 'User retrieved succe
             .select('-password')
             .populate('companyId', 'name companyName');
         if (!user) return res.status(404).json({ message: 'User not found' });
+        // A colleague's full record (profile, employment fields, attendance) is
+        // only visible to the account itself or someone privileged enough to act
+        // on that role — same rule already used for update/delete/promote below.
+        if (String(req.user.id) !== String(user._id) && !canActOn(req.user, user.role)) {
+            return res.status(403).json({ message: 'Insufficient permissions to view this user' });
+        }
         const employeeProfile = await EmployeeProfile.findOne({
             userId: user._id,
             ...(companyId ? { companyId } : {})
@@ -75,10 +83,7 @@ async function mergeAndSaveProfile(userId, data, companyId) {
 
 export const createUser = async (req, res) => {
    try{
-    const {name, email, password, mobile, role, employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus} = req.body;
-        if (!name || !email || !password) {
-            return res.status(400).json({ message: 'name, email and password are required' });
-        }
+    const {name, email, password, mobile, role, employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus, personalEmail} = req.body;
 
         const isManagedCreation = Boolean(req.user);
         const companyId = req.user?.companyId || null;
@@ -97,23 +102,70 @@ export const createUser = async (req, res) => {
             return res.status(403).json({ message: 'Insufficient permissions to create this role' });
         }
 
-        const existingEmail = await User.findOne({ email });
+        const finalName = name || [firstName, lastName].filter(Boolean).join(' ').trim();
+        if (!finalName) return res.status(400).json({ message: 'name is required' });
+
+        // Managed creation (HR/company_owner adding an employee) can omit email/password —
+        // the system then auto-generates a company login email and a secure temp password,
+        // and emails the credentials to the employee's personal mailbox.
+        let company = null;
+        if (isManagedCreation) company = await Company.findById(companyId).select('companyName companyEmail companyWebsite').lean();
+
+        let finalEmail = email;
+        if (!finalEmail) {
+            if (!isManagedCreation) return res.status(400).json({ message: 'email is required' });
+            if (!firstName || !lastName) return res.status(400).json({ message: 'firstName and lastName are required to auto-generate a company email' });
+            if (!personalEmail) return res.status(400).json({ message: 'personalEmail is required to deliver onboarding credentials for an auto-generated login' });
+            finalEmail = await generateCompanyEmail({ firstName, lastName, company });
+        }
+
+        let finalPassword = password;
+        let temporaryPassword = null;
+        if (!finalPassword) {
+            if (!isManagedCreation) return res.status(400).json({ message: 'password is required' });
+            temporaryPassword = generateTempPassword();
+            finalPassword = temporaryPassword;
+        }
+        const autoProvisioned = Boolean(temporaryPassword);
+
+        const existingEmail = await User.findOne({ email: finalEmail });
         if (existingEmail) return res.status(409).json({ message: 'Email already exists' });
         if (mobile) {
             const existingMobile = await User.findOne({ mobile });
             if (existingMobile) return res.status(409).json({ message: 'Mobile number already exists' });
         }
 
-        const hashedPw = await hashPassword(password);
+        const hashedPw = await hashPassword(finalPassword);
         const userRole = isManagedCreation ? (role || 'employee') : 'user';
-        const employeeFields = isManagedCreation ? { employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus } : {};
-        const newUser = new User({ name, email, password: hashedPw, mobile, companyId, role: userRole, ...employeeFields });
+        const employeeFields = isManagedCreation ? { employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus, personalEmail } : {};
+        const newUser = new User({ name: finalName, email: finalEmail, password: hashedPw, mobile, companyId, role: userRole, passwordChangeRequired: autoProvisioned, ...(isManagedCreation ? { createdBy: req.user.id } : {}), ...employeeFields });
 
         const savedUser = await newUser.save();
-        const token = await issueSession(res, savedUser);
+
+        // Only self-registration logs the caller in as the new account — a managed
+        // creation by HR/company_owner must never overwrite the caller's own session.
+        const token = isManagedCreation ? null : await issueSession(res, savedUser);
+
+        let emailSent = false;
+        if (autoProvisioned) {
+            const deliveryEmail = personalEmail || finalEmail;
+            try {
+                const template = employeeOnboardingTemplate({ employeeName: finalName, companyName: company?.companyName || 'MediFlow', companyEmail: finalEmail, temporaryPassword, senderName: req.user?.email || 'The Team' });
+                await mailService.sendMail({ to: deliveryEmail, ...template });
+                emailSent = true;
+            } catch (mailError) {
+                console.error('Onboarding email failed:', mailError.message);
+            }
+        }
+
         const userObj = savedUser.toObject();
         delete userObj.password;
-        return res.status(201).json({ message: 'User created successfully', user: userObj, token });
+        return res.status(201).json({
+            message: 'User created successfully',
+            user: userObj,
+            token,
+            ...(autoProvisioned ? { generatedCredentials: { companyEmail: finalEmail, emailSent } } : {}),
+        });
     }catch(error){
         console.error("Error creating user:", error);
         return res.status(500).json({ message: 'Error creating user', error: error.message });
@@ -208,7 +260,7 @@ export const updateUser = async (req, res) => {
             delete updateData.role;
         }
 
-        const editableFields = ['name', 'email', 'mobile', 'employeeId', 'firstName', 'lastName', 'joiningDate', 'departmentId', 'designationId', 'reportingManagerId', 'branchId', 'employmentType', 'probationStatus', 'employeeStatus', 'active', 'blocked'];
+        const editableFields = ['name', 'email', 'personalEmail', 'mobile', 'employeeId', 'firstName', 'lastName', 'joiningDate', 'departmentId', 'designationId', 'reportingManagerId', 'branchId', 'employmentType', 'probationStatus', 'employeeStatus', 'active', 'blocked'];
         for (const field of editableFields) {
             if (Object.prototype.hasOwnProperty.call(updateData, field)) existingUser[field] = updateData[field];
         }
@@ -347,6 +399,23 @@ export const changeUserStatus = async (req, res) => {
     }
 }
 
+
+// Minimal, PII-free colleague list (id + name + role only) for populating
+// pickers such as task assignee / project manager / message recipient. Any
+// authenticated company member can call this — it deliberately excludes
+// email, mobile, and employment data, which stay behind the full listUsers
+// endpoint restricted to admin/company_owner/hr_manager/hr.
+export const listColleagues = async (req, res) => {
+    try {
+        const companyId = req.user?.companyId;
+        if (!companyId) return res.status(400).json({ message: 'Company context missing' });
+        const users = await User.find({ companyId, active: true }).select('name role');
+        res.status(200).json({ users });
+    } catch (error) {
+        console.error('Error retrieving colleagues:', error);
+        res.status(500).json({ message: 'Error retrieving colleagues', error: error.message });
+    }
+}
 
 export const listUsers = async (req, res) => {
     try{

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import SalaryStructure from '../models/SalaryStructure.js'
 import Salary from '../models/Salary.js'
 import SalarySlip from '../models/SalarySlip.js'
@@ -8,9 +9,10 @@ import EmployeeProfile from '../models/EmployeeProfile.js'
 import { calculateSalary, buildLopDeduction } from '../services/salaryService.js'
 import mailService from '../services/mailService.js'
 import { offerLetterTemplate, salarySlipTemplate } from '../services/emailTemplateService.js'
-import { generateSalarySlipPdf } from '../services/pdfService.js'
+import { generateSalarySlipPdf, generateOfferLetterPdf } from '../services/pdfService.js'
+import { maskAccountNumber } from './employeeProfileController.js'
 
-const MANAGERS = ['admin', 'company_owner', 'hr_manager', 'hr']
+const MANAGERS = ['admin', 'company_owner', 'hr_manager']
 const isManager = (user) => MANAGERS.includes(user?.role)
 const companyQuery = (req, extra = {}) => ({ companyId: req.user.companyId, ...extra })
 const pageInfo = (query, defaultLimit = 20) => { const page = Math.max(Number(query.page) || 1, 1); const limit = Math.min(Math.max(Number(query.limit) || defaultLimit, 1), 100); return { page, limit, skip: (page - 1) * limit } }
@@ -86,14 +88,23 @@ async function resolveSlipCalculation(req, { employeeId, month, year }) {
   const components = lopDeduction > 0 ? [...salary.components, { name: 'LOP Deduction', type: 'DEDUCTION', calculationType: 'FIXED', amount: lopDeduction, basedOn: 'MONTHLY_CTC' }] : salary.components
   const totalDeductions = Number((salary.totalDeductions + lopDeduction).toFixed(2))
   const netSalary = Number((salary.netSalary - lopDeduction).toFixed(2))
-  return { employee, salary, month, year, lopDays, lopDeduction, components, grossSalary: salary.grossSalary, totalDeductions, netSalary }
+  const profile = await EmployeeProfile.findOne({ companyId: req.user.companyId, userId: employee._id }).select('+bankDetails.accountNumber bankDetails').lean()
+  const bankDetails = profile?.bankDetails ? {
+    accountHolderName: profile.bankDetails.accountHolderName,
+    bankName: profile.bankDetails.bankName,
+    accountNumberMasked: maskAccountNumber(profile.bankDetails.accountNumber),
+    ifscCode: profile.bankDetails.ifscCode,
+    branchName: profile.bankDetails.branchName,
+    accountType: profile.bankDetails.accountType,
+  } : null
+  return { employee, salary, month, year, lopDays, lopDeduction, components, grossSalary: salary.grossSalary, totalDeductions, netSalary, bankDetails }
 }
 
 export async function previewSlip(req, res) {
   const result = await resolveSlipCalculation(req, { employeeId: req.query.employeeId, month: req.query.month, year: req.query.year })
   if (result.error) return res.status(result.error.status).json({ message: result.error.message })
-  const { grossSalary, totalDeductions, netSalary, lopDays, lopDeduction, salary } = result
-  return res.json({ preview: { monthlyCtc: salary.monthlyCtc, grossSalary, totalDeductions, netSalary, lopDays, lopDeduction } })
+  const { grossSalary, totalDeductions, netSalary, lopDays, lopDeduction, salary, bankDetails } = result
+  return res.json({ preview: { monthlyCtc: salary.monthlyCtc, grossSalary, totalDeductions, netSalary, lopDays, lopDeduction, bankDetails } })
 }
 
 export async function listSlips(req, res) { const filter = companyQuery(req, !isManager(req.user) ? { employeeId: req.user.id } : {}); if (req.query.employeeId && isManager(req.user)) filter.employeeId = req.query.employeeId; if (req.query.month) filter.month = Number(req.query.month); if (req.query.year) filter.year = Number(req.query.year); if (req.query.search && isManager(req.user)) { const pattern = { $regex: String(req.query.search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }; filter.employeeId = { $in: await User.find({ companyId: req.user.companyId, $or: [{ name: pattern }, { email: pattern }, { employeeId: pattern }] }).distinct('_id') } } const { page, limit, skip } = pageInfo(req.query); const [data, total] = await Promise.all([SalarySlip.find(filter).populate('employeeId', 'name email employeeId role').sort({ year: -1, month: -1 }).skip(skip).limit(limit).lean(), SalarySlip.countDocuments(filter)]); return res.json({ data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } }) }
@@ -102,10 +113,10 @@ export async function createSlip(req, res) {
   try {
     const result = await resolveSlipCalculation(req, { employeeId: req.body.employeeId, month: req.body.month, year: req.body.year })
     if (result.error) return res.status(result.error.status).json({ message: result.error.message })
-    const { employee, salary, month, year, lopDays, lopDeduction, components, grossSalary, totalDeductions, netSalary } = result
+    const { employee, salary, month, year, lopDays, lopDeduction, components, grossSalary, totalDeductions, netSalary, bankDetails } = result
     const existing = await SalarySlip.exists({ companyId: req.user.companyId, employeeId: employee._id, month, year })
     if (existing) return res.status(409).json({ message: `Salary slip for ${month}/${year} already exists for this employee` })
-    const slip = await SalarySlip.create({ companyId: req.user.companyId, employeeId: employee._id, structureId: salary.structureId, salaryId: salary._id, month, year, components, grossSalary, totalDeductions, netSalary, lopDays, lopDeduction, generatedBy: req.user.id })
+    const slip = await SalarySlip.create({ companyId: req.user.companyId, employeeId: employee._id, structureId: salary.structureId, salaryId: salary._id, month, year, components, grossSalary, totalDeductions, netSalary, lopDays, lopDeduction, bankDetailsSnapshot: bankDetails, generatedBy: req.user.id })
     return res.status(201).json({ slip })
   } catch (error) { return res.status(400).json({ message: error.code === 11000 ? 'Salary slip already exists for this employee and month' : error.message }) }
 }
@@ -130,6 +141,22 @@ export async function listOffers(req, res) { const filter = companyQuery(req, !i
 export async function getOffer(req, res) { const filter = companyQuery(req, { _id: req.params.id }); if (!isManager(req.user)) filter.employeeId = req.user.id; const offer = await OfferLetter.findOne(filter).populate('employeeId', 'name email employeeId role').lean(); return offer ? res.json({ offer }) : res.status(404).json({ message: 'Offer letter not found' }) }
 export async function createOffer(req, res) { try { if (!req.body.salaryId || !mongoose.isValidObjectId(req.body.salaryId)) return res.status(400).json({ message: 'A valid salary assignment is required before creating an offer' }); const employee = await User.findOne(employeeFilter(req, req.body.employeeId)).select('name email employeeId role profile').lean(); if (!employee) return res.status(404).json({ message: 'Employee not found in this company' }); const profile = await EmployeeProfile.findOne({ companyId: req.user.companyId, userId: employee._id }).select('status').lean(); if (profile?.status !== 'APPROVED') return res.status(409).json({ message: 'Employee onboarding documents must be approved before creating an offer' }); const salary = await Salary.findOne(companyQuery(req, { _id: req.body.salaryId, employeeId: employee._id })).lean(); if (!salary) return res.status(404).json({ message: 'Salary assignment not found for this employee' }); const offer = await OfferLetter.create({ jobTitle: req.body.jobTitle, department: req.body.department, joiningDate: req.body.joiningDate, employmentType: req.body.employmentType, additionalTerms: req.body.additionalTerms, companyId: req.user.companyId, employeeId: employee._id, salaryId: salary._id, structureId: salary.structureId, salarySnapshot: salary, createdBy: req.user.id }); return res.status(201).json({ offer }) } catch (error) { return res.status(400).json({ message: error.message }) } }
 export async function updateOffer(req, res) { const offer = await OfferLetter.findOneAndUpdate(companyQuery(req, { _id: req.params.id, status: 'DRAFT' }), req.body, { new: true, runValidators: true }).lean(); return offer ? res.json({ offer }) : res.status(404).json({ message: 'Draft offer not found' }) }
-export async function sendOffer(req, res) { const offer = await OfferLetter.findOne(companyQuery(req, { _id: req.params.id })).populate('employeeId', 'name email employeeId').lean(); if (!offer?.employeeId?.email) return res.status(404).json({ message: 'Offer or employee email not found' }); const company = await Company.findById(req.user.companyId).select('companyName companyEmail companyMobile').lean(); const breakdown = (offer.salarySnapshot?.components || []).map((item) => `${item.name}: ₹${Number(item.amount || 0).toLocaleString('en-IN')}`).join('\n'); const template = offerLetterTemplate({ employeeName: offer.employeeId.name, companyName: company?.companyName, jobTitle: offer.jobTitle, joiningDate: offer.joiningDate ? new Date(offer.joiningDate).toLocaleDateString('en-IN') : '-', annualCTC: `₹${Number(offer.salarySnapshot?.annualCtc || 0).toLocaleString('en-IN')}`, monthlySalary: `₹${Number(offer.salarySnapshot?.monthlyCtc || 0).toLocaleString('en-IN')}`, salaryBreakdown: breakdown, senderName: req.user.email }); try { await mailService.sendMail({ to: offer.employeeId.email, ...template }); await OfferLetter.updateOne({ _id: offer._id }, { status: 'SENT', sentAt: new Date(), sendError: undefined }); return res.json({ message: 'Offer letter sent', status: 'SENT' }) } catch (error) { await OfferLetter.updateOne({ _id: offer._id }, { status: 'FAILED', sendError: error.message }); return res.status(502).json({ message: 'Offer letter email could not be sent', status: 'FAILED' }) } }
+export async function sendOffer(req, res) {
+  const offer = await OfferLetter.findOne(companyQuery(req, { _id: req.params.id })).populate('employeeId', 'name email employeeId profile').lean()
+  if (!offer?.employeeId?.email) return res.status(404).json({ message: 'Offer or employee email not found' })
+  const company = await Company.findById(req.user.companyId).select('companyName companyEmail companyMobile companyAddress').lean()
+  const breakdown = (offer.salarySnapshot?.components || []).map((item) => `${item.name}: ₹${Number(item.amount || 0).toLocaleString('en-IN')}`).join('\n')
+  const template = offerLetterTemplate({ employeeName: offer.employeeId.name, companyName: company?.companyName, jobTitle: offer.jobTitle, joiningDate: offer.joiningDate ? new Date(offer.joiningDate).toLocaleDateString('en-IN') : '-', annualCTC: `₹${Number(offer.salarySnapshot?.annualCtc || 0).toLocaleString('en-IN')}`, monthlySalary: `₹${Number(offer.salarySnapshot?.monthlyCtc || 0).toLocaleString('en-IN')}`, salaryBreakdown: breakdown, senderName: req.user.email })
+  try {
+    const pdfBuffer = await generateOfferLetterPdf({ offer, employee: offer.employeeId, company })
+    const attachment = { filename: `Offer-Letter-${offer.employeeId.name?.replace(/\s+/g, '-') || 'employee'}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }
+    await mailService.sendMail({ to: offer.employeeId.email, ...template, attachments: [attachment] })
+    await OfferLetter.updateOne({ _id: offer._id }, { status: 'SENT', sentAt: new Date(), sendError: undefined })
+    return res.json({ message: 'Offer letter sent', status: 'SENT' })
+  } catch (error) {
+    await OfferLetter.updateOne({ _id: offer._id }, { status: 'FAILED', sendError: error.message })
+    return res.status(502).json({ message: 'Offer letter email could not be sent', status: 'FAILED' })
+  }
+}
 
 export default { listStructures, createStructure, updateStructure, deleteStructure, listSalaries, getMySalary, createSalary, updateSalary, deleteSalary, listSlips, getMySlips, previewSlip, createSlip, getSlip, deleteSlip, sendSlip, listOffers, getOffer, createOffer, updateOffer, sendOffer }

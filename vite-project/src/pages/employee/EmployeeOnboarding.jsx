@@ -100,6 +100,14 @@ const EmployeeOnboarding = () => {
   const [files, setFiles] = useState({})
   const [experienceFiles, setExperienceFiles] = useState({})
 
+  const [completion, setCompletion] = useState(null)
+
+  const [bankForm, setBankForm] = useState({ accountHolderName: '', bankName: '', accountNumber: '', confirmAccountNumber: '', ifscCode: '', branchName: '', accountType: 'SAVINGS' })
+  const [bankDetails, setBankDetails] = useState(null)
+  const [bankSaving, setBankSaving] = useState(false)
+  const [bankError, setBankError] = useState('')
+  const [bankMessage, setBankMessage] = useState('')
+
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -111,8 +119,6 @@ const EmployeeOnboarding = () => {
       setError('')
 
       const response = await employeeProfileApi.getMyProfile()
-
-      console.log('MY PROFILE RESPONSE:', response)
 
       if (response.profile) {
         const currentProfile = response.profile
@@ -127,7 +133,14 @@ const EmployeeOnboarding = () => {
         setExperienceType(
           currentProfile.experienceType || 'fresher'
         )
+
+        if (currentProfile.bankDetails) {
+          setBankDetails(currentProfile.bankDetails)
+          setBankForm(current => ({ ...current, accountHolderName: currentProfile.bankDetails.accountHolderName || '', bankName: currentProfile.bankDetails.bankName || '', ifscCode: currentProfile.bankDetails.ifscCode || '', branchName: currentProfile.bankDetails.branchName || '', accountType: currentProfile.bankDetails.accountType || 'SAVINGS' }))
+        }
       }
+
+      setCompletion(response.completion || null)
     } catch (err) {
       console.error(err)
 
@@ -214,6 +227,42 @@ const EmployeeOnboarding = () => {
     })
 
     await employeeProfileApi.uploadDocuments(formData)
+  }
+
+  const updateBankField = event => {
+    setBankForm(current => ({ ...current, [event.target.name]: event.target.value }))
+  }
+
+  const saveBankDetails = async event => {
+    event.preventDefault()
+    setBankError('')
+    setBankMessage('')
+
+    if (bankForm.accountNumber !== bankForm.confirmAccountNumber) {
+      setBankError('Account number and confirmation do not match')
+      return
+    }
+    if (!/^\d{9,18}$/.test(bankForm.accountNumber)) {
+      setBankError('Account number must be 9-18 digits')
+      return
+    }
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankForm.ifscCode.toUpperCase())) {
+      setBankError('Enter a valid IFSC code, e.g. HDFC0001234')
+      return
+    }
+
+    try {
+      setBankSaving(true)
+      const response = await employeeProfileApi.saveBankDetails({ ...bankForm, ifscCode: bankForm.ifscCode.toUpperCase() })
+      setBankDetails(response.bankDetails)
+      setCompletion(response.completion)
+      setBankMessage('Bank details saved successfully')
+      setBankForm(current => ({ ...current, accountNumber: '', confirmAccountNumber: '' }))
+    } catch (err) {
+      setBankError(err?.response?.data?.message || 'Unable to save bank details')
+    } finally {
+      setBankSaving(false)
+    }
   }
 
   const submit = async event => {
@@ -420,6 +469,34 @@ const EmployeeOnboarding = () => {
         </div>
 
       </div>
+
+      {completion && (
+        <div className="card border-0 shadow-sm mb-4">
+          <div className="card-body p-4">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h5 className="mb-0">Profile Completion</h5>
+              <span className="fw-bold fs-5 text-primary">{completion.percentage}%</span>
+            </div>
+            <div className="progress mb-3" style={{ height: '10px' }}>
+              <div className={`progress-bar ${completion.percentage >= 100 ? 'bg-success' : 'bg-primary'}`} role="progressbar" style={{ width: `${completion.percentage}%` }} aria-valuenow={completion.percentage} aria-valuemin="0" aria-valuemax="100" />
+            </div>
+            <p className="text-muted small mb-3">{completion.percentage >= 100 ? 'Your profile is complete.' : 'Complete your profile to continue.'}</p>
+            <div className="row g-2">
+              {Object.values(completion.sections || {}).map((section) => (
+                <div className="col-sm-6 col-lg-3" key={section.label}>
+                  <div className={`border rounded-3 p-2 d-flex align-items-center gap-2 ${section.complete ? 'border-success-subtle bg-success-subtle' : 'border-warning-subtle bg-warning-subtle'}`}>
+                    <i className={`bi ${section.complete ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-warning'}`}></i>
+                    <div className="small">
+                      <div className="fw-semibold">{section.label}</div>
+                      <div className="text-muted">{section.percentage}%</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {message && (
         <div className="alert alert-success shadow-sm">
@@ -857,6 +934,82 @@ const EmployeeOnboarding = () => {
             })}
 
           </div>
+
+        </div>
+
+      </div>
+
+      <div className="card border-0 shadow-sm mb-4">
+
+        <div className="card-header bg-white border-0 p-4">
+          <div className="d-flex align-items-center">
+            <div className="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center me-3" style={{ width: '45px', height: '45px' }}>
+              <i className="bi bi-bank fs-4" />
+            </div>
+            <div>
+              <h5 className="mb-1">Bank Details</h5>
+              <small className="text-muted">Required for salary payments and salary slips</small>
+            </div>
+          </div>
+        </div>
+
+        <div className="card-body p-4">
+
+          {bankMessage && <div className="alert alert-success py-2 small">{bankMessage}</div>}
+          {bankError && <div className="alert alert-danger py-2 small">{bankError}</div>}
+
+          {bankDetails && (
+            <div className="border rounded-3 p-3 mb-3 bg-light">
+              <div className="row small">
+                <div className="col-md-6 mb-2"><span className="text-muted">Account Holder:</span> <strong>{bankDetails.accountHolderName}</strong></div>
+                <div className="col-md-6 mb-2"><span className="text-muted">Bank:</span> <strong>{bankDetails.bankName}</strong></div>
+                <div className="col-md-6 mb-2"><span className="text-muted">Account Number:</span> <strong>{bankDetails.accountNumberMasked}</strong></div>
+                <div className="col-md-6 mb-2"><span className="text-muted">IFSC:</span> <strong>{bankDetails.ifscCode}</strong></div>
+                <div className="col-md-6"><span className="text-muted">Branch:</span> <strong>{bankDetails.branchName}</strong></div>
+                <div className="col-md-6"><span className="text-muted">Account Type:</span> <strong>{bankDetails.accountType}</strong></div>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={saveBankDetails}>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label fw-semibold text-secondary">Account Holder Name</label>
+                <input required className="form-control" name="accountHolderName" value={bankForm.accountHolderName} onChange={updateBankField} />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label fw-semibold text-secondary">Bank Name</label>
+                <input required className="form-control" name="bankName" value={bankForm.bankName} onChange={updateBankField} />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label fw-semibold text-secondary">Account Number</label>
+                <input required className="form-control" name="accountNumber" value={bankForm.accountNumber} onChange={updateBankField} placeholder={bankDetails ? 'Enter to update saved number' : ''} />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label fw-semibold text-secondary">Confirm Account Number</label>
+                <input required className="form-control" name="confirmAccountNumber" value={bankForm.confirmAccountNumber} onChange={updateBankField} />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label fw-semibold text-secondary">IFSC Code</label>
+                <input required className="form-control text-uppercase" name="ifscCode" value={bankForm.ifscCode} onChange={updateBankField} placeholder="HDFC0001234" />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label fw-semibold text-secondary">Branch Name</label>
+                <input required className="form-control" name="branchName" value={bankForm.branchName} onChange={updateBankField} />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label fw-semibold text-secondary">Account Type</label>
+                <select className="form-select" name="accountType" value={bankForm.accountType} onChange={updateBankField}>
+                  <option value="SAVINGS">Savings</option>
+                  <option value="CURRENT">Current</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" className="btn btn-primary mt-4" disabled={bankSaving}>
+              {bankSaving ? <><span className="spinner-border spinner-border-sm me-2" />Saving...</> : <><i className="bi bi-save me-2" />Save Bank Details</>}
+            </button>
+          </form>
 
         </div>
 

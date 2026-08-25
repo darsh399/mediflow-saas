@@ -13,7 +13,8 @@ import {
   updateProfile,
   logoutUser,
   changeUserStatus,
-  promoteEmployee
+  promoteEmployee,
+  listColleagues
 } from '../controllers/userController.js';
 
 import authMiddleware from '../middleware/authMiddleware.js';
@@ -43,6 +44,15 @@ router.get(
   authMiddleware,
   companyMiddleware,
   getAllMyVisits
+);
+
+// Registered ahead of the /users/:id param route so "colleagues" is never
+// swallowed as an :id value.
+router.get(
+  '/users/colleagues',
+  authMiddleware,
+  companyMiddleware,
+  listColleagues
 );
 
 router.get(

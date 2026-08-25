@@ -105,6 +105,14 @@ export async function listAttendance(req, res) {
     if (req.query.date) {
       const date = parseDate(req.query.date, 'date')
       filter.date = { $gte: startOfDay(date), $lt: endOfDay(date) }
+    } else if (req.query.month || req.query.year) {
+      const now = new Date()
+      const year = Number(req.query.year) || now.getFullYear()
+      const month = req.query.month ? Number(req.query.month) : null
+      if (month && (month < 1 || month > 12)) return res.status(400).json({ message: 'month must be between 1 and 12' })
+      const rangeStart = month ? new Date(year, month - 1, 1) : new Date(year, 0, 1)
+      const rangeEnd = month ? new Date(year, month, 1) : new Date(year + 1, 0, 1)
+      filter.date = { $gte: rangeStart, $lt: rangeEnd }
     }
     if (!isReviewer(req.user)) filter.employeeId = req.user.id
     const page = Math.max(Number(req.query.page) || 1, 1)

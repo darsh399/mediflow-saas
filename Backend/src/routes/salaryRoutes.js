@@ -6,7 +6,10 @@ import roleMiddleware from '../middleware/roleMiddleware.js'
 import controller from '../controllers/salaryController.js'
 
 const router = express.Router()
-const manager = roleMiddleware('admin', 'company_owner', 'hr_manager', 'hr')
+// Only company_owner and hr_manager may manage salary structures, salary
+// assignments, salary slips and offer letters (admin retains its platform-wide
+// override). Normal hr must not.
+const manager = roleMiddleware('admin', 'company_owner', 'hr_manager')
 router.use(authMiddleware, companyMiddleware)
 
 router.get('/structures', manager, authorize('salary.view'), controller.listStructures)

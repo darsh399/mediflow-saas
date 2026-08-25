@@ -331,6 +331,14 @@ const ProfileReviews = () => {
                 </th>
 
                 <th className="py-3">
+                  Profile
+                </th>
+
+                <th className="py-3">
+                  Bank
+                </th>
+
+                <th className="py-3">
                   Status
                 </th>
 
@@ -347,7 +355,7 @@ const ProfileReviews = () => {
 
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="7"
                     className="text-center py-5"
                   >
                     <div
@@ -383,7 +391,7 @@ const ProfileReviews = () => {
                           className="btn btn-link text-decoration-none p-0"
                           onClick={() =>
                             navigate(
-                              `/admin/profile-${profile._id}`
+                              `/employee/profiles/${profile._id}`
                             )
                           }
                         >
@@ -430,13 +438,26 @@ const ProfileReviews = () => {
                           'N/A'}
                       </td>
 
+                      <td style={{ minWidth: '110px' }}>
+                        <div className="progress" style={{ height: '6px' }}>
+                          <div className={`progress-bar ${(profile.completion?.percentage || 0) >= 100 ? 'bg-success' : 'bg-primary'}`} style={{ width: `${profile.completion?.percentage || 0}%` }} />
+                        </div>
+                        <small className="text-muted">{profile.completion?.percentage || 0}%</small>
+                      </td>
+
+                      <td>
+                        {profile.bankDetails
+                          ? <span className="badge bg-success-subtle text-success">Completed</span>
+                          : <span className="badge bg-secondary-subtle text-secondary">Pending</span>}
+                      </td>
+
                       <td>
                         {getStatusBadge(profile.status)}
                       </td>
 
                       <td className="text-end pe-4">
 
-                        {profile.status === 'SUBMITTED' ? (
+                        {profile.status === 'SUBMITTED' && profile.reviewEligibility?.canReview ? (
 
                           <div className="d-flex justify-content-end gap-2">
 
@@ -475,6 +496,12 @@ const ProfileReviews = () => {
                             </button>
 
                           </div>
+
+                        ) : profile.status === 'SUBMITTED' && profile.reviewEligibility?.reason ? (
+
+                          <span className="text-muted small fst-italic" title={profile.reviewEligibility.reason}>
+                            Awaiting another reviewer
+                          </span>
 
                         ) : (
 

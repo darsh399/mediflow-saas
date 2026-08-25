@@ -43,6 +43,9 @@ const userSchema = new mongoose.Schema({
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    // Personal/alternate mailbox used to deliver onboarding credentials when
+    // `email` is an auto-generated company login ID rather than a real inbox.
+    personalEmail: { type: String, lowercase: true, trim: true },
     password: { type: String, required: true },
     role: {
         type: String,
@@ -69,7 +72,11 @@ const userSchema = new mongoose.Schema({
     resetPasswordExpiresAt: { type: Date, select: false },
     profile: { type: profileSchema, default: {} },
     // If user was invited, store reference to invite
-    invite: { type: mongoose.Schema.Types.ObjectId, ref: 'Invite' }
+    invite: { type: mongoose.Schema.Types.ObjectId, ref: 'Invite' },
+    // Who created this account (managed creation by HR/company_owner). Used to
+    // enforce maker-checker: the creator of an employee can never review/approve
+    // that same employee's onboarding profile.
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
 userSchema.index({ companyId: 1, employeeId: 1 }, { unique: true, sparse: true });

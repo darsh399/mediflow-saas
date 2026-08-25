@@ -60,6 +60,10 @@ const slice = createSlice({
             persistState(state)
             setAuthToken(token)
         },
+        updateUser(state, action) {
+            state.user = { ...state.user, ...action.payload }
+            persistState(state)
+        },
         clearAuth(state) {
             state.user = null
             state.token = null
@@ -115,7 +119,7 @@ const slice = createSlice({
     }
 })
 
-export const { setCredentials, clearAuth } = slice.actions
+export const { setCredentials, updateUser, clearAuth } = slice.actions
 
 export default slice.reducer
 
