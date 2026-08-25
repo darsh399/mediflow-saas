@@ -88,7 +88,7 @@ async function resolveSlipCalculation(req, { employeeId, month, year }) {
   const components = lopDeduction > 0 ? [...salary.components, { name: 'LOP Deduction', type: 'DEDUCTION', calculationType: 'FIXED', amount: lopDeduction, basedOn: 'MONTHLY_CTC' }] : salary.components
   const totalDeductions = Number((salary.totalDeductions + lopDeduction).toFixed(2))
   const netSalary = Number((salary.netSalary - lopDeduction).toFixed(2))
-  const profile = await EmployeeProfile.findOne({ companyId: req.user.companyId, userId: employee._id }).select('+bankDetails.accountNumber bankDetails').lean()
+  const profile = await EmployeeProfile.findOne({ companyId: req.user.companyId, userId: employee._id }).select('+bankDetails.accountNumber').lean()
   const bankDetails = profile?.bankDetails ? {
     accountHolderName: profile.bankDetails.accountHolderName,
     bankName: profile.bankDetails.bankName,
