@@ -5,6 +5,7 @@ import roleMiddleware from '../middleware/roleMiddleware.js';
 import { applyLeave, listLeaves, reviewLeave } from '../controllers/leaveController.js';
 import multer from 'multer';
 import requireModule from '../middleware/moduleMiddleware.js';
+import authorize from '../middleware/permissionMiddleware.js';
 
 const upload = multer({
   dest: 'uploads/leaves/',
@@ -18,8 +19,8 @@ const upload = multer({
 const router = express.Router();
 
 router.use(authMiddleware, companyMiddleware, requireModule('leaves'));
-router.post('/', upload.single('document'), applyLeave);
-router.get('/', listLeaves);
-router.post('/:id/review', roleMiddleware('admin','company_owner','hr_manager','hr','manager','project_manager','superadmin','super_admin'), reviewLeave);
+router.post('/', authorize('leave.apply'), upload.single('document'), applyLeave);
+router.get('/', authorize('leave.view'), listLeaves);
+router.post('/:id/review', roleMiddleware('admin','company_owner','hr_manager','hr','manager','project_manager','superadmin','super_admin'), authorize('leave.approve'), reviewLeave);
 
 export default router;

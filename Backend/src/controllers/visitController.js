@@ -21,7 +21,13 @@ async function saveVisitPhoto(file) {
   return { storageName, originalName: file.originalname, mimeType: file.mimetype, size: file.size };
 }
 
-const RADIUS_METERS = Number(process.env.VISIT_RADIUS_METERS || 15);
+function parseCoordinate(value, field, minimum, maximum) {
+  const coordinate = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(coordinate) || coordinate < minimum || coordinate > maximum) throw new Error(`${field} is required and must be a valid number`)
+  return coordinate
+}
+
+const RADIUS_METERS = Number(process.env.VISIT_RADIUS_METERS || 90);
 
 export const createVisit = async (req, res) => {
   try {
@@ -44,19 +50,20 @@ export const doctorVisit = async (req, res) => {
     const employeeId = req.user?.id;
     const { doctorId, currentLatitude, currentLongitude, purpose, notes } = req.body;
     if (!doctorId) return res.status(400).json({ message: 'doctorId is required' });
-    if (typeof currentLatitude !== 'number' || typeof currentLongitude !== 'number') return res.status(400).json({ message: 'currentLatitude and currentLongitude are required and must be numbers' });
+    const latitude = parseCoordinate(currentLatitude, 'currentLatitude', -90, 90);
+    const longitude = parseCoordinate(currentLongitude, 'currentLongitude', -180, 180);
 
     const doctor = await Doctor.findOne({ _id: doctorId, companyId });
     if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
     if (typeof doctor.latitude !== 'number' || typeof doctor.longitude !== 'number') return res.status(400).json({ message: 'Doctor does not have a registered location' });
 
-    const distance = calculateDistance(currentLatitude, currentLongitude, doctor.latitude, doctor.longitude);
+    const distance = calculateDistance(latitude, longitude, doctor.latitude, doctor.longitude);
     const distanceMeters = Number(distance.toFixed(3));
     if (distanceMeters > RADIUS_METERS) {
       return res.status(400).json({ success: false, message: `Location not matched. You must be within ${RADIUS_METERS} meters of the registered location.`, distanceInMeters: distanceMeters, allowedRadiusMeters: RADIUS_METERS });
     }
 
-    const visit = new Visit({ companyId, employeeId, doctorId, purpose, notes, visitLatitude: currentLatitude, visitLongitude: currentLongitude, registeredLatitude: doctor.latitude, registeredLongitude: doctor.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt: new Date(), createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
+    const visit = new Visit({ companyId, employeeId, doctorId, purpose, notes, visitLatitude: latitude, visitLongitude: longitude, registeredLatitude: doctor.latitude, registeredLongitude: doctor.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt: new Date(), createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
     await visit.save();
     await recordAudit(req, 'visit_created', { companyId, entityId: visit._id, module: 'visits', newValue: { status: visit.status, employeeId } });
     return res.status(201).json({ success: true, message: 'Visit successfully recorded', distanceInMeters: distanceMeters, visit });
@@ -73,19 +80,20 @@ export const medicalVisit = async (req, res) => {
     const employeeId = req.user?.id;
     const { medicalId, currentLatitude, currentLongitude, purpose, notes } = req.body;
     if (!medicalId) return res.status(400).json({ message: 'medicalId is required' });
-    if (typeof currentLatitude !== 'number' || typeof currentLongitude !== 'number') return res.status(400).json({ message: 'currentLatitude and currentLongitude are required and must be numbers' });
+    const latitude = parseCoordinate(currentLatitude, 'currentLatitude', -90, 90);
+    const longitude = parseCoordinate(currentLongitude, 'currentLongitude', -180, 180);
 
     const med = await Medical.findOne({ _id: medicalId, companyId });
     if (!med) return res.status(404).json({ message: 'Medical not found' });
     if (typeof med.latitude !== 'number' || typeof med.longitude !== 'number') return res.status(400).json({ message: 'Medical does not have a registered location' });
 
-    const distance = calculateDistance(currentLatitude, currentLongitude, med.latitude, med.longitude);
+    const distance = calculateDistance(latitude, longitude, med.latitude, med.longitude);
     const distanceMeters = Number(distance.toFixed(3));
     if (distanceMeters > RADIUS_METERS) {
       return res.status(400).json({ success: false, message: `Location not matched. You must be within ${RADIUS_METERS} meters of the registered location.`, distanceInMeters: distanceMeters, allowedRadiusMeters: RADIUS_METERS });
     }
 
-    const visit = new Visit({ companyId, employeeId, medicalId, purpose, notes, visitLatitude: currentLatitude, visitLongitude: currentLongitude, registeredLatitude: med.latitude, registeredLongitude: med.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt: new Date(), createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
+    const visit = new Visit({ companyId, employeeId, medicalId, purpose, notes, visitLatitude: latitude, visitLongitude: longitude, registeredLatitude: med.latitude, registeredLongitude: med.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt: new Date(), createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
     await visit.save();
     await recordAudit(req, 'visit_created', { companyId, entityId: visit._id, module: 'visits', newValue: { status: visit.status, employeeId } });
     return res.status(201).json({ success: true, message: 'Visit successfully recorded', distanceInMeters: distanceMeters, visit });
