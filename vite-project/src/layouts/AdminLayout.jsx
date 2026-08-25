@@ -20,6 +20,10 @@ const EMPLOYEE_VIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr", "ma
 // Expense claim review (view-all + approve/reject) is reserved for
 // company_owner/hr_manager/admin — not hr, matching leave review.
 const EXPENSE_APPROVER_ROLES = ["admin", "company_owner", "hr_manager"];
+// Everyone with company context can view the product catalog; only
+// company_owner/hr_manager/admin can add/edit/delete products.
+const PRODUCT_VIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager", "employee", "mr"];
+const PRODUCT_MANAGER_ROLES = ["admin", "company_owner", "hr_manager"];
 
 const AdminLayout = () => {
   const role = useSelector((state) => state.auth.user?.role);
@@ -33,8 +37,11 @@ const AdminLayout = () => {
   const canManageSalary = ["admin", "company_owner", "hr_manager"].includes(role);
   const canViewSalary = canManageSalary || role === "employee";
   const canReviewExpenses = EXPENSE_APPROVER_ROLES.includes(role);
+  const canViewProducts = PRODUCT_VIEWER_ROLES.includes(role);
+  const canManageProducts = PRODUCT_MANAGER_ROLES.includes(role);
   const [leavesOpen, setLeavesOpen] = useState(location.pathname.startsWith("/leaves"));
   const [expensesOpen, setExpensesOpen] = useState(location.pathname.startsWith("/expenses"));
+  const [productsOpen, setProductsOpen] = useState(location.pathname.startsWith("/products"));
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -43,6 +50,10 @@ const AdminLayout = () => {
 
   useEffect(() => {
     if (location.pathname.startsWith("/expenses")) setExpensesOpen(true);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/products")) setProductsOpen(true);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -98,6 +109,16 @@ const AdminLayout = () => {
             <NavLink className={navClass} to="/expenses/apply" onClick={closeSidebar}><i className="bi bi-plus-circle"></i> Submit Expense</NavLink>
             {canReviewExpenses && <NavLink className={navClass} to="/expenses/manage" onClick={closeSidebar}><i className="bi bi-clipboard-check"></i> Review Expenses</NavLink>}
           </div>}
+
+          {canViewProducts && <><p className="sidebar-label">PRODUCTS</p>
+            <button type="button" className={`sidebar-link folder-button ${location.pathname.startsWith("/products") ? "active" : ""}`} onClick={() => setProductsOpen((open) => !open)} aria-expanded={productsOpen}>
+              <i className="bi bi-capsule"></i><span>Products</span><i className={`bi ms-auto ${productsOpen ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+            </button>
+            {productsOpen && <div className="sidebar-submenu">
+              <NavLink className={navClass} to="/products" end onClick={closeSidebar}><i className="bi bi-grid"></i> All Products</NavLink>
+              {canManageProducts && <NavLink className={navClass} to="/products/add" onClick={closeSidebar}><i className="bi bi-plus-circle"></i> Add Product</NavLink>}
+            </div>}
+          </>}
 
           {canViewSalary && <><p className="sidebar-label">{canManageSalary ? "SALARY" : "MY SALARY"}</p><NavLink className={navClass} to="/salary/slips" onClick={closeSidebar}><i className="bi bi-receipt"></i> Salary Slips</NavLink>{canManageSalary && <NavLink className={navClass} to="/salary/structures" onClick={closeSidebar}><i className="bi bi-diagram-3"></i> Salary Structures</NavLink>}</>}
           {canViewSalary && <><p className="sidebar-label">{canManageSalary ? "OFFERS" : "MY OFFER"}</p>{canManageSalary && <NavLink className={navClass} to="/offers/create" onClick={closeSidebar}><i className="bi bi-file-earmark-plus"></i> Create Offer</NavLink>}<NavLink className={navClass} to="/offers" onClick={closeSidebar}><i className="bi bi-file-earmark-text"></i> {canManageSalary ? "Offer Letters" : "Offer Details"}</NavLink></>}

@@ -613,6 +613,10 @@ import MyLeaves from "../pages/leaves/MyLeave";
 import LeaveManagement from "../pages/leaves/LeaveManagement";
 import ApplyExpense from "../pages/expenses/ApplyExpense";
 import ExpenseManagement from "../pages/expenses/ExpenseManagement";
+import Products from "../pages/products/Products";
+import AddProduct from "../pages/products/AddProduct";
+import EditProduct from "../pages/products/EditProduct";
+import ProductDetails from "../pages/products/ProductDetails";
 import NotFound from "../pages/NotFound";
 import Attendance from "../pages/attendance/Attendance";
 import Calendar from "../pages/calendar/Calendar";
@@ -1311,6 +1315,28 @@ const AppRoutes = () => {
                 >
                     <Route path="expenses" element={<AdminLayout />}>
                         <Route path="manage" element={<ExpenseManagement />} />
+                    </Route>
+                </Route>
+
+                {/* ================= COMPANY PRODUCTS ================= */}
+
+                {/* Everyone with company context can view the catalog. */}
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager", "employee", "mr"]} />}
+                >
+                    <Route path="products" element={<AdminLayout />}>
+                        <Route index element={<Products />} />
+                        <Route path=":id" element={<ProductDetails />} />
+                    </Route>
+                </Route>
+
+                {/* Add/Edit is reserved for company_owner/hr_manager/admin — not hr. */}
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager"]} />}
+                >
+                    <Route path="products" element={<AdminLayout />}>
+                        <Route path="add" element={<AddProduct />} />
+                        <Route path=":id/edit" element={<EditProduct />} />
                     </Route>
                 </Route>
 
