@@ -14,6 +14,7 @@ const rolePermissions = {
     'organization.view', 'organization.manage',
     'calendar.view', 'calendar.manage',
     'salary.view', 'salary.manage', 'salary_slip.view', 'salary_slip.manage', 'offer.view', 'offer.manage',
+    'expense.apply', 'expense.view', 'expense.approve',
   ],
   hr_manager: [
     'employee.view', 'employee.create', 'employee.update', 'employee.delete',
@@ -25,6 +26,7 @@ const rolePermissions = {
     'organization.view', 'organization.manage',
     'calendar.view', 'calendar.manage',
     'salary.view', 'salary.manage', 'salary_slip.view', 'salary_slip.manage', 'offer.view', 'offer.manage',
+    'expense.apply', 'expense.view', 'expense.approve',
   ],
   // Normal HR: can view employees, leave requests, and onboarding
   // documents/profiles company-wide (including checking off individual
@@ -41,6 +43,9 @@ const rolePermissions = {
     // Can view the calendar/holidays declared by hr_manager/company_owner,
     // but cannot add/remove holidays or change working days — no calendar.manage.
     'calendar.view',
+    // Can submit and view expense claims, but not approve/reject them — only
+    // company_owner and hr_manager have expense.approve.
+    'expense.apply', 'expense.view',
   ],
   manager: [
     'employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.approve', 'leave.reject', 'leave.view_history', 'leave.view_ledger',
@@ -49,13 +54,15 @@ const rolePermissions = {
     'visit.view', 'visit.create', 'visit.update', 'visit.approve', 'visit.reject',
     'task.view', 'task.create', 'task.assign', 'task.update',
     'report.view', 'performance.view', 'performance.manage',
+    'expense.apply', 'expense.view',
   ],
   project_manager: [
     'employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.view_history', 'attendance.view', 'task.view', 'task.create', 'task.assign', 'task.update',
     'project.view', 'project.create', 'project.update', 'report.view',
+    'expense.apply', 'expense.view',
   ],
-  mr: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.view_history', 'doctor.view', 'doctor.create', 'medical.view', 'medical.create', 'visit.view', 'visit.create', 'attendance.view', 'attendance.create', 'task.view', 'task.update', 'calendar.view'],
-  employee: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'attendance.view', 'attendance.create', 'doctor.view', 'medical.view', 'visit.view', 'visit.create', 'task.view', 'task.update', 'document.view', 'document.upload', 'performance.view', 'calendar.view', 'leave.view_history', 'salary.view', 'salary_slip.view', 'offer.view'],
+  mr: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.view_history', 'doctor.view', 'doctor.create', 'medical.view', 'medical.create', 'visit.view', 'visit.create', 'attendance.view', 'attendance.create', 'task.view', 'task.update', 'calendar.view', 'expense.apply', 'expense.view'],
+  employee: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'attendance.view', 'attendance.create', 'doctor.view', 'medical.view', 'visit.view', 'visit.create', 'task.view', 'task.update', 'document.view', 'document.upload', 'performance.view', 'calendar.view', 'leave.view_history', 'salary.view', 'salary_slip.view', 'offer.view', 'expense.apply', 'expense.view'],
   user: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'attendance.view', 'attendance.create', 'task.view', 'task.update', 'calendar.view', 'leave.view_history'],
 }
 

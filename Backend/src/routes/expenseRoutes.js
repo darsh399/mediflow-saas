@@ -1,0 +1,26 @@
+import express from 'express';
+import multer from 'multer';
+import authMiddleware from '../middleware/authMiddleware.js';
+import companyMiddleware from '../middleware/companyMiddleware.js';
+import authorize from '../middleware/permissionMiddleware.js';
+import { applyExpense, listExpenses, reviewExpense } from '../controllers/expenseController.js';
+
+const upload = multer({
+  dest: 'uploads/expenses/',
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, callback) => {
+    const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+    callback(allowed.includes(file.mimetype) ? null : new Error('Only PDF, JPG, PNG, or WEBP receipts are allowed'), allowed.includes(file.mimetype));
+  },
+});
+
+const router = express.Router();
+
+router.use(authMiddleware, companyMiddleware);
+// Proof document is optional — upload.single lets the request through with
+// or without a "receipt" file attached.
+router.post('/', authorize('expense.apply'), upload.single('receipt'), applyExpense);
+router.get('/', authorize('expense.view'), listExpenses);
+router.post('/:id/review', authorize('expense.approve'), reviewExpense);
+
+export default router;

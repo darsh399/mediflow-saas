@@ -611,6 +611,8 @@ import SendMessage from "../pages/messages/SendMessage";
 import ApplyLeave from "../pages/leaves/ApplyLeaves";
 import MyLeaves from "../pages/leaves/MyLeave";
 import LeaveManagement from "../pages/leaves/LeaveManagement";
+import ApplyExpense from "../pages/expenses/ApplyExpense";
+import ExpenseManagement from "../pages/expenses/ExpenseManagement";
 import NotFound from "../pages/NotFound";
 import Attendance from "../pages/attendance/Attendance";
 import Calendar from "../pages/calendar/Calendar";
@@ -1289,6 +1291,26 @@ const AppRoutes = () => {
                 >
                     <Route path="leaves" element={<AdminLayout />}>
                         <Route path="manage" element={<LeaveManagement />} />
+                    </Route>
+                </Route>
+
+                {/* ================= EXPENSES ================= */}
+
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager", "employee", "mr"]} />}
+                >
+                    <Route path="expenses" element={<AdminLayout />}>
+                        <Route path="apply" element={<ApplyExpense />} />
+                    </Route>
+                </Route>
+
+                {/* Expense review (view-all + approve/reject) is reserved for
+                    company_owner/hr_manager/admin — not hr. */}
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager"]} />}
+                >
+                    <Route path="expenses" element={<AdminLayout />}>
+                        <Route path="manage" element={<ExpenseManagement />} />
                     </Route>
                 </Route>
 
