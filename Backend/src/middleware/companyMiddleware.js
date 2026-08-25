@@ -10,6 +10,7 @@ export default async function companyMiddleware(req, res, next) {
       return res.status(403).json({ message: `Company account is ${company.status || 'inactive'}` });
     }
     req.company = company;
+    req.companyId = companyId;
     return next();
   } catch (error) {
     console.error('Company middleware error:', error.message);

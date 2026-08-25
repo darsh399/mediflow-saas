@@ -3,6 +3,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import EmployeeProfile from '../models/EmployeeProfile.js';
 import { canActOn } from '../utils/authorize.js';
+import User from '../models/User.js';
+import recordAudit from '../utils/audit.js';
 
 const privateUploadDirectory = path.resolve(process.cwd(), 'private_uploads');
 const allowedExtensions = new Set(['.pdf', '.jpg', '.jpeg', '.png']);
@@ -21,7 +23,9 @@ export async function uploadProfileDocuments(req, res) {
       type: file.fieldname === 'profileImage' ? 'passportPhoto' : (Array.isArray(req.body.documentType) ? req.body.documentType[index] : req.body.documentType || 'document'),
       url: `private_uploads/${storageName}`,
       originalName: file.originalname,
-      mimeType: file.mimetype
+      mimeType: file.mimetype,
+      size: file.size,
+      expiresAt: req.body.expiryDate && !Number.isNaN(new Date(req.body.expiryDate).getTime()) ? new Date(req.body.expiryDate) : undefined,
     });
   }
   const profile = await EmployeeProfile.findOneAndUpdate(
@@ -30,6 +34,41 @@ export async function uploadProfileDocuments(req, res) {
     { new: true, upsert: true, setDefaultsOnInsert: true }
   );
   return res.status(201).json({ documents: stored, profile });
+}
+
+export async function listEmployeeDocuments(req, res) {
+  const profile = await EmployeeProfile.findOne({ companyId: req.user.companyId, userId: req.params.userId }).populate('userId', 'name email role');
+  if (!profile) return res.status(404).json({ message: 'Employee profile not found' });
+  if (String(profile.userId._id) !== String(req.user.id) && !canActOn(req.user, profile.userId.role)) return res.status(403).json({ message: 'Document access denied' });
+  return res.status(200).json({ documents: profile.documents, employee: profile.userId });
+}
+
+export async function verifyEmployeeDocument(req, res) {
+  const profile = await EmployeeProfile.findOne({ companyId: req.user.companyId, userId: req.params.userId }).populate('userId', 'role');
+  if (!profile) return res.status(404).json({ message: 'Employee profile not found' });
+  if (!canActOn(req.user, profile.userId.role)) return res.status(403).json({ message: 'Document verification denied' });
+  const document = profile.documents.id ? profile.documents.id(req.params.documentId) : null;
+  if (!document) return res.status(404).json({ message: 'Document not found' });
+  document.verified = Boolean(req.body.verified);
+  document.verifiedAt = document.verified ? new Date() : undefined;
+  document.verifiedBy = document.verified ? req.user.id : undefined;
+  await profile.save();
+  await recordAudit(req, 'employee_document_verification_updated', { companyId: req.user.companyId, entityId: profile.userId._id, module: 'documents', newValue: { documentId: req.params.documentId, verified: document.verified } });
+  return res.status(200).json({ message: 'Document verification updated', document });
+}
+
+export async function deleteEmployeeDocument(req, res) {
+  const profile = await EmployeeProfile.findOne({ companyId: req.user.companyId, userId: req.params.userId }).populate('userId', 'role');
+  if (!profile) return res.status(404).json({ message: 'Employee profile not found' });
+  if (String(profile.userId._id) !== String(req.user.id) && !canActOn(req.user, profile.userId.role)) return res.status(403).json({ message: 'Document deletion denied' });
+  const document = profile.documents.id ? profile.documents.id(req.params.documentId) : null;
+  if (!document) return res.status(404).json({ message: 'Document not found' });
+  const filePath = path.resolve(process.cwd(), document.url);
+  await fs.unlink(filePath).catch(() => undefined);
+  profile.documents.pull(req.params.documentId);
+  await profile.save();
+  await recordAudit(req, 'employee_document_deleted', { companyId: req.user.companyId, entityId: profile.userId._id, module: 'documents' });
+  return res.status(200).json({ message: 'Document deleted' });
 }
 
 export async function downloadPrivateDocument(req, res) {

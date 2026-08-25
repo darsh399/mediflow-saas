@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { doctorVisit, medicalVisit } from '../../redux/slices/visitSlice'
 import doctorApi from '../../api/doctorApi'
@@ -14,6 +14,9 @@ const AddVisit = ()=>{
   const [selected, setSelected] = useState('')
   const [notes, setNotes] = useState('')
   const [location, setLocation] = useState({ latitude: '', longitude: '' })
+  const [visitPhoto, setVisitPhoto] = useState(null)
+  const cameraInputRef = useRef(null)
+  const galleryInputRef = useRef(null)
   const [locationStatus, setLocationStatus] = useState('Requesting live location...')
 
   useEffect(()=>{
@@ -30,6 +33,7 @@ const AddVisit = ()=>{
     if(!location.latitude || !location.longitude) return alert('Current location is not available yet')
     const submitVisit = async ()=>{
       const payload = { currentLatitude: location.latitude, currentLongitude: location.longitude, purpose: 'field_visit', notes }
+      if (visitPhoto) payload.visitPhoto = visitPhoto
       if(type === 'doctor') payload.doctorId = selected
       else payload.medicalId = selected
       try{
@@ -75,6 +79,17 @@ const AddVisit = ()=>{
       <div className="mb-3">
         <label className="form-label">Notes</label>
         <textarea className="form-control" rows={3} value={notes} onChange={e=>setNotes(e.target.value)} />
+      </div>
+
+      <div className="mb-3">
+        <label className="form-label">Visit photo (optional)</label>
+        <div className="d-flex flex-wrap gap-2">
+          <button type="button" className="btn btn-outline-primary" onClick={() => cameraInputRef.current?.click()}><i className="bi bi-camera me-2"></i>Take photo</button>
+          <button type="button" className="btn btn-outline-secondary" onClick={() => galleryInputRef.current?.click()}><i className="bi bi-image me-2"></i>Choose from gallery</button>
+        </div>
+        <input ref={cameraInputRef} className="d-none" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={e=>setVisitPhoto(e.target.files?.[0] || null)} />
+        <input ref={galleryInputRef} className="d-none" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setVisitPhoto(e.target.files?.[0] || null)} />
+        {visitPhoto && <div className="mt-2 small text-success"><i className="bi bi-check-circle me-1"></i>{visitPhoto.name}</div>}
       </div>
 
       <div className="mb-3">

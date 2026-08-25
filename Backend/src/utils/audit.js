@@ -6,6 +6,8 @@ export default async function recordAudit(req, action, target = {}, meta = {}) {
     actorRole: req.user?.role,
     companyId: req.user?.companyId,
     action,
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
     ...target,
     meta
   });

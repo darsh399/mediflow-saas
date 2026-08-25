@@ -5,8 +5,13 @@ const documentSchema = new mongoose.Schema({
   url: { type: String, required: true },
   originalName: String,
   mimeType: String,
+  size: { type: Number, min: 0 },
+  expiresAt: Date,
+  verified: { type: Boolean, default: false },
+  verifiedAt: Date,
+  verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   uploadedAt: { type: Date, default: Date.now }
-}, { _id: false });
+});
 
 const employeeProfileSchema = new mongoose.Schema({
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true, index: true },

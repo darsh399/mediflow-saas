@@ -74,6 +74,8 @@ const AdminLayout = () => {
           </>}
 
           <p className="sidebar-label">WORK</p>
+          <NavLink className={navClass} to="/attendance" onClick={closeSidebar}><i className="bi bi-clock-history"></i> Attendance</NavLink>
+          <NavLink className={navClass} to="/calendar" onClick={closeSidebar}><i className="bi bi-calendar3"></i> Calendar</NavLink>
           <NavLink className={navClass} to="/tasks" onClick={closeSidebar}><i className="bi bi-check2-square"></i> Tasks</NavLink>
           {canManageCompany && <NavLink className={navClass} to="/projects" onClick={closeSidebar}><i className="bi bi-kanban"></i> Projects</NavLink>}
           <NavLink className={navClass} to="/orders" onClick={closeSidebar}><i className="bi bi-bag"></i> Orders</NavLink>

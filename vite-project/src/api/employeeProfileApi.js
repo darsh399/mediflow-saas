@@ -10,5 +10,7 @@ export async function downloadDocument(storageName){
 	const fileName = storageName.split('/').pop()
 	return (await axios.get(`/api/employee-profiles/documents/${encodeURIComponent(fileName)}`, { responseType: 'blob' })).data
 }
+export async function verifyDocument(userId, documentId, verified){ return (await axios.patch(`/api/employee-profiles/documents/employee/${userId}/${documentId}/verify`, { verified })).data }
+export async function deleteDocument(userId, documentId){ return (await axios.delete(`/api/employee-profiles/documents/employee/${userId}/${documentId}`)).data }
 
-export default { getMyProfile, saveProfile, submitProfile, uploadDocuments, listProfiles, reviewProfile, downloadDocument }
+export default { getMyProfile, saveProfile, submitProfile, uploadDocuments, listProfiles, reviewProfile, downloadDocument, verifyDocument, deleteDocument }

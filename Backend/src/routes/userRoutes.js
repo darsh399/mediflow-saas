@@ -18,6 +18,7 @@ import {
 import authMiddleware from '../middleware/authMiddleware.js';
 import requireRole from '../middleware/roleMiddleware.js';
 import companyMiddleware from '../middleware/companyMiddleware.js';
+import authorize from '../middleware/permissionMiddleware.js';
 
 const router = express.Router();
 
@@ -27,6 +28,7 @@ router.post(
   '/users',
   authMiddleware,
   requireRole('admin', 'company_owner', 'hr_manager', 'hr'),
+  authorize('employee.create'),
   createUser
 );
 
@@ -46,6 +48,7 @@ router.get(
   '/users/:id',
   authMiddleware,
   companyMiddleware,
+  authorize('employee.view'),
   getUserById
 );
 
@@ -61,6 +64,7 @@ router.delete(
   '/users/:id',
   authMiddleware,
   requireRole('admin', 'company_owner', 'hr_manager', 'hr', 'super_admin'),
+  authorize('employee.delete'),
   deleteUser
 );
 
@@ -68,6 +72,7 @@ router.get(
   '/users',
   authMiddleware,
   requireRole('admin', 'company_owner', 'hr_manager', 'hr', 'super_admin', 'mr'),
+  authorize('employee.view'),
   listUsers
 );
 
@@ -75,6 +80,7 @@ router.get(
   '/users/search',
   authMiddleware,
   requireRole('admin', 'company_owner', 'hr_manager', 'hr', 'super_admin'),
+  authorize('employee.view'),
   searchUsers
 );
 
@@ -98,6 +104,7 @@ router.patch(
   '/users/:id/status',
   authMiddleware,
   requireRole('admin', 'company_owner', 'hr_manager', 'hr'),
+  authorize('employee.update'),
   changeUserStatus
 );
 
