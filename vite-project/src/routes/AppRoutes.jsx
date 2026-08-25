@@ -577,7 +577,7 @@ import Medicals from "../pages/admin/Medicals";
 import AddMedical from "../pages/admin/AddMedical";
 import MedicalDetails from "../pages/admin/MedicalDetails";
 
-import Visits from "../pages/admin/Visits";
+import VisitRecords from "../pages/admin/VisitRecords";
 
 import AddVisit from "../pages/mr/AddVisit";
 
@@ -1166,7 +1166,12 @@ const AppRoutes = () => {
 
                         <Route
                             path="visits"
-                            element={<Visits />}
+                            element={<VisitRecords />}
+                        />
+
+                        <Route
+                            path="visits/:employeeId"
+                            element={<VisitRecords />}
                         />
 
                         <Route

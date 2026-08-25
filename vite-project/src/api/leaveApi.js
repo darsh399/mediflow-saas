@@ -7,19 +7,24 @@ export async function applyLeave(data){
   return resp.data
 }
 
-export async function listLeaves(){
-  const resp = await axios.get('/api/leaves')
+export async function listLeaves(params){
+  const resp = await axios.get('/api/leaves', { params })
   return resp.data
 }
 
-export async function listMyLeaves(){
-  const resp = await axios.get('/api/leaves?mine=true')
+export async function listMyLeaves(params){
+  const resp = await axios.get('/api/leaves', { params: { ...(params || {}), mine: true } })
   return resp.data
 }
 
 export async function reviewLeave(id, action){
-  const resp = await axios.post(`/api/leaves/${id}/review`, { action })
+  const resp = await axios.post(`/api/leaves/${id}/review`, typeof action === 'string' ? { action } : action)
   return resp.data
 }
 
-export default { applyLeave, listLeaves, listMyLeaves, reviewLeave }
+export async function getPolicy(){ return (await axios.get('/api/leaves/policy')).data }
+export async function updatePolicy(leaveTypes){ return (await axios.patch('/api/leaves/policy', { leaveTypes })).data }
+export async function getMyBalances(){ return (await axios.get('/api/leaves/balances/me')).data }
+export async function getLeaveHistory(id){ return (await axios.get(`/api/leaves/${id}/history`)).data }
+
+export default { applyLeave, listLeaves, listMyLeaves, reviewLeave, getPolicy, updatePolicy, getMyBalances, getLeaveHistory }

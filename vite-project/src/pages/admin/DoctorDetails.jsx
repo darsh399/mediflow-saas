@@ -4,6 +4,12 @@ import doctorApi from "../../api/doctorApi";
 import { useDispatch, useSelector } from "react-redux";
 import { doctorVisit } from "../../redux/slices/visitSlice";
 
+function formatDateOfBirth(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString("en-GB");
+}
+
 const DoctorDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -248,6 +254,15 @@ const DoctorDetails = () => {
 
                 <div className="fw-semibold">
                   {doctor.phone || "-"}
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <small className="text-muted d-block">
+                  Date of Birth
+                </small>
+                <div className="fw-semibold">
+                  {formatDateOfBirth(doctor.dateOfBirth)}
                 </div>
               </div>
             </div>

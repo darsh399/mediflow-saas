@@ -10,7 +10,8 @@ const AddDoctor = () => {
     latitude: '',
     longitude: '',
     phone: '',
-    specialty: ''
+    specialty: '',
+    dateOfBirth: ''
   })
 
   const [loading, setLoading] = useState(false)
@@ -333,6 +334,25 @@ const AddDoctor = () => {
 
                   </div>
 
+                </div>
+
+                <div className="mb-4 mt-4">
+                  <label className="form-label fw-semibold" htmlFor="doctor-date-of-birth">
+                    Date of Birth <span className="text-muted fw-normal">(optional)</span>
+                  </label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-light border-end-0">
+                      <i className="bi bi-calendar3 text-primary"></i>
+                    </span>
+                    <input
+                      id="doctor-date-of-birth"
+                      type="date"
+                      name="dateOfBirth"
+                      value={form.dateOfBirth}
+                      onChange={handleChange}
+                      className="form-control border-start-0"
+                    />
+                  </div>
                 </div>
 
                 {/* Location */}

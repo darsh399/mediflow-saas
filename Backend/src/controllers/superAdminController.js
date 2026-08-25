@@ -1,8 +1,6 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import User from '../models/User.js'
-import createToken from '../utils/createToken.js'
-import getCookieOptions from '../utils/getCookieOptions.js'
 import Company from '../models/Company.js'
 import Subscription from '../models/Subscription.js'
 import Doctor from '../models/Doctor.js'
@@ -27,6 +25,7 @@ import { normalizeModules } from '../config/modules.js'
 import recordAudit from '../utils/audit.js'
 import fs from 'fs/promises'
 import path from 'path'
+import { issueSession, revokeRefreshToken, clearSessionCookies } from '../services/sessionService.js'
 
 export const login = async (req, res) => {
   try {
@@ -41,9 +40,8 @@ export const login = async (req, res) => {
 
     if (user.role !== 'super_admin') return res.status(403).json({ message: 'Forbidden' })
 
-    const token = createToken({ id: user._id, email: user.email, role: user.role })
+    const token = await issueSession(res, user)
     const u = user.toObject(); delete u.password
-    res.cookie('token', token, getCookieOptions())
     return res.status(200).json({ message: 'Login successful', user: u, token })
   } catch (err) {
     console.error('Superadmin login error:', err)
@@ -53,8 +51,8 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    const opts = { ...getCookieOptions(), maxAge: undefined }
-    res.clearCookie('token', opts)
+    await revokeRefreshToken(req)
+    clearSessionCookies(res)
     return res.status(200).json({ message: 'Logged out' })
   } catch (err) {
     console.error('Superadmin logout error:', err)

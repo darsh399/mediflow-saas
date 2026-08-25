@@ -1,10 +1,12 @@
 import express from 'express';
-import { sendInvite, acceptInvite, forgotPassword, resetPassword, changePassword, currentUser } from '../controllers/authController.js';
+import { sendInvite, acceptInvite, forgotPassword, resetPassword, changePassword, currentUser, refreshAccessToken } from '../controllers/authController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import { requireRole } from '../utils/authorize.js';
 import companyMiddleware from '../middleware/companyMiddleware.js';
 
 const router = express.Router();
+
+router.post('/refresh-token', refreshAccessToken);
 
 // Protected: only admin/hr/manager can send invites
 router.post('/invite/send', authMiddleware, companyMiddleware, requireRole('admin','company_owner','hr_manager','hr','manager'), sendInvite);

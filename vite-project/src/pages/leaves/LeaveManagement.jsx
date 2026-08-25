@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import leaveApi from "../../api/leaveApi";
 
 const LeaveManagement = () => {
@@ -10,15 +11,27 @@ const LeaveManagement = () => {
   const [reviewingId, setReviewingId] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [policyTypes, setPolicyTypes] = useState([]);
+  const [savingPolicy, setSavingPolicy] = useState(false);
+  const [selectedHistory, setSelectedHistory] = useState(null);
+  const canManagePolicy = ["admin", "company_owner", "hr_manager", "hr"].includes(useSelector(state => state.auth.user?.role));
 
   const loadLeaves = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await leaveApi.listLeaves();
-
-      setLeaves(response.leaves || []);
+      const [leaveResult, policyResult] = await Promise.allSettled([leaveApi.listLeaves(), leaveApi.getPolicy()]);
+      if (leaveResult.status === "rejected") {
+        throw leaveResult.reason;
+      }
+      const response = leaveResult.value;
+      setLeaves(Array.isArray(response?.leaves) ? response.leaves : Array.isArray(response) ? response : []);
+      if (policyResult.status === "fulfilled") {
+        setPolicyTypes(policyResult.value.policy?.leaveTypes || []);
+      } else {
+        setError(policyResult.reason?.response?.data?.message || "Leave requests loaded, but policy could not be loaded");
+      }
     } catch (err) {
       setError(
         err?.response?.data?.message ||
@@ -32,6 +45,32 @@ const LeaveManagement = () => {
   useEffect(() => {
     loadLeaves();
   }, []);
+
+  const savePolicy = async () => {
+    try {
+      setSavingPolicy(true);
+      const response = await leaveApi.updatePolicy(policyTypes);
+      setPolicyTypes(response.policy?.leaveTypes || policyTypes);
+      setSuccess("Leave policy updated successfully.");
+    } catch (err) {
+      setError(err?.response?.data?.message || "Unable to update leave policy");
+    } finally {
+      setSavingPolicy(false);
+    }
+  };
+
+  const addPolicyType = () => {
+    setPolicyTypes(current => [...current, { code: `CUSTOM_${current.length + 1}`, name: "New Leave Type", enabled: true, yearlyAllowance: 0, monthlyAccrual: 0, maxCarryForward: 0, minimumNoticeDays: 0, documentRequired: false }]);
+  };
+
+  const showHistory = async leaveId => {
+    try {
+      const response = await leaveApi.getLeaveHistory(leaveId);
+      setSelectedHistory(response);
+    } catch (err) {
+      setError(err?.response?.data?.message || "Unable to load action history");
+    }
+  };
 
   const formatDate = (date) => {
     if (!date) return "N/A";
@@ -133,7 +172,9 @@ const LeaveManagement = () => {
       setError("");
       setSuccess("");
 
-      await leaveApi.reviewLeave(id, action);
+      const reviewNote = window.prompt(action === "reject" ? "Reason for rejection:" : "Approval comment (optional):", "")
+      if (action === "reject" && !reviewNote?.trim()) return
+      await leaveApi.reviewLeave(id, { action, reviewNote: reviewNote?.trim() || "" });
 
       setSuccess(
         `Leave ${
@@ -347,6 +388,10 @@ const LeaveManagement = () => {
             {error}
           </div>
         )}
+
+        {selectedHistory && <div className="card border-0 shadow-sm rounded-4 mb-4"><div className="card-body p-4"><div className="d-flex justify-content-between align-items-center mb-3"><h5 className="fw-bold mb-0">Action History</h5><button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setSelectedHistory(null)}>Close</button></div><div className="border-start border-primary ps-3">{selectedHistory.history?.map(item => <div className="mb-3" key={item._id}><div className="fw-semibold">{item.action}</div><div className="small text-muted">{new Date(item.createdAt).toLocaleString()} by {item.actorName} ({String(item.actorRole || '').replace(/_/g, ' ')})</div>{item.comment && <div className="small mt-1">{item.comment}</div>}</div>)}</div></div></div>}
+
+        {canManagePolicy && <div className="card border-0 shadow-sm rounded-4 mb-4"><div className="card-body p-4"><div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><div><h5 className="fw-bold mb-1">Leave Policy</h5><p className="text-muted small mb-0">Configure allowances, accrual, notice, and document rules.</p></div><div className="d-flex gap-2"><button type="button" className="btn btn-outline-primary" onClick={addPolicyType}>Add leave type</button><button type="button" className="btn btn-primary" disabled={savingPolicy} onClick={savePolicy}>Save policy</button></div></div><div className="table-responsive"><table className="table align-middle"><thead><tr><th>Code</th><th>Type</th><th>Yearly</th><th>Monthly</th><th>Carry forward</th><th>Notice days</th><th>Document</th><th>Enabled</th></tr></thead><tbody>{policyTypes.map((type, index) => <tr key={type._id || type.code}><td><input className="form-control" value={type.code} onChange={event => setPolicyTypes(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, code: event.target.value.toUpperCase().replace(/\s+/g, '_') } : item))} /></td><td><input className="form-control" value={type.name} onChange={event => setPolicyTypes(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} /></td><td><input type="number" min="0" step="0.5" className="form-control" value={type.yearlyAllowance ?? 0} onChange={event => setPolicyTypes(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, yearlyAllowance: Number(event.target.value) } : item))} /></td><td><input type="number" min="0" step="0.1" className="form-control" value={type.monthlyAccrual ?? 0} onChange={event => setPolicyTypes(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, monthlyAccrual: Number(event.target.value) } : item))} /></td><td><input type="number" min="0" step="0.5" className="form-control" value={type.maxCarryForward ?? 0} onChange={event => setPolicyTypes(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, maxCarryForward: Number(event.target.value) } : item))} /></td><td><input type="number" min="0" className="form-control" value={type.minimumNoticeDays ?? 0} onChange={event => setPolicyTypes(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, minimumNoticeDays: Number(event.target.value) } : item))} /></td><td><input type="checkbox" checked={Boolean(type.documentRequired)} onChange={event => setPolicyTypes(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, documentRequired: event.target.checked } : item))} /></td><td><input type="checkbox" checked={type.enabled !== false} onChange={event => setPolicyTypes(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, enabled: event.target.checked } : item))} /></td></tr>)}</tbody></table></div></div></div>}
 
         {/* FILTERS */}
         <div className="card border-0 shadow-sm rounded-4 mb-4">
@@ -648,6 +693,7 @@ const LeaveManagement = () => {
                           </td>
 
                           <td className="py-4 pe-4">
+                            <button type="button" className="btn btn-sm btn-outline-primary mb-2" onClick={() => showHistory(leave._id)}>History</button>
                             {isPending ? (
                               <div className="d-flex flex-column flex-xl-row gap-2">
                                 <button

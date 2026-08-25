@@ -20,6 +20,7 @@ npm install
 ```
 
 2. Create a local `.env` (or use `.env.development`) and set `MONGO_URI`, `JWT_SECRET`.
+	Configure `ACCESS_TOKEN_EXPIRES_IN` and `REFRESH_TOKEN_EXPIRES_IN` for access and refresh session lifetimes. Refresh tokens are stored in HttpOnly cookies and rotated on use.
 
 3. Start dev server (uses `nodemon`):
 

@@ -55,6 +55,7 @@ export default async function authMiddleware(req, res, next) {
     };
     return next();
   } catch (error) {
+    if (error?.name === 'TokenExpiredError') return res.status(401).json({ message: 'Access token expired', code: 'TOKEN_EXPIRED' });
     console.error('Auth middleware error:', error.message);
     return res.status(401).json({ message: 'Invalid or expired token' });
   }

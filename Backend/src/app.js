@@ -24,6 +24,7 @@ import organizationRoutes from './routes/organizationRoutes.js';
 import holidayRoutes from './routes/holidayRoutes.js';
 import leavePolicyRoutes from './routes/leavePolicyRoutes.js';
 import errorMiddleware from './middleware/errorMiddleware.js';
+import { startBirthdayScheduler } from './services/birthdayNotificationService.js';
 
 dotenv.config();
 
@@ -76,7 +77,7 @@ app.get('/activate-account', (req, res) => {
     res.redirect(`${frontendUrl.replace(/\/$/, '')}/activate-account${query ? `?${query}` : ''}`);
 });
 
-connectDB();
+connectDB().then(() => startBirthdayScheduler()).catch((error) => console.error('Database startup failed:', error.message));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/doctors', doctorRoutes);

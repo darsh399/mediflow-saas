@@ -1,6 +1,8 @@
 import Visit from '../models/Visit.js';
 import Doctor from '../models/Doctor.js';
 import Medical from '../models/Medical.js';
+import User from '../models/User.js';
+import mongoose from 'mongoose';
 import calculateDistance from '../utils/calculateDistance.js';
 import recordAudit from '../utils/audit.js';
 import crypto from 'crypto';
@@ -28,6 +30,75 @@ function parseCoordinate(value, field, minimum, maximum) {
 }
 
 const RADIUS_METERS = Number(process.env.VISIT_RADIUS_METERS || 90);
+const COMPANY_VISIT_ROLES = ['admin', 'company_owner', 'hr_manager', 'hr', 'manager', 'project_manager'];
+
+function canViewEmployeeVisitRecords(user) {
+  return COMPANY_VISIT_ROLES.includes(user?.role);
+}
+
+function localDateValue(date) {
+  const offset = Number(process.env.APP_TIMEZONE_OFFSET_MINUTES || 330);
+  const local = new Date(date.getTime() + offset * 60000);
+  return { year: local.getUTCFullYear(), month: local.getUTCMonth() + 1, day: local.getUTCDate() };
+}
+
+function dateAtStart(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) throw new Error('Dates must use YYYY-MM-DD format');
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) throw new Error('Invalid date');
+  const offset = Number(process.env.APP_TIMEZONE_OFFSET_MINUTES || 330);
+  return new Date(date.getTime() - offset * 60000);
+}
+
+function dateValueFromParts({ year, month, day }) {
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function addDays(value, days) {
+  const date = new Date(`${value}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return dateValueFromParts({ year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate() });
+}
+
+function getVisitDateRange(query, now = new Date()) {
+  const todayParts = localDateValue(now);
+  const today = dateValueFromParts(todayParts);
+  const range = String(query.range || 'TODAY').toUpperCase();
+  let start = query.startDate;
+  let end = query.endDate;
+  if (!start && !end) {
+    if (range === 'YESTERDAY') start = end = addDays(today, -1);
+    else if (range === 'LAST_7_DAYS') start = addDays(today, -6), end = today;
+    else if (range === 'THIS_WEEK') {
+      const weekday = new Date(`${today}T00:00:00Z`).getUTCDay();
+      start = addDays(today, weekday === 0 ? -6 : 1 - weekday);
+      end = today;
+    } else if (range === 'LAST_WEEK') {
+      const weekday = new Date(`${today}T00:00:00Z`).getUTCDay();
+      const thisWeek = addDays(today, weekday === 0 ? -6 : 1 - weekday);
+      start = addDays(thisWeek, -7);
+      end = addDays(thisWeek, -1);
+    } else if (range === 'THIS_MONTH') {
+      start = `${todayParts.year}-${String(todayParts.month).padStart(2, '0')}-01`;
+      end = today;
+    } else if (range === 'LAST_MONTH') {
+      const firstThisMonth = `${todayParts.year}-${String(todayParts.month).padStart(2, '0')}-01`;
+      end = addDays(firstThisMonth, -1);
+      const endParts = new Date(`${end}T00:00:00Z`);
+      start = `${endParts.getUTCFullYear()}-${String(endParts.getUTCMonth() + 1).padStart(2, '0')}-01`;
+    } else start = end = today;
+  }
+  if (!start || !end) throw new Error('Both startDate and endDate are required');
+  const startDate = dateAtStart(start);
+  const endDate = new Date(dateAtStart(end).getTime() + 86400000);
+  if (startDate >= endDate) throw new Error('startDate cannot be after endDate');
+  return { start, end, startDate, endDate };
+}
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 export const createVisit = async (req, res) => {
   try {
@@ -100,6 +171,83 @@ export const medicalVisit = async (req, res) => {
   } catch (error) {
     console.error('Medical visit error:', error);
     return res.status(500).json({ message: 'Error recording medical visit', error: error.message });
+  }
+};
+
+export const listEmployeeVisitSummary = async (req, res) => {
+  try {
+    if (!canViewEmployeeVisitRecords(req.user)) return res.status(403).json({ message: 'Insufficient permissions to view employee visit records' });
+    const { start, end, startDate, endDate } = getVisitDateRange(req.query);
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
+    const search = String(req.query.search || '').trim();
+    const employeeMatch = {
+      companyId: req.user.companyId,
+      role: { $nin: ['admin', 'company_owner', 'super_admin', 'superadmin'] },
+    };
+    if (search) {
+      const pattern = new RegExp(escapeRegex(search), 'i');
+      employeeMatch.$or = [{ name: pattern }, { firstName: pattern }, { lastName: pattern }, { employeeId: pattern }, { email: pattern }, { $expr: { $regexMatch: { input: { $concat: [{ $ifNull: ['$firstName', ''] }, ' ', { $ifNull: ['$lastName', ''] }] }, regex: escapeRegex(search), options: 'i' } } }];
+    }
+    const sortBy = ['name', 'employeeId', 'visitCount', 'lastVisit'].includes(req.query.sortBy) ? req.query.sortBy : 'name';
+    const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1;
+    const sort = { [sortBy]: sortOrder, _id: 1 };
+    const [result] = await User.aggregate([
+      { $match: employeeMatch },
+      { $lookup: { from: 'visits', let: { employeeId: '$_id', companyId: '$companyId' }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ['$companyId', '$$companyId'] }, { $eq: ['$employeeId', '$$employeeId'] }, { $gte: ['$visitedAt', startDate] }, { $lt: ['$visitedAt', endDate] }] } } }, { $sort: { visitedAt: -1 } }, { $project: { visitedAt: 1 } }], as: 'periodVisits' } },
+      { $addFields: { visitCount: { $size: '$periodVisits' }, lastVisit: { $arrayElemAt: ['$periodVisits.visitedAt', 0] } } },
+      { $facet: { employees: [{ $sort: sort }, { $skip: (page - 1) * limit }, { $limit: limit }, { $project: { _id: 1, name: 1, firstName: 1, lastName: 1, employeeId: 1, email: 1, role: 1, active: 1, visitCount: 1, lastVisit: 1 } }], metadata: [{ $count: 'total' }] } },
+    ]);
+    const total = result?.metadata?.[0]?.total || 0;
+    return res.status(200).json({ employees: result?.employees || [], dateRange: { startDate: start, endDate: end }, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (error) {
+    console.error('Employee visit summary error:', error);
+    return res.status(400).json({ message: error.message || 'Unable to load employee visit summary' });
+  }
+};
+
+export const listEmployeeVisits = async (req, res) => {
+  try {
+    if (!canViewEmployeeVisitRecords(req.user)) return res.status(403).json({ message: 'Insufficient permissions to view employee visit records' });
+    if (!mongoose.isValidObjectId(req.params.employeeId)) return res.status(400).json({ message: 'Invalid employee id' });
+    const employee = await User.findOne({ _id: req.params.employeeId, companyId: req.user.companyId, role: { $nin: ['admin', 'company_owner', 'super_admin', 'superadmin'] } }).select('_id name firstName lastName employeeId email role active').lean();
+    if (!employee) return res.status(404).json({ message: 'Employee not found in this company' });
+    const { start, end, startDate, endDate } = getVisitDateRange(req.query);
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
+    const filter = { companyId: req.user.companyId, employeeId: employee._id, visitedAt: { $gte: startDate, $lt: endDate } };
+    const [visits, total] = await Promise.all([
+      Visit.find(filter).populate('doctorId', 'name specialty phone').populate('medicalId', 'name address phone').sort({ visitedAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      Visit.countDocuments(filter),
+    ]);
+    return res.status(200).json({ employee, visits, dateRange: { startDate: start, endDate: end }, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (error) {
+    console.error('Employee visit history error:', error);
+    return res.status(400).json({ message: error.message || 'Unable to load employee visit history' });
+  }
+};
+
+export const getVisitCalendarSummary = async (req, res) => {
+  try {
+    if (!canViewEmployeeVisitRecords(req.user)) return res.status(403).json({ message: 'Insufficient permissions to view visit calendar' });
+    const { startDate, endDate } = getVisitDateRange({ startDate: req.query.startDate, endDate: req.query.endDate });
+    const match = { companyId: req.user.companyId, visitedAt: { $gte: startDate, $lt: endDate } };
+    if (req.query.employeeId) {
+      if (!mongoose.isValidObjectId(req.query.employeeId)) return res.status(400).json({ message: 'Invalid employee id' });
+      const employee = await User.exists({ _id: req.query.employeeId, companyId: req.user.companyId, role: { $nin: ['admin', 'company_owner', 'super_admin', 'superadmin'] } });
+      if (!employee) return res.status(404).json({ message: 'Employee not found in this company' });
+      match.employeeId = new mongoose.Types.ObjectId(req.query.employeeId);
+    }
+    const visits = await Visit.aggregate([
+      { $match: match },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$visitedAt', timezone: process.env.APP_TIMEZONE || 'Asia/Kolkata' } }, count: { $sum: 1 } } },
+      { $project: { _id: 0, date: '$_id', count: 1 } },
+      { $sort: { date: 1 } },
+    ]);
+    return res.status(200).json({ visits });
+  } catch (error) {
+    console.error('Visit calendar summary error:', error);
+    return res.status(400).json({ message: error.message || 'Unable to load visit calendar' });
   }
 };
 

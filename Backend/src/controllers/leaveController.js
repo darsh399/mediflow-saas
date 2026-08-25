@@ -5,6 +5,7 @@ import LeaveActionHistory from '../models/LeaveActionHistory.js';
 import Notification from '../models/Notification.js';
 import leaveService from '../services/leaveService.js';
 import recordAudit from '../utils/audit.js';
+import { hasAnyRole } from '../utils/authorize.js';
 
 const REVIEWER_ROLES = ['admin', 'company_owner', 'hr_manager', 'hr', 'manager', 'project_manager', 'superadmin', 'super_admin'];
 
@@ -77,6 +78,17 @@ export const listLeaves = async (req, res) => {
     const query = companyId ? { companyId } : {};
     // The personal endpoint is also used by reviewers on their own leave pages.
     if (req.query.mine === 'true' || !isReviewer(req.user)) query.userId = req.user.id;
+    if (req.query.status) query.status = String(req.query.status).toLowerCase();
+    if (req.query.leaveType) query.leaveType = String(req.query.leaveType).toUpperCase();
+    if (req.query.from || req.query.to) {
+      const from = new Date(`${req.query.from || req.query.to}T00:00:00.000Z`);
+      const to = new Date(`${req.query.to || req.query.from}T23:59:59.999Z`);
+      if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) return res.status(400).json({ message: 'Invalid leave date range' });
+      query.$or = [
+        { startDate: { $lte: to }, endDate: { $gte: from } },
+        { fromDate: { $lte: to }, toDate: { $gte: from } },
+      ];
+    }
     const leaves = await Leave.find(query).populate('userId appliedBy reviewedBy', '-password');
     return res.status(200).json({ leaves });
   } catch (error) {

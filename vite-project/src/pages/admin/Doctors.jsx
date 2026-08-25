@@ -4,6 +4,13 @@ import { fetchDoctors, deleteDoctor } from '../../redux/slices/doctorSlice'
 import { Link } from 'react-router-dom'
 import SearchBar from '../../components/SearchBar'
 
+function formatDateOfBirth(value) {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '-'
+  return date.toLocaleDateString('en-GB')
+}
+
 const Doctors = () => {
   const dispatch = useDispatch()
   const { items, loading, error } = useSelector(s => s.doctors)
@@ -229,6 +236,10 @@ const Doctors = () => {
                       Phone
                     </th>
 
+                    <th className="py-3 text-muted small text-uppercase">
+                      Date of Birth
+                    </th>
+
                     <th className="py-3 text-muted small text-uppercase text-end">
                       Actions
                     </th>
@@ -311,6 +322,10 @@ const Doctors = () => {
                           </span>
                         )}
 
+                      </td>
+
+                      <td className="py-3">
+                        {formatDateOfBirth(doctor.dateOfBirth)}
                       </td>
 
                       <td className="py-3 text-end">

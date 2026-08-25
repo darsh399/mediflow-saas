@@ -8,6 +8,8 @@ const MyLeaves = () => {
   const [dateFilter, setDateFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [history, setHistory] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   const loadLeaves = async () => {
     try {
@@ -108,6 +110,18 @@ const MyLeaves = () => {
     setSearch("");
     setStatusFilter("all");
     setDateFilter("all");
+  };
+
+  const showHistory = async (leaveId) => {
+    try {
+      setHistoryLoading(true);
+      const response = await leaveApi.getLeaveHistory(leaveId);
+      setHistory(response);
+    } catch (err) {
+      setError(err?.response?.data?.message || "Unable to load leave history");
+    } finally {
+      setHistoryLoading(false);
+    }
   };
 
   const pending = leaves.filter(
@@ -288,6 +302,8 @@ const MyLeaves = () => {
           </div>
         )}
 
+        {history && <div className="card border-0 shadow-sm rounded-4 mb-4"><div className="card-body p-4"><div className="d-flex justify-content-between align-items-center mb-3"><h5 className="fw-bold mb-0">Leave Action History</h5><button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setHistory(null)}>Close</button></div><div className="mb-3"><strong>{history.leave?.leaveType || history.leave?.type}</strong><span className="text-muted ms-2">{formatDate(history.leave?.fromDate || history.leave?.startDate)} to {formatDate(history.leave?.toDate || history.leave?.endDate)}</span></div>{historyLoading ? <div className="text-muted">Loading history...</div> : history.history?.length ? <div className="border-start border-primary ps-3">{history.history.map(item => <div className="mb-3" key={item._id}><div className="fw-semibold">{item.action}</div><div className="small text-muted">{formatDate(item.createdAt)} by {item.actorName} ({String(item.actorRole || '').replace(/_/g, ' ')})</div>{item.comment && <div className="small mt-1">{item.comment}</div>}</div>)}</div> : <div className="text-muted">No action history available.</div>}</div></div>}
+
         {/* FILTERS */}
         <div className="card border-0 shadow-sm rounded-4 mb-4">
           <div className="card-body p-4">
@@ -445,6 +461,8 @@ const MyLeaves = () => {
                     <th className="py-3 border-0">
                       STATUS
                     </th>
+
+                    <th className="py-3 border-0">HISTORY</th>
                   </tr>
                 </thead>
 
@@ -479,6 +497,8 @@ const MyLeaves = () => {
                                 "-"}
                             </span>
                           </td>
+
+                          <td className="py-4"><button type="button" className="btn btn-sm btn-outline-primary" disabled={historyLoading} onClick={() => showHistory(leave._id)}>View</button></td>
 
                           <td className="py-4">
                             {formatDate(

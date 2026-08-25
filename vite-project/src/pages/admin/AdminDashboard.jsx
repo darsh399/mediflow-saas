@@ -38,27 +38,38 @@ const AdminDashboard = () => {
   })
 
   const [loading, setLoading] = useState(true)
+  const [errors, setErrors] = useState({})
+
+  const countFromResponse = (response, key) => {
+    if (Number.isFinite(response?.pagination?.total)) return response.pagination.total
+    if (Array.isArray(response?.[key])) return response[key].length
+    if (Array.isArray(response)) return response.length
+    return 0
+  }
 
   useEffect(() => {
     const loadDashboard = async () => {
       try {
         setLoading(true)
 
-        const [u, d, m, v, l] = await Promise.all([
+        const requests = [
           userApi.listUsers(),
           doctorApi.listDoctors(),
           medicalApi.listMedicals(),
           visitApi.listVisits(),
           leaveApi.listLeaves()
-        ])
-
-        setCounts({
-          users: (u.users || u).length,
-          doctors: (d.doctors || d).length,
-          medicals: (m.medicals || m).length,
-          visits: (v.visits || v).length,
-          leaves: (l.leaves || l).length
+        ]
+        const results = await Promise.allSettled(requests)
+        const keys = ['users', 'doctors', 'medicals', 'visits', 'leaves']
+        const nextErrors = {}
+        const nextCounts = {}
+        results.forEach((result, index) => {
+          const key = keys[index]
+          if (result.status === 'fulfilled') nextCounts[key] = countFromResponse(result.value, key)
+          else nextErrors[key] = result.reason?.response?.data?.message || `Unable to load ${key}`
         })
+        setCounts(current => ({ ...current, ...nextCounts }))
+        setErrors(nextErrors)
       } catch (err) {
         console.error('Dashboard API error:', err)
       } finally {
@@ -196,8 +207,9 @@ const AdminDashboard = () => {
                     </p>
 
                     <h3 className="fw-bold mb-0">
-                      {card.value}
+                      {errors[card.title.toLowerCase()] ? '—' : card.value}
                     </h3>
+                    {errors[card.title.toLowerCase()] && <small className="text-danger">{errors[card.title.toLowerCase()]}</small>}
                   </div>
 
                   <div

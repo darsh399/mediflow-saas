@@ -17,6 +17,9 @@ const AddVisit = ()=>{
   const [visitPhoto, setVisitPhoto] = useState(null)
   const cameraInputRef = useRef(null)
   const galleryInputRef = useRef(null)
+  const videoRef = useRef(null)
+  const cameraStreamRef = useRef(null)
+  const [cameraOpen, setCameraOpen] = useState(false)
   const [locationStatus, setLocationStatus] = useState('Requesting live location...')
 
   useEffect(()=>{
@@ -29,10 +32,50 @@ const AddVisit = ()=>{
     return () => navigator.geolocation.clearWatch(watchId)
   }, [])
 
+  useEffect(() => () => {
+    cameraStreamRef.current?.getTracks().forEach(track => track.stop())
+  }, [])
+
+  const openCamera = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      cameraInputRef.current?.click()
+      return
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+      cameraStreamRef.current = stream
+      setCameraOpen(true)
+      requestAnimationFrame(() => {
+        if (videoRef.current) videoRef.current.srcObject = stream
+      })
+    } catch (cameraError) {
+      alert(cameraError.name === 'NotAllowedError' ? 'Camera permission was denied. Allow camera access and try again.' : 'Unable to open the camera')
+    }
+  }
+
+  const closeCamera = () => {
+    cameraStreamRef.current?.getTracks().forEach(track => track.stop())
+    cameraStreamRef.current = null
+    setCameraOpen(false)
+  }
+
+  const capturePhoto = () => {
+    const video = videoRef.current
+    if (!video?.videoWidth) return
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+    canvas.toBlob(blob => {
+      if (blob) setVisitPhoto(new File([blob], `visit-${Date.now()}.jpg`, { type: 'image/jpeg' }))
+      closeCamera()
+    }, 'image/jpeg', 0.9)
+  }
+
   const handleUseLocationAndSubmit = ()=>{
     if(!location.latitude || !location.longitude) return alert('Current location is not available yet')
     const submitVisit = async ()=>{
-      const payload = { currentLatitude: location.latitude, currentLongitude: location.longitude, purpose: 'field_visit', notes }
+      const payload = { currentLatitude: Number(location.latitude), currentLongitude: Number(location.longitude), purpose: 'field_visit', notes }
       if (visitPhoto) payload.visitPhoto = visitPhoto
       if(type === 'doctor') payload.doctorId = selected
       else payload.medicalId = selected
@@ -84,13 +127,15 @@ const AddVisit = ()=>{
       <div className="mb-3">
         <label className="form-label">Visit photo (optional)</label>
         <div className="d-flex flex-wrap gap-2">
-          <button type="button" className="btn btn-outline-primary" onClick={() => cameraInputRef.current?.click()}><i className="bi bi-camera me-2"></i>Take photo</button>
+          <button type="button" className="btn btn-outline-primary" onClick={openCamera}><i className="bi bi-camera me-2"></i>Take photo</button>
           <button type="button" className="btn btn-outline-secondary" onClick={() => galleryInputRef.current?.click()}><i className="bi bi-image me-2"></i>Choose from gallery</button>
         </div>
         <input ref={cameraInputRef} className="d-none" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={e=>setVisitPhoto(e.target.files?.[0] || null)} />
         <input ref={galleryInputRef} className="d-none" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setVisitPhoto(e.target.files?.[0] || null)} />
         {visitPhoto && <div className="mt-2 small text-success"><i className="bi bi-check-circle me-1"></i>{visitPhoto.name}</div>}
       </div>
+
+      {cameraOpen && <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1050 }}><div className="bg-white rounded p-3 w-100" style={{ maxWidth: 560 }}><div className="d-flex justify-content-between align-items-center mb-3"><h5 className="mb-0">Take visit photo</h5><button type="button" className="btn-close" onClick={closeCamera} aria-label="Close camera"></button></div><video ref={videoRef} autoPlay playsInline muted className="w-100 rounded bg-dark" style={{ maxHeight: '65vh', objectFit: 'contain' }}></video><div className="d-flex justify-content-end gap-2 mt-3"><button type="button" className="btn btn-outline-secondary" onClick={closeCamera}>Cancel</button><button type="button" className="btn btn-primary" onClick={capturePhoto}><i className="bi bi-camera me-2"></i>Capture photo</button></div></div></div>}
 
       <div className="mb-3">
         <div className="small text-muted mb-2">{locationStatus}</div>
