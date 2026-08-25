@@ -8,9 +8,12 @@ import Company from '../models/Company.js';
 import Invite from '../models/Invite.js';
 import EmployeeProfile from '../models/EmployeeProfile.js';
 import Attendance from '../models/Attendance.js';
+import Notification from '../models/Notification.js';
 import { hasPermission } from '../config/permissions.js';
 import recordAudit from '../utils/audit.js';
 import { issueSession, revokeRefreshToken, clearSessionCookies } from '../services/sessionService.js';
+import mailService from '../services/mailService.js';
+import { promotionTemplate } from '../services/emailTemplateService.js';
 
 
 
@@ -239,6 +242,78 @@ export const deleteUser = async (req, res) => {
         console.error("Error deleting user:", error);
         res.status(500).json({ message: 'Error deleting user', error: error.message });
     }   
+}
+
+export const promoteEmployee = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { designation, department, note, effectiveDate } = req.body || {};
+        if (!designation || !String(designation).trim()) {
+            return res.status(400).json({ message: 'New designation/title is required' });
+        }
+
+        const companyId = req.user?.companyId;
+        const findQuery = companyId ? { _id: userId, companyId } : { _id: userId };
+        const targetUser = await User.findOne(findQuery);
+        if (!targetUser) return res.status(404).json({ message: 'User not found' });
+
+        if (!canActOn(req.user, targetUser.role)) {
+            return res.status(403).json({ message: 'Insufficient permissions to promote this user' });
+        }
+
+        const previousDesignation = targetUser.profile?.jobDetails?.designation || '';
+        const previousDepartment = targetUser.profile?.jobDetails?.department || '';
+        const newDesignation = String(designation).trim();
+
+        targetUser.profile = targetUser.profile || {};
+        targetUser.profile.jobDetails = { ...(targetUser.profile.jobDetails || {}), designation: newDesignation };
+        if (department !== undefined) targetUser.profile.jobDetails.department = String(department).trim();
+        targetUser.markModified('profile');
+        await targetUser.save();
+
+        await recordAudit(req, 'employee_promoted', {
+            targetUserId: targetUser._id,
+            targetUserRole: targetUser.role,
+            companyId: targetUser.companyId,
+            entityId: targetUser._id,
+            module: 'employees',
+            oldValue: { designation: previousDesignation, department: previousDepartment },
+            newValue: { designation: newDesignation, department: targetUser.profile.jobDetails.department || previousDepartment },
+        }, { note, effectiveDate });
+
+        const actorName = req.user?.name || req.user?.email || 'Management';
+        await Notification.create({
+            companyId: targetUser.companyId,
+            recipientId: targetUser._id,
+            type: 'EMPLOYEE_PROMOTED',
+            title: 'You have been promoted',
+            message: `Congratulations! You have been promoted to ${newDesignation} by ${actorName}.${note ? ` ${note}` : ''}`,
+        });
+
+        let emailSent = false;
+        if (targetUser.email) {
+            try {
+                const template = promotionTemplate({
+                    employeeName: targetUser.name,
+                    previousDesignation: previousDesignation || 'your previous role',
+                    designation: newDesignation,
+                    note: note ? String(note).trim() : '',
+                    effectiveDate: effectiveDate ? new Date(effectiveDate).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN'),
+                    senderName: actorName,
+                });
+                await mailService.sendMail({ to: targetUser.email, ...template });
+                emailSent = true;
+            } catch (mailError) {
+                console.error('Promotion email failed:', mailError.message);
+            }
+        }
+
+        const userObj = targetUser.toObject(); delete userObj.password;
+        return res.status(200).json({ message: 'Employee promoted successfully', user: userObj, emailSent });
+    } catch (error) {
+        console.error('Error promoting employee:', error);
+        return res.status(500).json({ message: 'Error promoting employee', error: error.message });
+    }
 }
 
 export const changeUserStatus = async (req, res) => {

@@ -13,6 +13,8 @@ const AdminLayout = () => {
   const canSendCompanyMessages = MESSAGE_SENDER_ROLES.includes(role);
   const canReviewLeaves = REVIEWER_ROLES.includes(role);
   const isMr = role === "mr";
+  const canManageSalary = ["admin", "company_owner", "hr_manager", "hr"].includes(role);
+  const canViewSalary = canManageSalary || role === "employee";
   const [leavesOpen, setLeavesOpen] = useState(location.pathname.startsWith("/leaves"));
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -62,6 +64,9 @@ const AdminLayout = () => {
             <NavLink className={navClass} to="/leaves/my" onClick={closeSidebar}><i className="bi bi-clock-history"></i> My Leave Requests</NavLink>
             {canReviewLeaves && <NavLink className={navClass} to="/leaves/manage" onClick={closeSidebar}><i className="bi bi-clipboard-check"></i> Review Requests</NavLink>}
           </div>}
+
+          {canViewSalary && <><p className="sidebar-label">{canManageSalary ? "SALARY" : "MY SALARY"}</p><NavLink className={navClass} to="/salary/slips" onClick={closeSidebar}><i className="bi bi-receipt"></i> Salary Slips</NavLink>{canManageSalary && <NavLink className={navClass} to="/salary/structures" onClick={closeSidebar}><i className="bi bi-diagram-3"></i> Salary Structures</NavLink>}</>}
+          {canViewSalary && <><p className="sidebar-label">{canManageSalary ? "OFFERS" : "MY OFFER"}</p>{canManageSalary && <NavLink className={navClass} to="/offers/create" onClick={closeSidebar}><i className="bi bi-file-earmark-plus"></i> Create Offer</NavLink>}<NavLink className={navClass} to="/offers" onClick={closeSidebar}><i className="bi bi-file-earmark-text"></i> {canManageSalary ? "Offer Letters" : "Offer Details"}</NavLink></>}
 
           {isMr && <><p className="sidebar-label">MR TOOLS</p>
             <NavLink className={navClass} to="/users"><i className="bi bi-people"></i> Employees</NavLink>

@@ -613,6 +613,7 @@ import LeaveManagement from "../pages/leaves/LeaveManagement";
 import NotFound from "../pages/NotFound";
 import Attendance from "../pages/attendance/Attendance";
 import Calendar from "../pages/calendar/Calendar";
+import SalaryPortal from "../pages/salary/SalaryPortal";
 
 
 const AppRoutes = () => {
@@ -1313,6 +1314,17 @@ const AppRoutes = () => {
 
                     </Route>
 
+                </Route>
+
+                <Route element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "hr", "employee"]} />}>
+                    <Route path="salary" element={<AdminLayout />}>
+                        <Route path="slips" element={<SalaryPortal mode="slips" />} />
+                        <Route path="structures" element={<SalaryPortal mode="structures" />} />
+                    </Route>
+                    <Route path="offers" element={<AdminLayout />}>
+                        <Route index element={<SalaryPortal mode="offers" />} />
+                        <Route path="create" element={<SalaryPortal mode="offers" />} />
+                    </Route>
                 </Route>
 
                 <Route path="*" element={<NotFound />} />

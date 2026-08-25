@@ -1,0 +1,26 @@
+import axios from './axiosInstance'
+
+const request = async (method, url, data, config) => (await axios({ method, url, data, ...config })).data
+export const listSalaries = (params) => request('get', '/api/salaries', null, { params })
+export const getMySalary = () => request('get', '/api/salaries/my')
+export const createSalary = (data) => request('post', '/api/salaries', data)
+export const updateSalary = (id, data) => request('put', `/api/salaries/${id}`, data)
+export const deleteSalary = (id) => request('delete', `/api/salaries/${id}`)
+export const listStructures = (params) => request('get', '/api/salaries/structures', null, { params })
+export const createStructure = (data) => request('post', '/api/salaries/structures', data)
+export const updateStructure = (id, data) => request('put', `/api/salaries/structures/${id}`, data)
+export const deleteStructure = (id) => request('delete', `/api/salaries/structures/${id}`)
+export const listSlips = (params) => request('get', '/api/salaries/slips', null, { params })
+export const listMySlips = (params) => request('get', '/api/salaries/slips/my', null, { params })
+export const getSlip = (id) => request('get', `/api/salaries/slips/${id}`)
+export const previewSlip = (params) => request('get', '/api/salaries/slips/preview', null, { params })
+export const createSlip = (data) => request('post', '/api/salaries/slips', data)
+export const deleteSlip = (id) => request('delete', `/api/salaries/slips/${id}`)
+export const sendSlip = (id) => request('post', `/api/salaries/slips/${id}/send`)
+export const listOffers = (params) => request('get', '/api/salaries/offers', null, { params })
+export const listMyOffers = (params) => request('get', '/api/salaries/offers/my', null, { params })
+export const getOffer = (id) => request('get', `/api/salaries/offers/${id}`)
+export const createOffer = (data) => request('post', '/api/salaries/offers', data)
+export const updateOffer = (id, data) => request('put', `/api/salaries/offers/${id}`, data)
+export const sendOffer = (id) => request('post', `/api/salaries/offers/${id}/send`)
+export default { listSalaries, getMySalary, createSalary, updateSalary, deleteSalary, listStructures, createStructure, updateStructure, deleteStructure, listSlips, listMySlips, getSlip, previewSlip, createSlip, deleteSlip, sendSlip, listOffers, listMyOffers, getOffer, createOffer, updateOffer, sendOffer }

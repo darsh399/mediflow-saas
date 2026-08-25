@@ -24,6 +24,7 @@ import organizationRoutes from './routes/organizationRoutes.js';
 import holidayRoutes from './routes/holidayRoutes.js';
 import leavePolicyRoutes from './routes/leavePolicyRoutes.js';
 import errorMiddleware from './middleware/errorMiddleware.js';
+import salaryRoutes from './routes/salaryRoutes.js';
 import { startBirthdayScheduler } from './services/birthdayNotificationService.js';
 
 dotenv.config();
@@ -98,6 +99,7 @@ app.use('/api/activities', activityRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/organization', organizationRoutes);
 app.use('/api/calendar/holidays', holidayRoutes);
+app.use('/api/salaries', salaryRoutes);
 // Keep legacy /superadmin route
 app.use('/superadmin', superadminRoutes);
 // Also expose superadmin API under /api/superadmin so frontend dev proxy can forward API calls

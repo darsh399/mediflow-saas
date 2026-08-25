@@ -12,6 +12,7 @@ export const MODULES = [
   'documents',
   'notifications',
   'calendar',
+  'payroll',
 ]
 
 export function normalizeModules(modules) {

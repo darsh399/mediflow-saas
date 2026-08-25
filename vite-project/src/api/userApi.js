@@ -36,6 +36,11 @@ export async function changeUserStatus(id, action) {
   return resp.data
 }
 
+export async function promoteEmployee(id, data) {
+  const resp = await axios.post(`/api/users/${id}/promote`, data)
+  return resp.data
+}
+
 export async function updateProfile(id, data) {
   const resp = await axios.put(`/api/users/${id}/profile`, data)
   return resp.data
@@ -53,6 +58,7 @@ export default {
   updateUser,
   listUsers,
   changeUserStatus,
+  promoteEmployee,
   searchUsers,
   deleteUser,
   updateProfile,

@@ -1,0 +1,38 @@
+import express from 'express'
+import authMiddleware from '../middleware/authMiddleware.js'
+import companyMiddleware from '../middleware/companyMiddleware.js'
+import authorize from '../middleware/permissionMiddleware.js'
+import roleMiddleware from '../middleware/roleMiddleware.js'
+import controller from '../controllers/salaryController.js'
+
+const router = express.Router()
+const manager = roleMiddleware('admin', 'company_owner', 'hr_manager', 'hr')
+router.use(authMiddleware, companyMiddleware)
+
+router.get('/structures', manager, authorize('salary.view'), controller.listStructures)
+router.post('/structures', manager, authorize('salary.manage'), controller.createStructure)
+router.put('/structures/:id', manager, authorize('salary.manage'), controller.updateStructure)
+router.delete('/structures/:id', manager, authorize('salary.manage'), controller.deleteStructure)
+
+router.get('/my', authorize('salary.view'), controller.getMySalary)
+router.get('/', authorize('salary.view'), controller.listSalaries)
+router.post('/', manager, authorize('salary.manage'), controller.createSalary)
+router.put('/:id', manager, authorize('salary.manage'), controller.updateSalary)
+router.delete('/:id', manager, authorize('salary.manage'), controller.deleteSalary)
+
+router.get('/slips/my', authorize('salary_slip.view'), controller.getMySlips)
+router.get('/slips', authorize('salary_slip.view'), controller.listSlips)
+router.get('/slips/preview', manager, authorize('salary_slip.manage'), controller.previewSlip)
+router.post('/slips', manager, authorize('salary_slip.manage'), controller.createSlip)
+router.get('/slips/:id', authorize('salary_slip.view'), controller.getSlip)
+router.delete('/slips/:id', manager, authorize('salary_slip.manage'), controller.deleteSlip)
+router.post('/slips/:id/send', manager, authorize('salary_slip.manage'), controller.sendSlip)
+
+router.get('/offers/my', authorize('offer.view'), controller.listOffers)
+router.get('/offers', authorize('offer.view'), controller.listOffers)
+router.get('/offers/:id', authorize('offer.view'), controller.getOffer)
+router.post('/offers', manager, authorize('offer.manage'), controller.createOffer)
+router.put('/offers/:id', manager, authorize('offer.manage'), controller.updateOffer)
+router.post('/offers/:id/send', manager, authorize('offer.manage'), controller.sendOffer)
+
+export default router

@@ -13,6 +13,7 @@ const rolePermissions = {
     'report.view', 'report.export', 'audit.view', 'performance.view', 'performance.manage',
     'organization.view', 'organization.manage',
     'calendar.view', 'calendar.manage',
+    'salary.view', 'salary.manage', 'salary_slip.view', 'salary_slip.manage', 'offer.view', 'offer.manage',
   ],
   hr_manager: [
     'employee.view', 'employee.create', 'employee.update', 'employee.delete',
@@ -23,6 +24,7 @@ const rolePermissions = {
     'report.view', 'report.export', 'audit.view', 'performance.view', 'performance.manage',
     'organization.view', 'organization.manage',
     'calendar.view', 'calendar.manage',
+    'salary.view', 'salary.manage', 'salary_slip.view', 'salary_slip.manage', 'offer.view', 'offer.manage',
   ],
   hr: [
     'employee.view', 'employee.create', 'employee.update',
@@ -30,7 +32,7 @@ const rolePermissions = {
     'attendance.view', 'attendance.create', 'document.view', 'document.upload',
     'report.view', 'performance.view',
     'organization.view', 'organization.manage',
-    'calendar.view', 'calendar.manage',
+    'calendar.view', 'calendar.manage', 'salary.view', 'salary.manage', 'salary_slip.view', 'salary_slip.manage', 'offer.view', 'offer.manage',
   ],
   manager: [
     'employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.approve', 'leave.reject', 'leave.view_history', 'leave.view_ledger',
@@ -45,7 +47,7 @@ const rolePermissions = {
     'project.view', 'project.create', 'project.update', 'report.view',
   ],
   mr: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.view_history', 'doctor.view', 'doctor.create', 'medical.view', 'medical.create', 'visit.view', 'visit.create', 'attendance.view', 'attendance.create', 'task.view', 'task.update', 'calendar.view'],
-  employee: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'attendance.view', 'attendance.create', 'doctor.view', 'medical.view', 'visit.view', 'visit.create', 'task.view', 'task.update', 'document.view', 'document.upload', 'performance.view', 'calendar.view', 'leave.view_history'],
+  employee: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'attendance.view', 'attendance.create', 'doctor.view', 'medical.view', 'visit.view', 'visit.create', 'task.view', 'task.update', 'document.view', 'document.upload', 'performance.view', 'calendar.view', 'leave.view_history', 'salary.view', 'salary_slip.view', 'offer.view'],
   user: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'attendance.view', 'attendance.create', 'task.view', 'task.update', 'calendar.view', 'leave.view_history'],
 }
 
