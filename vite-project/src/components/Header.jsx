@@ -647,11 +647,9 @@ const Header = () => {
     <>
       <nav
         ref={navbarRef}
-        className="navbar navbar-expand-lg bg-white sticky-top"
+        className="navbar navbar-expand-lg mf-navbar sticky-top"
         style={{
           zIndex: 1100,
-          borderBottom: "1px solid #e9ecef",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
         }}
       >
         <div className="container py-1">
@@ -662,13 +660,14 @@ const Header = () => {
             onClick={closeMenus}
           >
             <div
-              className="d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+              className="d-flex align-items-center justify-content-center text-white fw-bold"
               style={{
                 width: "42px",
                 height: "42px",
                 borderRadius: "12px",
                 background:
-                  "linear-gradient(135deg, #0d6efd, #6610f2)",
+                  "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+                boxShadow: "0 6px 16px rgba(59,130,246,.35)",
                 fontSize: "20px",
               }}
             >
@@ -713,17 +712,6 @@ const Header = () => {
             id="mainNavbar"
           >
             <ul className="navbar-nav mx-auto mb-3 mb-lg-0 align-items-lg-center">
-
-              <li className="nav-item">
-                <Link
-                  to="/"
-                  className="nav-link px-3 fw-medium"
-                  onClick={closeMenus}
-                >
-                  <i className="bi bi-house-door me-1"></i>
-                  Home
-                </Link>
-              </li>
 
               {!signedIn && (
                 <>
@@ -806,14 +794,8 @@ const Header = () => {
                 <>
                   <NotificationBell />
 
-                  <span
-                    className="badge rounded-pill text-bg-light border px-3 py-2"
-                    style={{
-                      fontSize: "11px",
-                      color: "#495057",
-                    }}
-                  >
-                    <i className="bi bi-person-badge me-1"></i>
+                  <span className="mf-role-badge">
+                    <i className="bi bi-person-badge"></i>
                     {formattedRole}
                   </span>
 
@@ -1022,15 +1004,6 @@ const Header = () => {
                       </div>
                     )}
                   </div>
-
-                  <button
-                    type="button"
-                    className="btn btn-outline-danger rounded-3 px-3"
-                    onClick={handleLogout}
-                  >
-                    <i className="bi bi-box-arrow-right me-1"></i>
-                    Logout
-                  </button>
                 </>
               ) : (
                 <>
@@ -1060,6 +1033,34 @@ const Header = () => {
 
       <style>
         {`
+          .mf-navbar {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: saturate(180%) blur(10px);
+            -webkit-backdrop-filter: saturate(180%) blur(10px);
+            border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 0 4px 24px rgba(15, 23, 42, 0.05);
+          }
+
+          body.dark-mode .mf-navbar {
+            background: rgba(17, 24, 39, 0.88);
+            border-bottom-color: rgba(148, 163, 184, 0.14);
+          }
+
+          .mf-role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: #fff;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            text-transform: capitalize;
+          }
+
           .navbar .nav-link {
             color: #495057;
             transition: all 0.2s ease;
