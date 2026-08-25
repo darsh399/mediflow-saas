@@ -46,10 +46,14 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import authApi from "../api/authApi";
+import { updateUser } from "../redux/slices/authSlice";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const forced = useSelector((state) => state.auth.user?.passwordChangeRequired);
 
   const [form, setForm] = useState({
     currentPassword: "",
@@ -119,6 +123,8 @@ const ResetPassword = () => {
           "Password changed successfully."
       );
 
+      dispatch(updateUser({ passwordChangeRequired: false }));
+
       setForm({
         currentPassword: "",
         newPassword: "",
@@ -126,7 +132,7 @@ const ResetPassword = () => {
       });
 
       setTimeout(() => {
-        navigate("/home");
+        navigate("/profile");
       }, 1500);
     } catch (err) {
       setError(
@@ -207,12 +213,13 @@ const ResetPassword = () => {
               </div>
 
               <h3 className="fw-bold mb-2">
-                Change Password
+                {forced ? "Set a New Password" : "Change Password"}
               </h3>
 
               <p className="text-muted mb-0">
-                Update your password securely by confirming
-                your current password first.
+                {forced
+                  ? "For your security, you must change your temporary password before you can continue."
+                  : "Update your password securely by confirming your current password first."}
               </p>
             </div>
 
@@ -412,15 +419,17 @@ const ResetPassword = () => {
               </button>
             </form>
 
-            <div className="text-center mt-4">
-              <Link
-                to="/profile"
-                className="text-decoration-none"
-              >
-                <i className="bi bi-arrow-left me-1"></i>
-                Back to Profile
-              </Link>
-            </div>
+            {!forced && (
+              <div className="text-center mt-4">
+                <Link
+                  to="/profile"
+                  className="text-decoration-none"
+                >
+                  <i className="bi bi-arrow-left me-1"></i>
+                  Back to Profile
+                </Link>
+              </div>
+            )}
 
           </div>
 

@@ -175,9 +175,23 @@ const slice = createSlice({
         s.items = a.payload || []
       })
 
-      // Single user
+      // Single user — clear stale data while a different employee's record is
+      // loading so navigating between employees never flashes the previous one.
+      .addCase(fetchUser.pending, (s) => {
+        s.loading = true
+        s.error = null
+        s.current = null
+      })
+
       .addCase(fetchUser.fulfilled, (s, a) => {
+        s.loading = false
         s.current = a.payload
+      })
+
+      .addCase(fetchUser.rejected, (s, a) => {
+        s.loading = false
+        s.error = a.payload || a.error
+        s.current = null
       })
 
       // Create

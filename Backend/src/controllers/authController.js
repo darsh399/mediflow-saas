@@ -253,11 +253,16 @@ export const changePassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     user.password = hashedPassword;
+    user.passwordChangeRequired = false;
 
     await user.save();
 
+    const userObj = user.toObject();
+    delete userObj.password;
+
     return res.status(200).json({
       message: "Password changed successfully",
+      user: userObj,
     });
   } catch (error) {
     console.error("Change password error:", error);

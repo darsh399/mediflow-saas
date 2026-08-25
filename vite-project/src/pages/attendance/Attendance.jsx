@@ -43,15 +43,18 @@ export default function Attendance() {
   const [selectedRecord, setSelectedRecord] = useState(null)
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [detailsLoading, setDetailsLoading] = useState(false)
+  const [month, setMonth] = useState('')
+  const [year, setYear] = useState('')
 
   async function load() {
     try {
       setLoading(true)
+      const monthFilter = month || year ? { month: month || undefined, year: year || undefined, limit: 200 } : {}
       if (isReviewer) {
-        const history = await attendanceApi.listAttendance({ limit: 100 })
+        const history = await attendanceApi.listAttendance({ limit: 100, ...monthFilter })
         setRecords(history.attendance || [])
       } else {
-        const [current, history] = await Promise.all([attendanceApi.getToday(), attendanceApi.listAttendance({ limit: 10 })])
+        const [current, history] = await Promise.all([attendanceApi.getToday(), attendanceApi.listAttendance({ limit: 10, ...monthFilter })])
         setToday(current.attendance)
         setRecords(history.attendance || [])
       }
@@ -63,7 +66,22 @@ export default function Attendance() {
     }
   }
 
-  useEffect(() => { load() }, [isReviewer])
+  useEffect(() => { load() }, [isReviewer, month, year])
+
+  const clearMonthFilter = () => { setMonth(''); setYear('') }
+
+  const monthYearFilter = (
+    <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+      <select className="form-select" style={{ maxWidth: 180 }} value={month} onChange={(event) => setMonth(event.target.value)}>
+        <option value="">All months</option>
+        {Array.from({ length: 12 }, (_, index) => (
+          <option value={index + 1} key={index}>{new Date(2000, index, 1).toLocaleString('en-IN', { month: 'long' })}</option>
+        ))}
+      </select>
+      <input className="form-control" style={{ maxWidth: 140 }} type="number" placeholder="Year" value={year} onChange={(event) => setYear(event.target.value)} />
+      {(month || year) && <button type="button" className="btn btn-outline-secondary" onClick={clearMonthFilter}>Clear</button>}
+    </div>
+  )
 
   async function showDetails(record) {
     setSelectedRecord(record)
@@ -116,6 +134,7 @@ export default function Attendance() {
           <button type="button" className="btn btn-outline-primary" onClick={load} disabled={loading}><i className="bi bi-arrow-clockwise me-1"></i>Refresh</button>
         </div>
         {error && <div className="alert alert-danger" role="alert">{error}</div>}
+        {monthYearFilter}
         {loading ? <div className="alert alert-info">Loading company attendance...</div> : (
           <div className="card border-0 shadow-sm"><div className="card-body"><h5 className="fw-bold mb-3">Recent attendance</h5><div className="table-responsive"><table className="table align-middle mb-0"><thead><tr><th>Employee</th><th>Role</th><th>Date</th><th>Status</th><th>Check-in</th><th>Check-out</th><th>Total hours</th></tr></thead><tbody>{records.length ? records.map((record) => { const employee = record.employeeId || {}; const recordSessions = record.sessions?.length ? record.sessions : record.checkIn ? [{ checkIn: record.checkIn, checkOut: record.checkOut }] : []; const firstSession = recordSessions[0]; const lastSession = recordSessions[recordSessions.length - 1]; return <tr key={record._id} role="button" tabIndex="0" onClick={() => showDetails(record)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') showDetails(record) }}><td><button type="button" className="btn btn-link p-0 fw-semibold text-start" onClick={(event) => { event.stopPropagation(); showDetails(record) }}>{employee.name || 'Unknown employee'}</button><div className="small text-muted">{employee.email || 'No email'}</div></td><td>{String(employee.role || '-').replace(/_/g, ' ')}</td><td>{new Date(record.date).toLocaleDateString()}</td><td>{record.status || '-'}</td><td>{formatTime(firstSession?.checkIn)}</td><td>{formatTime(lastSession?.checkOut)}</td><td>{formatDuration(record.totalWorkingHours)}</td></tr> }) : <tr><td colSpan="7" className="text-center text-muted py-4">No attendance records yet.</td></tr>}</tbody></table></div></div></div>
         )}
@@ -148,6 +167,7 @@ export default function Attendance() {
             <div className="col-sm-6 col-lg-3"><div className="card border-0 shadow-sm h-100"><div className="card-body"><div className="text-muted small">SESSIONS TODAY</div><h4 className="mb-0 mt-2">{sessions.length}</h4></div></div></div>
             <div className="col-sm-6 col-lg-3"><div className="card border-0 shadow-sm h-100"><div className="card-body"><div className="text-muted small">WORKING HOURS</div><h4 className="mb-0 mt-2">{formatDuration(today?.totalWorkingHours)}</h4></div></div></div>
           </div>
+          {monthYearFilter}
           <div className="card border-0 shadow-sm"><div className="card-body"><h5 className="fw-bold mb-3">Recent attendance</h5><div className="table-responsive"><table className="table align-middle mb-0"><thead><tr><th>Date</th><th>Status</th><th>Sessions</th><th>Total hours</th></tr></thead><tbody>{records.length ? records.map((record) => { const recordSessions = record.sessions?.length ? record.sessions : record.checkIn ? [{ checkIn: record.checkIn, checkOut: record.checkOut }] : []; return <tr key={record._id}><td>{new Date(record.date).toLocaleDateString()}</td><td>{record.status}</td><td>{recordSessions.map((session) => `${formatTime(session.checkIn)} - ${formatTime(session.checkOut)}`).join(', ') || '-'}</td><td>{formatDuration(record.totalWorkingHours)}</td></tr> }) : <tr><td colSpan="4" className="text-center text-muted py-4">No attendance records yet.</td></tr>}</tbody></table></div></div></div>
         </>
       )}

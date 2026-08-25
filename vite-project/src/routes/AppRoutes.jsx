@@ -568,6 +568,7 @@ import TermsAndConditions from "../components/TermsAndCondition";
 
 import AdminLayout from "../layouts/AdminLayout";
 import ProtectedRoute from "../components/ProtectedRoute";
+import GuestRoute from "../components/GuestRoute";
 
 import Doctors from "../pages/admin/Doctors";
 import AddDoctor from "../pages/admin/AddDoctor";
@@ -624,11 +625,15 @@ const AppRoutes = () => {
 
                 {/* ================= PUBLIC ROUTES ================= */}
 
-                <Route index element={<Home />} />
+                {/* Guest-only: an authenticated user is redirected to their
+                    role-specific dashboard instead of seeing these pages. */}
+                <Route element={<GuestRoute />}>
+                    <Route index element={<Home />} />
 
-                <Route path="login" element={<Login />} />
+                    <Route path="login" element={<Login />} />
 
-                <Route path="signup" element={<Signup />} />
+                    <Route path="signup" element={<Signup />} />
+                </Route>
 
                 <Route
                     path="features"
@@ -933,9 +938,7 @@ const AppRoutes = () => {
                                 "admin",
                                 "company_owner",
                                 "hr_manager",
-                                "hr",
-                                "manager",
-                                "project_manager"
+                                "hr"
                             ]}
                         />
                     }
@@ -1279,8 +1282,10 @@ const AppRoutes = () => {
                     </Route>
                 </Route>
 
+                {/* Leave review (view-all + approve/reject) is reserved for
+                    hr_manager/company_owner/admin/people managers — not hr. */}
                 <Route
-                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager"]} />}
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "manager", "project_manager"]} />}
                 >
                     <Route path="leaves" element={<AdminLayout />}>
                         <Route path="manage" element={<LeaveManagement />} />
@@ -1316,7 +1321,7 @@ const AppRoutes = () => {
 
                 </Route>
 
-                <Route element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "hr", "employee"]} />}>
+                <Route element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "employee"]} />}>
                     <Route path="salary" element={<AdminLayout />}>
                         <Route path="slips" element={<SalaryPortal mode="slips" />} />
                         <Route path="structures" element={<SalaryPortal mode="structures" />} />

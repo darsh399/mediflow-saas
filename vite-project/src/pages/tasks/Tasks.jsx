@@ -34,7 +34,7 @@ const Tasks = () => {
 
       const [taskResponse, userResponse] = await Promise.all([
         taskApi.listTasks(),
-        userApi.listUsers(),
+        userApi.listColleagues(),
       ]);
 
       setTasks(taskResponse.tasks || []);

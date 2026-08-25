@@ -21,6 +21,7 @@ const router = express.Router();
 router.use(authMiddleware, companyMiddleware, requireModule('leaves'));
 router.post('/', authorize('leave.apply'), upload.single('document'), applyLeave);
 router.get('/', authorize('leave.view'), listLeaves);
-router.post('/:id/review', roleMiddleware('admin','company_owner','hr_manager','hr','manager','project_manager','superadmin','super_admin'), authorize('leave.approve'), reviewLeave);
+// Normal hr can view leave requests (see the GET route below) but not approve/reject them.
+router.post('/:id/review', roleMiddleware('admin','company_owner','hr_manager','manager','project_manager','superadmin','super_admin'), authorize('leave.approve'), reviewLeave);
 
 export default router;
