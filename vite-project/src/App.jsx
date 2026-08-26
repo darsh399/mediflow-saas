@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { clearAuth, setCredentials, validateSession } from './redux/slices/authSlice';
 import './App.css';
 import GlobalLoader from './components/GlobalLoader';
+import ScrollToTop from './components/ScrollToTop';
 const App = () => {
   const dispatch = useDispatch()
   const token = useSelector(state => state.auth.token)
@@ -31,6 +32,7 @@ const App = () => {
 
   return(
     <div className="App">
+      <ScrollToTop />
       <GlobalLoader />
       <AppRoutes/>
     </div>
