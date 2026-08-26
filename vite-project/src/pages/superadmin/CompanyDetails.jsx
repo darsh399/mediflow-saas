@@ -18,6 +18,23 @@ const PLAN_OPTIONS = [
   { value: '3_YEAR', label: '3 Years' },
 ]
 
+const MODULE_OPTIONS = [
+  { value: 'employees', label: 'Employees', icon: 'bi-people' },
+  { value: 'attendance', label: 'Attendance', icon: 'bi-clock-history' },
+  { value: 'leaves', label: 'Leave Management', icon: 'bi-calendar2-week' },
+  { value: 'doctors', label: 'Doctors', icon: 'bi-heart-pulse' },
+  { value: 'medicals', label: 'Medicals', icon: 'bi-hospital' },
+  { value: 'visits', label: 'Field Visits', icon: 'bi-geo-alt' },
+  { value: 'tasks', label: 'Tasks', icon: 'bi-check2-square' },
+  { value: 'orders', label: 'Orders', icon: 'bi-bag' },
+  { value: 'reports', label: 'Reports', icon: 'bi-bar-chart' },
+  { value: 'performance', label: 'Performance', icon: 'bi-trophy' },
+  { value: 'documents', label: 'Documents', icon: 'bi-file-earmark-text' },
+  { value: 'notifications', label: 'Notifications', icon: 'bi-bell' },
+  { value: 'calendar', label: 'Calendar', icon: 'bi-calendar3' },
+  { value: 'payroll', label: 'Payroll & Salary', icon: 'bi-cash-stack' },
+]
+
 const PLAN_COLORS = {
   TRIAL: '#0dcaf0',
   FREE: '#6c757d',
@@ -97,6 +114,8 @@ const CompanyDetails = () => {
   const [actionLoading, setActionLoading] = useState(false)
   const [subForm, setSubForm] = useState({ plan: 'TRIAL', extendMonths: '', autoRenew: false })
   const [subLoading, setSubLoading] = useState(false)
+  const [modulesForm, setModulesForm] = useState([])
+  const [modulesLoading, setModulesLoading] = useState(false)
 
   useEffect(() => {
     const loadCompany = async () => {
@@ -106,6 +125,7 @@ const CompanyDetails = () => {
         const response = await superAdminApi.getCompany(id)
 
         setData(response)
+        setModulesForm(response.enabledModules || [])
       } catch (error) {
         console.error(error)
 
@@ -216,6 +236,41 @@ const CompanyDetails = () => {
       )
     } finally {
       setSubLoading(false)
+    }
+  }
+
+  const toggleModule = value => {
+    setModulesForm(current =>
+      current.includes(value)
+        ? current.filter(module => module !== value)
+        : [...current, value]
+    )
+  }
+
+  const saveModules = async () => {
+    try {
+      setModulesLoading(true)
+
+      await superAdminApi.updateCompanyModules(id, modulesForm)
+
+      const response = await superAdminApi.getCompany(id)
+      setData(response)
+      setModulesForm(response.enabledModules || [])
+
+      notify(
+        'Services Updated',
+        'Enabled services have been updated for this company.'
+      )
+    } catch (error) {
+      console.error(error)
+
+      notify(
+        'Error',
+        error?.response?.data?.message ||
+          'Unable to update services'
+      )
+    } finally {
+      setModulesLoading(false)
     }
   }
 
@@ -736,6 +791,63 @@ const CompanyDetails = () => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <div className="card border-0 shadow-sm mt-4 overflow-hidden">
+
+        <div className="card-header border-0 p-4 text-white" style={{ background: 'linear-gradient(135deg, #198754 0%, #0dcaf0 100%)' }}>
+          <h5 className="fw-bold mb-1">
+            <i className="bi bi-toggles me-2"></i>
+            Manage Services
+          </h5>
+          <p className="mb-0 opacity-75 small">
+            Activate or deactivate individual services (like Payroll) for this company.
+          </p>
+        </div>
+
+        <div className="card-body p-4">
+          <div className="row g-3">
+            {MODULE_OPTIONS.map(option => {
+              const enabled = modulesForm.includes(option.value)
+              return (
+                <div className="col-xl-3 col-md-4 col-sm-6" key={option.value}>
+                  <div
+                    className="d-flex align-items-center justify-content-between border rounded-3 p-3 h-100"
+                    style={{ borderColor: enabled ? '#198754' : undefined, backgroundColor: enabled ? '#19875408' : undefined }}
+                  >
+                    <div className="d-flex align-items-center gap-2">
+                      <i className={`bi ${option.icon}`} style={{ color: enabled ? '#198754' : '#6c757d' }}></i>
+                      <span className="fw-semibold small">{option.label}</span>
+                    </div>
+                    <div className="form-check form-switch mb-0">
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        className="form-check-input"
+                        id={`module-${option.value}`}
+                        checked={enabled}
+                        onChange={() => toggleModule(option.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="d-flex justify-content-end mt-4">
+            <button type="button" className="btn btn-success rounded-3" disabled={modulesLoading} onClick={saveModules}>
+              {modulesLoading ? (
+                <span className="spinner-border spinner-border-sm"></span>
+              ) : (
+                <>
+                  <i className="bi bi-check2-circle me-1"></i>
+                  Save Services
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

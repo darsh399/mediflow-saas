@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux'
 import { Navigate, Outlet } from 'react-router-dom'
 import { getDashboardRoute } from '../utils/dashboardRoute'
 
-// Guards public-only pages (home, login, signup): an authenticated user must
+// Guards public-only pages (home, login): an authenticated user must
 // never see them. Mirrors ProtectedRoute's session-loading check so the login
 // page never flashes before the redirect fires.
 const GuestRoute = () => {

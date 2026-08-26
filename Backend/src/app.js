@@ -29,6 +29,7 @@ import expenseRoutes from './routes/expenseRoutes.js';
 import companyProductRoutes from './routes/companyProductRoutes.js';
 import auditLogRoutes from './routes/auditLogRoutes.js';
 import subscriptionSelfServiceRoutes from './routes/subscriptionSelfServiceRoutes.js';
+import demoRequestRoutes from './routes/demoRequestRoutes.js';
 import { startBirthdayScheduler } from './services/birthdayNotificationService.js';
 
 dotenv.config();
@@ -108,6 +109,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/company-products', companyProductRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 app.use('/api/billing', subscriptionSelfServiceRoutes);
+app.use('/api/demo-requests', demoRequestRoutes);
 // Keep legacy /superadmin route
 app.use('/superadmin', superadminRoutes);
 // Also expose superadmin API under /api/superadmin so frontend dev proxy can forward API calls

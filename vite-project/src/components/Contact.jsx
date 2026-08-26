@@ -1,4 +1,5 @@
 import { useState } from "react";
+import demoRequestApi from "../api/demoRequestApi";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,10 @@ const Contact = () => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [showDemo, setShowDemo] = useState(false);
+  const [videoUnavailable, setVideoUnavailable] = useState(false);
 
   const handleChange = (event) => {
     setFormData({
@@ -19,21 +24,32 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setError("");
+    setSubmitting(true);
 
-    console.log("Enquiry:", formData);
+    try {
+      await demoRequestApi.createDemoRequest(formData);
 
-    setSubmitted(true);
+      setSubmitted(true);
 
-    setFormData({
-      name: "",
-      companyName: "",
-      email: "",
-      phone: "",
-      subject: "",
-      message: "",
-    });
+      setFormData({
+        name: "",
+        companyName: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
+      });
+    } catch (submitError) {
+      setError(
+        submitError?.response?.data?.message ||
+          "Unable to submit your enquiry right now. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -56,14 +72,83 @@ const Contact = () => {
                 Contact MediFlow
               </h1>
 
-              <p className="lead text-white opacity-75 mb-0">
+              <p className="lead text-white opacity-75 mb-4">
                 Interested in MediFlow for your organization? Send us
                 an enquiry and our team will get in touch with you.
               </p>
+
+              <button
+                type="button"
+                className="btn btn-light btn-lg rounded-pill px-4 fw-semibold text-primary d-inline-flex align-items-center gap-2"
+                onClick={() => {
+                  setVideoUnavailable(false);
+                  setShowDemo(true);
+                }}
+              >
+                <span
+                  className="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center"
+                  style={{ width: "32px", height: "32px" }}
+                >
+                  <i className="bi bi-play-fill"></i>
+                </span>
+                Watch Demo
+              </button>
             </div>
           </div>
         </div>
       </section>
+
+      {showDemo && (
+        <div
+          className="modal d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+          onClick={() => setShowDemo(false)}
+        >
+          <div
+            className="modal-dialog modal-lg modal-dialog-centered"
+            role="document"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-content border-0 rounded-4 overflow-hidden">
+              <div className="modal-header border-0 pb-0">
+                <h5 className="modal-title fw-bold">
+                  <i className="bi bi-play-circle text-primary me-2"></i>
+                  MediFlow Product Demo
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Close"
+                  onClick={() => setShowDemo(false)}
+                />
+              </div>
+              <div className="modal-body pt-2">
+                {videoUnavailable ? (
+                  <div className="text-center text-muted py-5">
+                    <i className="bi bi-camera-video-off fs-1 d-block mb-3"></i>
+                    Our demo video isn&apos;t available right now.
+                    <br />
+                    Please send us an enquiry below and we&apos;ll walk you
+                    through MediFlow directly.
+                  </div>
+                ) : (
+                  <video
+                    className="w-100 rounded-3"
+                    controls
+                    autoPlay
+                    src="/demo-video.mp4"
+                    onError={() => setVideoUnavailable(true)}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="py-5">
         <div className="container">
@@ -229,6 +314,13 @@ const Contact = () => {
                       </div>
                     )}
 
+                    {error && (
+                      <div className="alert alert-danger rounded-3">
+                        <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                        {error}
+                      </div>
+                    )}
+
                     <form onSubmit={handleSubmit}>
                       <div className="row">
                         <div className="col-md-6 mb-3">
@@ -350,9 +442,16 @@ const Contact = () => {
                       <button
                         type="submit"
                         className="btn btn-primary btn-lg w-100 rounded-3"
+                        disabled={submitting}
                       >
-                        <i className="bi bi-send me-2"></i>
-                        Send Enquiry
+                        {submitting ? (
+                          <span className="spinner-border spinner-border-sm"></span>
+                        ) : (
+                          <>
+                            <i className="bi bi-send me-2"></i>
+                            Send Enquiry
+                          </>
+                        )}
                       </button>
                     </form>
                   </div>

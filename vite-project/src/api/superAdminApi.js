@@ -49,4 +49,14 @@ export async function listAuditLogs(params){
   return resp.data
 }
 
-export default { login, dashboard, createCompany, updateCompanyStatus, updateCompanySubscription, updateCompanyModules, getCompanyUsage, listAuditLogs, getCompany, deleteCompany }
+export async function listDemoRequests(params){
+  const resp = await axios.get('/api/demo-requests', { params })
+  return resp.data
+}
+
+export async function updateDemoRequestStatus(id, status){
+  const resp = await axios.patch(`/api/demo-requests/${id}/status`, { status })
+  return resp.data
+}
+
+export default { login, dashboard, createCompany, updateCompanyStatus, updateCompanySubscription, updateCompanyModules, getCompanyUsage, listAuditLogs, listDemoRequests, updateDemoRequestStatus, getCompany, deleteCompany }

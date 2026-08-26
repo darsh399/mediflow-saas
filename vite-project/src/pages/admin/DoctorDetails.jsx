@@ -3,6 +3,9 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import doctorApi from "../../api/doctorApi";
 import { useDispatch, useSelector } from "react-redux";
 import { doctorVisit } from "../../redux/slices/visitSlice";
+import AssignVisitModal from "../../components/AssignVisitModal";
+
+const ASSIGN_ROLES = ['admin', 'company_owner', 'hr_manager', 'manager', 'superadmin', 'super_admin'];
 
 function formatDateOfBirth(value) {
   if (!value) return "-";
@@ -18,6 +21,8 @@ const DoctorDetails = () => {
   const { loading: visitLoading, error: visitError, lastResult } = useSelector(
     (s) => s.visits
   );
+  const role = useSelector((s) => s.auth.user?.role);
+  const canAssign = ASSIGN_ROLES.includes(role);
 
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +35,8 @@ const DoctorDetails = () => {
     "Requesting live location..."
   );
   const [notes, setNotes] = useState("");
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignSuccess, setAssignSuccess] = useState("");
 
   useEffect(() => {
     const loadDoctor = async () => {
@@ -57,6 +64,10 @@ const DoctorDetails = () => {
   }, [id]);
 
   useEffect(() => {
+    // Admin/hr_manager/manager don't self check-in, so skip requesting
+    // location permission for them — only the assign flow applies.
+    if (canAssign) return;
+
     if (!navigator.geolocation) {
       setLocationStatus(
         "Geolocation is not supported by this browser"
@@ -86,7 +97,7 @@ const DoctorDetails = () => {
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
+  }, [canAssign]);
 
   const handleAddVisit = async () => {
     if (!location.latitude || !location.longitude) {
@@ -289,6 +300,31 @@ const DoctorDetails = () => {
 
               <div className="mb-3">
                 <small className="text-muted d-block">
+                  Address
+                </small>
+
+                <div className="fw-semibold">
+                  {doctor.address || "-"}
+                </div>
+              </div>
+
+              <div className="row mb-3">
+                <div className="col-4">
+                  <small className="text-muted d-block">City</small>
+                  <div className="fw-semibold">{doctor.city || "-"}</div>
+                </div>
+                <div className="col-4">
+                  <small className="text-muted d-block">District</small>
+                  <div className="fw-semibold">{doctor.district || "-"}</div>
+                </div>
+                <div className="col-4">
+                  <small className="text-muted d-block">State</small>
+                  <div className="fw-semibold">{doctor.state || "-"}</div>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <small className="text-muted d-block">
                   Latitude
                 </small>
 
@@ -360,6 +396,44 @@ const DoctorDetails = () => {
             </div>
           )}
 
+        {canAssign && (
+          <div className="col-12">
+            <div className="card border-0 shadow-sm rounded-4">
+              <div className="card-body p-4">
+                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                  <div>
+                    <h5 className="fw-bold mb-1">
+                      <i className="bi bi-person-check text-success me-2"></i>
+                      Assign Visit
+                    </h5>
+
+                    <p className="text-muted small mb-0">
+                      Schedule an employee to visit this doctor on a future date.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-success px-4 py-2 rounded-3 fw-semibold"
+                    onClick={() => setShowAssignModal(true)}
+                  >
+                    <i className="bi bi-calendar-plus me-2"></i>
+                    Assign Visit
+                  </button>
+                </div>
+
+                {assignSuccess && (
+                  <div className="alert alert-success mt-3 mb-0 rounded-3">
+                    <i className="bi bi-check-circle-fill me-2"></i>
+                    {assignSuccess}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!canAssign && (
         <div className="col-12">
           <div className="card border-0 shadow-sm rounded-4">
             <div className="card-body p-4">
@@ -477,7 +551,17 @@ const DoctorDetails = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
+
+      {showAssignModal && (
+        <AssignVisitModal
+          doctorId={doctor._id}
+          targetName={doctor.name}
+          onClose={() => setShowAssignModal(false)}
+          onAssigned={() => setAssignSuccess("Visit assigned successfully.")}
+        />
+      )}
     </div>
   );
 };

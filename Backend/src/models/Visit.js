@@ -24,6 +24,17 @@ const visitSchema = new mongoose.Schema({
   rejectionReason: { type: String, trim: true, maxlength: 1000 },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   approvedAt: Date,
+  // Set only when this visit was scheduled for an employee by an admin/hr_manager/
+  // manager (see assignVisit) — absent for self-logged check-ins.
+  assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  // Reason the assigned employee gave when moving visitedAt to a new date.
+  rescheduleReason: { type: String, trim: true, maxlength: 1000 },
+  // Reason the assigned employee gave when cancelling a scheduled visit.
+  cancellationReason: { type: String, trim: true, maxlength: 1000 },
+  // When the assigned employee marked this visit done — distinct from
+  // visitedAt, which is the planned/assigned date and may be in the past
+  // relative to when they actually completed it.
+  completedAt: Date,
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 

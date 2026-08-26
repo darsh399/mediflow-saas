@@ -545,25 +545,14 @@ const Header = () => {
                   </div>
                 </>
               ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="btn btn-outline-primary rounded-3 px-4"
-                    onClick={closeMenus}
-                  >
-                    <i className="bi bi-box-arrow-in-right me-1"></i>
-                    Login
-                  </Link>
-
-                  <Link
-                    to="/signup"
-                    className="btn btn-primary rounded-3 px-4 shadow-sm"
-                    onClick={closeMenus}
-                  >
-                    Get Started
-                    <i className="bi bi-arrow-right ms-2"></i>
-                  </Link>
-                </>
+                <Link
+                  to="/login"
+                  className="btn btn-primary rounded-3 px-4 shadow-sm"
+                  onClick={closeMenus}
+                >
+                  <i className="bi bi-box-arrow-in-right me-1"></i>
+                  Login
+                </Link>
               )}
             </div>
           </div>

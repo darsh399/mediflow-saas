@@ -6,6 +6,9 @@ const notificationSchema = new mongoose.Schema({
   type: { type: String, required: true },
   title: { type: String, required: true },
   message: { type: String, required: true },
+  // Optional frontend route (e.g. "/my-visits?visitId=...") to send the user
+  // to when they click this notification.
+  link: { type: String, trim: true },
   dedupeKey: { type: String, unique: true, sparse: true, index: true },
   readAt: Date
 }, { timestamps: true });

@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { getAllMyVisits } from "../../redux/slices/userSlice";
+import VisitActionModal from "../../components/VisitActionModal";
+import VisitDetailsModal from "../../components/VisitDetailsModal";
 
 const MyVisits = () => {
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightVisitId = searchParams.get("visitId");
 
   const { items: visits, loading, error } = useSelector(
     (state) => state.users
@@ -13,10 +18,28 @@ const MyVisits = () => {
   const [dateFilter, setDateFilter] = useState("all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [actionModal, setActionModal] = useState(null); // { visit, mode }
+  const [detailsVisit, setDetailsVisit] = useState(null);
 
   useEffect(() => {
     dispatch(getAllMyVisits());
   }, [dispatch]);
+
+  // Arriving from a "visit assigned" notification link — open that visit's
+  // details as soon as the list has loaded.
+  useEffect(() => {
+    if (!highlightVisitId || !visits?.length) return;
+    const match = visits.find((v) => v._id === highlightVisitId);
+    if (match) setDetailsVisit(match);
+  }, [highlightVisitId, visits]);
+
+  const closeDetails = () => {
+    setDetailsVisit(null);
+    if (highlightVisitId) {
+      searchParams.delete("visitId");
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
 
   const formatDate = (date) => {
     if (!date) return "N/A";
@@ -47,6 +70,23 @@ const MyVisits = () => {
     const d = new Date(date);
     d.setHours(23, 59, 59, 999);
     return d;
+  };
+
+  const getStatusBadge = (status) => {
+    switch (String(status || "").toLowerCase()) {
+      case "completed":
+      case "approved":
+        return { backgroundColor: "#e8f8ef", color: "#198754", icon: "bi-check-circle-fill", label: "Completed" };
+      case "scheduled":
+        return { backgroundColor: "#e7f1ff", color: "#0d6efd", icon: "bi-calendar-event", label: "Scheduled" };
+      case "cancelled":
+      case "rejected":
+        return { backgroundColor: "#fdecec", color: "#dc3545", icon: "bi-x-circle-fill", label: status === "rejected" ? "Rejected" : "Cancelled" };
+      case "correction_requested":
+        return { backgroundColor: "#fff4e5", color: "#fd7e14", icon: "bi-exclamation-circle-fill", label: "Correction Requested" };
+      default:
+        return { backgroundColor: "#fff4e5", color: "#fd7e14", icon: "bi-clock-fill", label: "Pending" };
+    }
   };
 
   const filteredVisits = useMemo(() => {
@@ -118,8 +158,8 @@ const MyVisits = () => {
         medicalName.includes(searchValue) ||
         specialty.includes(searchValue);
 
-      const visitDate = visit.createdAt
-        ? new Date(visit.createdAt)
+      const visitDate = visit.visitedAt
+        ? new Date(visit.visitedAt)
         : null;
 
       let matchesDate = true;
@@ -148,6 +188,9 @@ const MyVisits = () => {
     setFromDate("");
     setToDate("");
   };
+
+  const completedCount = filteredVisits.filter((v) => ["completed", "approved"].includes(String(v.status || "").toLowerCase())).length;
+  const scheduledCount = filteredVisits.filter((v) => String(v.status || "").toLowerCase() === "scheduled").length;
 
   if (loading) {
     return (
@@ -572,12 +615,21 @@ const MyVisits = () => {
                       <th className="border-0 py-3 text-muted small fw-semibold">
                         STATUS
                       </th>
+
+                      <th className="border-0 py-3 text-muted small fw-semibold">
+                        ACTIONS
+                      </th>
                     </tr>
                   </thead>
 
                   <tbody>
                     {filteredVisits.map((visit, index) => (
-                      <tr key={visit._id}>
+                      <tr
+                        key={visit._id}
+                        onClick={() => setDetailsVisit(visit)}
+                        className={visit._id === highlightVisitId ? "table-primary" : ""}
+                        style={{ cursor: "pointer" }}
+                      >
 
                         <td className="px-4 py-4">
                           <div
@@ -651,11 +703,11 @@ const MyVisits = () => {
 
                         <td className="py-4">
                           <div className="fw-semibold text-dark">
-                            {formatDate(visit.createdAt)}
+                            {formatDate(visit.visitedAt)}
                           </div>
 
                           <small className="text-muted">
-                            {formatTime(visit.createdAt)}
+                            {formatTime(visit.visitedAt)}
                           </small>
                         </td>
 
@@ -695,16 +747,64 @@ const MyVisits = () => {
                         </td>
 
                         <td className="py-4">
-                          <span
-                            className="badge rounded-pill px-3 py-2"
-                            style={{
-                              backgroundColor: "#e8f8ef",
-                              color: "#198754",
-                            }}
-                          >
-                            <i className="bi bi-check-circle-fill me-1"></i>
-                            Completed
-                          </span>
+                          {(() => {
+                            const badge = getStatusBadge(visit.status);
+                            return (
+                              <span
+                                className="badge rounded-pill px-3 py-2"
+                                style={{
+                                  backgroundColor: badge.backgroundColor,
+                                  color: badge.color,
+                                }}
+                              >
+                                <i className={`bi ${badge.icon} me-1`}></i>
+                                {badge.label}
+                              </span>
+                            );
+                          })()}
+                          {visit.rescheduleReason && (
+                            <div className="small text-muted mt-1" title={visit.rescheduleReason}>
+                              Rescheduled: {visit.rescheduleReason}
+                            </div>
+                          )}
+                          {visit.cancellationReason && (
+                            <div className="small text-muted mt-1" title={visit.cancellationReason}>
+                              Reason: {visit.cancellationReason}
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="py-4">
+                          {visit.assignedBy && visit.status === "scheduled" ? (
+                            <div className="d-flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-success rounded-3"
+                                onClick={(e) => { e.stopPropagation(); setActionModal({ visit, mode: "complete" }); }}
+                              >
+                                <i className="bi bi-check-lg me-1"></i>
+                                Complete
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-primary rounded-3"
+                                onClick={(e) => { e.stopPropagation(); setActionModal({ visit, mode: "reschedule" }); }}
+                              >
+                                <i className="bi bi-calendar-event me-1"></i>
+                                Reschedule
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-danger rounded-3"
+                                onClick={(e) => { e.stopPropagation(); setActionModal({ visit, mode: "cancel" }); }}
+                              >
+                                <i className="bi bi-x-lg me-1"></i>
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-muted small">-</span>
+                          )}
                         </td>
 
                       </tr>
@@ -774,7 +874,7 @@ const MyVisits = () => {
                     </div>
 
                     <div className="fs-4 fw-bold">
-                      {filteredVisits.length}
+                      {completedCount}
                     </div>
                   </div>
 
@@ -793,19 +893,19 @@ const MyVisits = () => {
                     style={{
                       width: "45px",
                       height: "45px",
-                      backgroundColor: "#fff4e5",
+                      backgroundColor: "#e7f1ff",
                     }}
                   >
-                    <i className="bi bi-geo-alt text-warning fs-5"></i>
+                    <i className="bi bi-calendar-event text-primary fs-5"></i>
                   </div>
 
                   <div>
                     <div className="text-muted small">
-                      Location Tracking
+                      Upcoming (Assigned) Visits
                     </div>
 
-                    <div className="fs-6 fw-bold text-success">
-                      Enabled
+                    <div className="fs-4 fw-bold">
+                      {scheduledCount}
                     </div>
                   </div>
 
@@ -817,6 +917,25 @@ const MyVisits = () => {
         </div>
 
       </div>
+
+      {detailsVisit && !actionModal && (
+        <VisitDetailsModal
+          visit={detailsVisit}
+          onClose={closeDetails}
+          onReschedule={(visit) => { setActionModal({ visit, mode: "reschedule" }); }}
+          onCancel={(visit) => { setActionModal({ visit, mode: "cancel" }); }}
+          onComplete={(visit) => { setActionModal({ visit, mode: "complete" }); }}
+        />
+      )}
+
+      {actionModal && (
+        <VisitActionModal
+          visit={actionModal.visit}
+          mode={actionModal.mode}
+          onClose={() => setActionModal(null)}
+          onDone={() => { dispatch(getAllMyVisits()); closeDetails(); }}
+        />
+      )}
     </div>
   );
 };

@@ -7,7 +7,7 @@ const rolePermissions = {
     'leave.view', 'leave.apply', 'leave.update', 'leave.cancel', 'leave.approve', 'leave.reject', 'leave.adjust_balance', 'leave.manage_policy', 'leave.view_ledger', 'leave.view_history',
     'attendance.view', 'attendance.create', 'attendance.approve',
     'doctor.view', 'doctor.create', 'doctor.update', 'doctor.delete',
-    'visit.view', 'visit.create', 'visit.update', 'visit.approve', 'visit.reject',
+    'visit.view', 'visit.create', 'visit.assign', 'visit.update', 'visit.approve', 'visit.reject',
     'task.view', 'task.create', 'task.assign', 'task.update',
     'document.view', 'document.upload', 'document.verify', 'document.delete',
     'report.view', 'report.export', 'audit.view', 'performance.view', 'performance.manage',
@@ -19,7 +19,7 @@ const rolePermissions = {
   ],
   hr_manager: [
     'employee.view', 'employee.create', 'employee.update', 'employee.delete',
-    'visit.view',
+    'visit.view', 'visit.assign',
     'leave.view', 'leave.apply', 'leave.update', 'leave.cancel', 'leave.approve', 'leave.reject', 'leave.adjust_balance', 'leave.manage_policy', 'leave.view_ledger', 'leave.view_history',
     'attendance.view', 'attendance.create', 'attendance.approve',
     'document.view', 'document.upload', 'document.verify', 'document.delete',
@@ -55,17 +55,21 @@ const rolePermissions = {
     'employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.approve', 'leave.reject', 'leave.view_history', 'leave.view_ledger',
     'attendance.view', 'attendance.approve', 'doctor.view', 'doctor.create',
     'doctor.update', 'medical.view', 'medical.create', 'medical.update',
-    'visit.view', 'visit.create', 'visit.update', 'visit.approve', 'visit.reject',
+    'visit.view', 'visit.create', 'visit.assign', 'visit.update', 'visit.approve', 'visit.reject',
     'task.view', 'task.create', 'task.assign', 'task.update',
     'report.view', 'performance.view', 'performance.manage',
+    // View-only, same as employee — controllers scope non-manager roles
+    // (salaryController's MANAGERS list) to their own records automatically.
+    'salary.view', 'salary_slip.view', 'offer.view',
     'expense.apply', 'expense.view', 'companyProduct.view',
   ],
   project_manager: [
     'employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.view_history', 'attendance.view', 'task.view', 'task.create', 'task.assign', 'task.update',
     'project.view', 'project.create', 'project.update', 'report.view',
+    'salary.view', 'salary_slip.view', 'offer.view',
     'expense.apply', 'expense.view', 'companyProduct.view',
   ],
-  mr: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.view_history', 'doctor.view', 'doctor.create', 'medical.view', 'medical.create', 'visit.view', 'visit.create', 'attendance.view', 'attendance.create', 'task.view', 'task.update', 'calendar.view', 'expense.apply', 'expense.view', 'companyProduct.view'],
+  mr: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.view_history', 'doctor.view', 'doctor.create', 'medical.view', 'medical.create', 'visit.view', 'visit.create', 'attendance.view', 'attendance.create', 'task.view', 'task.update', 'calendar.view', 'salary.view', 'salary_slip.view', 'offer.view', 'expense.apply', 'expense.view', 'companyProduct.view'],
   employee: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'attendance.view', 'attendance.create', 'doctor.view', 'medical.view', 'visit.view', 'visit.create', 'task.view', 'task.update', 'document.view', 'document.upload', 'performance.view', 'calendar.view', 'leave.view_history', 'salary.view', 'salary_slip.view', 'offer.view', 'expense.apply', 'expense.view', 'companyProduct.view'],
   user: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'attendance.view', 'attendance.create', 'task.view', 'task.update', 'calendar.view', 'leave.view_history'],
 }

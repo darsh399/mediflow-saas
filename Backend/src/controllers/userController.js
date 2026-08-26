@@ -81,39 +81,34 @@ async function mergeAndSaveProfile(userId, data, companyId) {
     return user;
 }
 
+// Employee creation only — always called by an authenticated admin/hr/manager
+// (see userRoutes.js), never publicly. Public self-registration was removed.
 export const createUser = async (req, res) => {
    try{
-    const {name, email, password, mobile, role, employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus, personalEmail, companyName} = req.body;
+    const {name, email, password, mobile, role, employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus, personalEmail} = req.body;
 
-        const isManagedCreation = Boolean(req.user);
-        const companyId = req.user?.companyId || null;
-        if (!isManagedCreation && (role || req.body.companyId)) {
-            return res.status(403).json({ message: 'Public registration cannot set role or company' });
-        }
-
+        const companyId = req.user.companyId;
         const managedRoles = ['employee', 'mr', 'manager', 'hr', 'hr_manager'];
-        if (isManagedCreation && !managedRoles.includes(role || 'employee')) {
+        if (!managedRoles.includes(role || 'employee')) {
             return res.status(403).json({ message: 'Invalid role for employee creation' });
         }
-        if (isManagedCreation && !companyId) {
+        if (!companyId) {
             return res.status(400).json({ message: 'Company context missing' });
         }
-        if (isManagedCreation && !canActOn(req.user, role || 'employee')) {
+        if (!canActOn(req.user, role || 'employee')) {
             return res.status(403).json({ message: 'Insufficient permissions to create this role' });
         }
 
         const finalName = name || [firstName, lastName].filter(Boolean).join(' ').trim();
         if (!finalName) return res.status(400).json({ message: 'name is required' });
 
-        // Managed creation (HR/company_owner adding an employee) can omit email/password —
-        // the system then auto-generates a company login email and a secure temp password,
-        // and emails the credentials to the employee's personal mailbox.
-        let company = null;
-        if (isManagedCreation) company = await Company.findById(companyId).select('companyName companyEmail companyWebsite').lean();
+        // Can omit email/password — the system then auto-generates a company
+        // login email and a secure temp password, and emails the credentials
+        // to the employee's personal mailbox.
+        const company = await Company.findById(companyId).select('companyName companyEmail companyWebsite').lean();
 
         let finalEmail = email;
         if (!finalEmail) {
-            if (!isManagedCreation) return res.status(400).json({ message: 'email is required' });
             if (!firstName || !lastName) return res.status(400).json({ message: 'firstName and lastName are required to auto-generate a company email' });
             if (!personalEmail) return res.status(400).json({ message: 'personalEmail is required to deliver onboarding credentials for an auto-generated login' });
             finalEmail = await generateCompanyEmail({ firstName, lastName, company });
@@ -122,7 +117,6 @@ export const createUser = async (req, res) => {
         let finalPassword = password;
         let temporaryPassword = null;
         if (!finalPassword) {
-            if (!isManagedCreation) return res.status(400).json({ message: 'password is required' });
             temporaryPassword = generateTempPassword();
             finalPassword = temporaryPassword;
         }
@@ -136,15 +130,10 @@ export const createUser = async (req, res) => {
         }
 
         const hashedPw = await hashPassword(finalPassword);
-        const userRole = isManagedCreation ? (role || 'employee') : 'user';
-        const employeeFields = isManagedCreation ? { employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus, personalEmail } : {};
-        const newUser = new User({ name: finalName, email: finalEmail, password: hashedPw, mobile, companyId, role: userRole, passwordChangeRequired: autoProvisioned, ...(isManagedCreation ? { createdBy: req.user.id } : { requestedCompanyName: companyName?.trim() || undefined }), ...employeeFields });
+        const employeeFields = { employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus, personalEmail };
+        const newUser = new User({ name: finalName, email: finalEmail, password: hashedPw, mobile, companyId, role: role || 'employee', passwordChangeRequired: autoProvisioned, createdBy: req.user.id, ...employeeFields });
 
         const savedUser = await newUser.save();
-
-        // Only self-registration logs the caller in as the new account — a managed
-        // creation by HR/company_owner must never overwrite the caller's own session.
-        const token = isManagedCreation ? null : await issueSession(res, savedUser);
 
         let emailSent = false;
         if (autoProvisioned) {
@@ -163,7 +152,6 @@ export const createUser = async (req, res) => {
         return res.status(201).json({
             message: 'User created successfully',
             user: userObj,
-            token,
             ...(autoProvisioned ? { generatedCredentials: { companyEmail: finalEmail, emailSent } } : {}),
         });
     }catch(error){
@@ -193,6 +181,10 @@ export const loginUser = async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, userExists.password);
         if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+
+        if (userExists.role === 'super_admin') {
+            return res.status(403).json({ message: 'Super admins must log in through the super admin portal' });
+        }
 
         if (userExists.blocked || userExists.active === false) {
             return res.status(403).json({ message: 'Account is disabled or blocked' });
@@ -519,7 +511,8 @@ export const getAllMyVisits = async (req, res) => {
         })
             .populate('doctorId')
             .populate('medicalId')
-            .sort({ createdAt: -1 });
+            .populate('assignedBy', 'name email role')
+            .sort({ visitedAt: -1 });
 
         return res.status(200).json({
             message: 'Your visits retrieved successfully',

@@ -5,6 +5,12 @@ export async function createVisit(data){
   return resp.data
 }
 
+// Admin/hr_manager/manager schedules a doctor/medical visit for an employee.
+export async function assignVisit(data){
+  const resp = await axios.post('/api/visits/assign', data)
+  return resp.data
+}
+
 export async function doctorVisit(payload){
   const body = payload.visitPhoto ? toMultipart(payload) : payload
   const resp = await axios.post('/api/visits/doctor', body)
@@ -65,9 +71,27 @@ export async function updateVisit(id, data){
   return resp.data
 }
 
+// Assigned employee reschedules their own scheduled visit to a new date.
+export async function rescheduleVisit(id, data){
+  const resp = await axios.patch(`/api/visits/${id}/reschedule`, data)
+  return resp.data
+}
+
+// Assigned employee cancels their own scheduled visit.
+export async function cancelVisit(id, data){
+  const resp = await axios.patch(`/api/visits/${id}/cancel`, data)
+  return resp.data
+}
+
+// Assigned employee marks their own scheduled visit done.
+export async function completeVisit(id, data){
+  const resp = await axios.patch(`/api/visits/${id}/complete`, data)
+  return resp.data
+}
+
 export async function deleteVisit(id){
   const resp = await axios.delete(`/api/visits/${id}`)
   return resp.data
 }
 
-export default { createVisit, doctorVisit, medicalVisit, downloadVisitPhoto, listVisits, listEmployeeVisitSummary, listEmployeeVisits, getVisitCalendarSummary, getTopPerformers, getVisit, updateVisit, deleteVisit }
+export default { createVisit, assignVisit, doctorVisit, medicalVisit, downloadVisitPhoto, listVisits, listEmployeeVisitSummary, listEmployeeVisits, getVisitCalendarSummary, getTopPerformers, getVisit, updateVisit, rescheduleVisit, cancelVisit, completeVisit, deleteVisit }

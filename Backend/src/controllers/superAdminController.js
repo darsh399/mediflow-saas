@@ -10,6 +10,7 @@ import Leave from '../models/Leave.js'
 import Invite from '../models/Invite.js'
 import Product from '../models/Product.js'
 import Order from '../models/Order.js'
+import DemoRequest from '../models/DemoRequest.js'
 import Task from '../models/Task.js'
 import Project from '../models/Project.js'
 import EmployeeProfile from '../models/EmployeeProfile.js'
@@ -66,7 +67,7 @@ export const dashboard = async (req, res) => {
     const monthStart = new Date()
     monthStart.setDate(1)
     monthStart.setHours(0, 0, 0, 0)
-    const [totalCompanies, activeCompanies, suspendedCompanies, blockedCompanies, rejectedCompanies, pendingCompanies, expiredSubs, activeSubs, trialSubs, totalUsers, totalEmployees, totalHR, totalMR, newCompaniesThisMonth, revenue] = await Promise.all([
+    const [totalCompanies, activeCompanies, suspendedCompanies, blockedCompanies, rejectedCompanies, pendingCompanies, expiredSubs, activeSubs, trialSubs, totalUsers, totalEmployees, totalHR, totalMR, newCompaniesThisMonth, revenue, newDemoRequests] = await Promise.all([
       Company.countDocuments(),
       Company.countDocuments({ status: 'ACTIVE' }),
       Company.countDocuments({ status: 'SUSPENDED' }),
@@ -82,12 +83,13 @@ export const dashboard = async (req, res) => {
       User.countDocuments({ role: 'mr' }),
       Company.countDocuments({ createdAt: { $gte: monthStart } }),
       Subscription.aggregate([{ $match: { createdAt: { $gte: monthStart }, status: { $in: ['ACTIVE', 'TRIAL', 'GRACE'] } } }, { $group: { _id: null, total: { $sum: '$price' } } }]),
+      DemoRequest.countDocuments({ status: 'NEW' }),
     ])
 
     return res.status(200).json({
       totalCompanies, activeCompanies, suspendedCompanies, blockedCompanies, pendingCompanies,
       expiredSubs, activeSubs, trialSubs, rejectedCompanies, totalUsers, totalEmployees, totalHR, totalMR,
-      newCompaniesThisMonth, monthlyRevenue: revenue[0]?.total || 0
+      newCompaniesThisMonth, monthlyRevenue: revenue[0]?.total || 0, newDemoRequests
     })
   } catch (err) {
     console.error('Superadmin dashboard error:', err)

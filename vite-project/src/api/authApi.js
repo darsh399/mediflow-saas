@@ -5,11 +5,6 @@ export async function loginApi({ email, password }) {
   return resp.data;
 }
 
-export async function registerApi(payload) {
-  const resp = await axios.post("/api/register", payload);
-  return resp.data;
-}
-
 export async function sendInviteApi(payload) {
   const resp = await axios.post("/api/auth/invite/send", payload);
   return resp.data;
@@ -55,7 +50,6 @@ export async function changePasswordApi({
 
 export default {
   loginApi,
-  registerApi,
   sendInviteApi,
   acceptInviteApi,
   forgotPasswordApi,
