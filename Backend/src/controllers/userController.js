@@ -511,7 +511,8 @@ export const getAllMyVisits = async (req, res) => {
         })
             .populate('doctorId')
             .populate('medicalId')
-            .sort({ createdAt: -1 });
+            .populate('assignedBy', 'name email role')
+            .sort({ visitedAt: -1 });
 
         return res.status(200).json({
             message: 'Your visits retrieved successfully',

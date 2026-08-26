@@ -2,6 +2,7 @@ import Visit from '../models/Visit.js';
 import Doctor from '../models/Doctor.js';
 import Medical from '../models/Medical.js';
 import User from '../models/User.js';
+import Notification from '../models/Notification.js';
 import mongoose from 'mongoose';
 import calculateDistance from '../utils/calculateDistance.js';
 import recordAudit from '../utils/audit.js';
@@ -75,7 +76,8 @@ export const doctorVisit = async (req, res) => {
       return res.status(400).json({ success: false, message: `Location not matched. You must be within ${RADIUS_METERS} meters of the registered location.`, distanceInMeters: distanceMeters, allowedRadiusMeters: RADIUS_METERS });
     }
 
-    const visit = new Visit({ companyId, employeeId, doctorId, purpose, notes, visitLatitude: latitude, visitLongitude: longitude, registeredLatitude: doctor.latitude, registeredLongitude: doctor.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt: new Date(), createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
+    const visitedAt = new Date();
+    const visit = new Visit({ companyId, employeeId, doctorId, purpose, notes, visitLatitude: latitude, visitLongitude: longitude, registeredLatitude: doctor.latitude, registeredLongitude: doctor.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt, status: 'completed', completedAt: visitedAt, createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
     await visit.save();
     await recordAudit(req, 'visit_created', { companyId, entityId: visit._id, module: 'visits', newValue: { status: visit.status, employeeId } });
     return res.status(201).json({ success: true, message: 'Visit successfully recorded', distanceInMeters: distanceMeters, visit });
@@ -105,13 +107,69 @@ export const medicalVisit = async (req, res) => {
       return res.status(400).json({ success: false, message: `Location not matched. You must be within ${RADIUS_METERS} meters of the registered location.`, distanceInMeters: distanceMeters, allowedRadiusMeters: RADIUS_METERS });
     }
 
-    const visit = new Visit({ companyId, employeeId, medicalId, purpose, notes, visitLatitude: latitude, visitLongitude: longitude, registeredLatitude: med.latitude, registeredLongitude: med.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt: new Date(), createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
+    const visitedAt = new Date();
+    const visit = new Visit({ companyId, employeeId, medicalId, purpose, notes, visitLatitude: latitude, visitLongitude: longitude, registeredLatitude: med.latitude, registeredLongitude: med.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt, status: 'completed', completedAt: visitedAt, createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
     await visit.save();
     await recordAudit(req, 'visit_created', { companyId, entityId: visit._id, module: 'visits', newValue: { status: visit.status, employeeId } });
     return res.status(201).json({ success: true, message: 'Visit successfully recorded', distanceInMeters: distanceMeters, visit });
   } catch (error) {
     console.error('Medical visit error:', error);
     return res.status(500).json({ message: 'Error recording medical visit', error: error.message });
+  }
+};
+
+// Admin/hr_manager/manager schedules a future doctor or medical visit for an
+// employee — no GPS check here (that happens when the employee actually
+// performs the visit via doctorVisit/medicalVisit).
+export const assignVisit = async (req, res) => {
+  try {
+    const companyId = req.user?.companyId;
+    const { employeeId, doctorId, medicalId, visitDate, purpose, notes } = req.body || {};
+    if (!employeeId) return res.status(400).json({ message: 'employeeId is required' });
+    if (!doctorId && !medicalId) return res.status(400).json({ message: 'doctorId or medicalId is required' });
+    if (!visitDate) return res.status(400).json({ message: 'visitDate is required' });
+    const date = new Date(visitDate);
+    if (Number.isNaN(date.getTime())) return res.status(400).json({ message: 'visitDate must be a valid date' });
+
+    const employee = await User.findOne({ _id: employeeId, companyId, active: true }).select('_id name role');
+    if (!employee) return res.status(404).json({ message: 'Employee not found in this company' });
+
+    if (doctorId) {
+      const doctorExists = await Doctor.exists({ _id: doctorId, companyId });
+      if (!doctorExists) return res.status(404).json({ message: 'Doctor not found' });
+    }
+    if (medicalId) {
+      const medicalExists = await Medical.exists({ _id: medicalId, companyId });
+      if (!medicalExists) return res.status(404).json({ message: 'Medical not found' });
+    }
+
+    const visit = new Visit({
+      companyId,
+      employeeId,
+      doctorId: doctorId || undefined,
+      medicalId: medicalId || undefined,
+      purpose: purpose ? String(purpose).trim() : undefined,
+      notes: notes ? String(notes).trim() : undefined,
+      visitedAt: date,
+      status: 'scheduled',
+      assignedBy: req.user.id,
+      createdBy: req.user.id,
+    });
+    await visit.save();
+    await recordAudit(req, 'visit_assigned', { companyId, entityId: visit._id, module: 'visits', newValue: { employeeId, doctorId, medicalId, visitDate: date } });
+    await Notification.create({
+      companyId,
+      recipientId: employeeId,
+      type: 'VISIT_ASSIGNED',
+      title: 'New visit assigned',
+      message: `You have been assigned a visit on ${date.toLocaleDateString('en-IN')}.`,
+      link: `/employee/visits?visitId=${visit._id}`,
+    });
+
+    return res.status(201).json({ message: 'Visit assigned', visit });
+  } catch (error) {
+    console.error('Assign visit error:', error);
+    return res.status(500).json({ message: 'Error assigning visit', error: error.message });
   }
 };
 
@@ -193,7 +251,7 @@ export const listEmployeeVisits = async (req, res) => {
     const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
     const filter = { companyId: req.user.companyId, employeeId: employee._id, visitedAt: { $gte: startDate, $lt: endDate } };
     const [visits, total] = await Promise.all([
-      Visit.find(filter).populate('doctorId', 'name specialty phone').populate('medicalId', 'name address phone').sort({ visitedAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      Visit.find(filter).populate('doctorId', 'name specialty phone').populate('medicalId', 'name address phone').populate('assignedBy', 'name email role').sort({ visitedAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
       Visit.countDocuments(filter),
     ]);
     return res.status(200).json({ employee, visits, dateRange: { startDate: start, endDate: end }, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
@@ -236,6 +294,7 @@ export const listVisits = async (req, res) => {
       .populate('employeeId', 'name email role')
       .populate('doctorId', 'name specialty phone')
       .populate('medicalId', 'name address phone')
+      .populate('assignedBy', 'name email role')
       .sort({ visitedAt: -1 });
 
     return res.status(200).json({ visits });
@@ -310,6 +369,124 @@ export const updateVisit = async (req, res) => {
   }
 };
 
+// The assigned employee moves their own scheduled visit to a new date,
+// with a required reason. Only the assignee may do this — not any
+// admin/hr_manager (they can already change anything via updateVisit).
+export const rescheduleVisit = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const companyId = req.user?.companyId;
+    const { visitDate, reason } = req.body || {};
+    if (!visitDate) return res.status(400).json({ message: 'visitDate is required' });
+    const date = new Date(visitDate);
+    if (Number.isNaN(date.getTime())) return res.status(400).json({ message: 'visitDate must be a valid date' });
+    if (!reason?.trim()) return res.status(400).json({ message: 'A reason is required to reschedule this visit' });
+
+    const visit = await Visit.findOne(companyId ? { _id: id, companyId } : { _id: id });
+    if (!visit) return res.status(404).json({ message: 'Visit not found' });
+    if (String(visit.employeeId) !== String(req.user.id)) return res.status(403).json({ message: 'You can only reschedule your own assigned visits' });
+    if (!visit.assignedBy) return res.status(409).json({ message: 'Only visits assigned to you can be rescheduled' });
+    if (visit.status !== 'scheduled') return res.status(409).json({ message: 'Only scheduled visits can be rescheduled' });
+
+    const oldDate = visit.visitedAt;
+    visit.visitedAt = date;
+    visit.rescheduleReason = reason.trim();
+    await visit.save();
+    await recordAudit(req, 'visit_rescheduled', { companyId, entityId: visit._id, module: 'visits', oldValue: { visitedAt: oldDate }, newValue: { visitedAt: date, reason: visit.rescheduleReason } });
+
+    if (visit.assignedBy) {
+      await Notification.create({
+        companyId,
+        recipientId: visit.assignedBy,
+        type: 'VISIT_RESCHEDULED',
+        title: 'Visit rescheduled',
+        message: `A visit you assigned was rescheduled to ${date.toLocaleDateString('en-IN')}. Reason: ${visit.rescheduleReason}`,
+        link: `/admin/visits/${visit.employeeId}?visitId=${visit._id}`,
+      });
+    }
+
+    return res.status(200).json({ message: 'Visit rescheduled', visit });
+  } catch (error) {
+    console.error('Reschedule visit error:', error);
+    return res.status(500).json({ message: 'Error rescheduling visit', error: error.message });
+  }
+};
+
+// The assigned employee cancels their own scheduled visit, with a required reason.
+export const cancelVisit = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const companyId = req.user?.companyId;
+    const { reason } = req.body || {};
+    if (!reason?.trim()) return res.status(400).json({ message: 'A reason is required to cancel this visit' });
+
+    const visit = await Visit.findOne(companyId ? { _id: id, companyId } : { _id: id });
+    if (!visit) return res.status(404).json({ message: 'Visit not found' });
+    if (String(visit.employeeId) !== String(req.user.id)) return res.status(403).json({ message: 'You can only cancel your own assigned visits' });
+    if (!visit.assignedBy) return res.status(409).json({ message: 'Only visits assigned to you can be cancelled' });
+    if (visit.status !== 'scheduled') return res.status(409).json({ message: 'Only scheduled visits can be cancelled' });
+
+    visit.status = 'cancelled';
+    visit.cancellationReason = reason.trim();
+    await visit.save();
+    await recordAudit(req, 'visit_cancelled', { companyId, entityId: visit._id, module: 'visits', newValue: { status: 'cancelled', reason: visit.cancellationReason } });
+
+    if (visit.assignedBy) {
+      await Notification.create({
+        companyId,
+        recipientId: visit.assignedBy,
+        type: 'VISIT_CANCELLED',
+        title: 'Assigned visit cancelled',
+        message: `An assigned visit was cancelled. Reason: ${visit.cancellationReason}`,
+        link: `/admin/visits/${visit.employeeId}?visitId=${visit._id}`,
+      });
+    }
+
+    return res.status(200).json({ message: 'Visit cancelled', visit });
+  } catch (error) {
+    console.error('Cancel visit error:', error);
+    return res.status(500).json({ message: 'Error cancelling visit', error: error.message });
+  }
+};
+
+// The assigned employee marks their own scheduled visit done, recording when
+// they actually completed it (separate from visitedAt, the planned date).
+export const completeVisit = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const companyId = req.user?.companyId;
+    const { notes } = req.body || {};
+
+    const visit = await Visit.findOne(companyId ? { _id: id, companyId } : { _id: id });
+    if (!visit) return res.status(404).json({ message: 'Visit not found' });
+    if (String(visit.employeeId) !== String(req.user.id)) return res.status(403).json({ message: 'You can only complete your own assigned visits' });
+    if (!visit.assignedBy) return res.status(409).json({ message: 'Only visits assigned to you can be marked complete this way' });
+    if (visit.status !== 'scheduled') return res.status(409).json({ message: 'Only scheduled visits can be marked complete' });
+
+    visit.status = 'completed';
+    visit.completedAt = new Date();
+    if (notes?.trim()) visit.notes = notes.trim();
+    await visit.save();
+    await recordAudit(req, 'visit_completed', { companyId, entityId: visit._id, module: 'visits', newValue: { status: 'completed', completedAt: visit.completedAt } });
+
+    if (visit.assignedBy) {
+      await Notification.create({
+        companyId,
+        recipientId: visit.assignedBy,
+        type: 'VISIT_COMPLETED',
+        title: 'Assigned visit completed',
+        message: `An assigned visit was marked complete on ${visit.completedAt.toLocaleDateString('en-IN')}.`,
+        link: `/admin/visits/${visit.employeeId}?visitId=${visit._id}`,
+      });
+    }
+
+    return res.status(200).json({ message: 'Visit marked complete', visit });
+  } catch (error) {
+    console.error('Complete visit error:', error);
+    return res.status(500).json({ message: 'Error completing visit', error: error.message });
+  }
+};
+
 export const deleteVisit = async (req, res) => {
   try {
     const id = req.params.id;
@@ -323,4 +500,4 @@ export const deleteVisit = async (req, res) => {
   }
 };
 
-export default { createVisit, listVisits, getVisit, updateVisit, deleteVisit, downloadVisitPhoto };
+export default { createVisit, assignVisit, listVisits, getVisit, updateVisit, deleteVisit, downloadVisitPhoto, rescheduleVisit, cancelVisit, completeVisit };

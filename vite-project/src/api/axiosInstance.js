@@ -51,6 +51,22 @@ function refreshAccessToken() {
 axiosInstance.interceptors.request.use(
   config => {
     notifyApiLoading(true)
+    // Defensive fallback: normally the Authorization header comes from
+    // axiosInstance.defaults.headers.common (set once at bootstrap/login),
+    // but a dev-server hot-reload of this module can reset that default
+    // without re-running the bootstrap code. Re-attach from localStorage
+    // whenever the header is missing, unless a caller explicitly cleared it
+    // (the refresh-token call passes `Authorization: undefined` on purpose).
+    const hasExplicitAuthHeader = config.headers && Object.prototype.hasOwnProperty.call(config.headers, 'Authorization')
+    if (!hasExplicitAuthHeader && !axiosInstance.defaults.headers.common.Authorization && !config._skipAuthRefresh) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('auth') || '{}')
+        if (stored?.token) {
+          config.headers = config.headers || {}
+          config.headers.Authorization = `Bearer ${stored.token}`
+        }
+      } catch (storageError) { void storageError }
+    }
     return config
   },
   error => {
@@ -83,7 +99,15 @@ axiosInstance.interceptors.response.use(
           return Promise.reject(refreshError)
         })
     }
-    if ((status === 401 && !isAuthEndpoint) || (status === 403 && /disabled|blocked|company account|inactive/i.test(message))) {
+    // Only force a full logout for the specific messages authMiddleware/
+    // companyMiddleware send when the *account or company itself* is
+    // blocked/suspended — not any 403 that happens to mention "disabled",
+    // which also matches moduleMiddleware's unrelated "this module is
+    // disabled for your company" (a feature-flag response, not an auth
+    // failure) and was wrongly logging users out of features their plan
+    // simply doesn't include.
+    const isAccountBlockedMessage = /^account is disabled or blocked$/i.test(message) || /^company account is/i.test(message)
+    if ((status === 401 && !isAuthEndpoint) || (status === 403 && isAccountBlockedMessage)) {
       clearClientSession()
     }
     return Promise.reject(error)

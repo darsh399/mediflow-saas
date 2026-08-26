@@ -7,6 +7,10 @@ const AddDoctor = () => {
   const [form, setForm] = useState({
     name: '',
     clinicName: '',
+    address: '',
+    city: '',
+    district: '',
+    state: '',
     latitude: '',
     longitude: '',
     phone: '',
@@ -278,6 +282,71 @@ const AddDoctor = () => {
                       required
                     />
 
+                  </div>
+
+                </div>
+
+                {/* Address */}
+                <div className="mb-4">
+
+                  <label className="form-label fw-semibold">
+                    Address
+                  </label>
+
+                  <div className="input-group">
+
+                    <span className="input-group-text bg-light border-end-0">
+                      <i className="bi bi-signpost-2 text-primary"></i>
+                    </span>
+
+                    <input
+                      name="address"
+                      value={form.address}
+                      onChange={handleChange}
+                      className="form-control border-start-0"
+                      placeholder="Street / area address"
+                    />
+
+                  </div>
+
+                </div>
+
+                <div className="row g-3 mb-1">
+
+                  {/* City */}
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold">City</label>
+                    <input
+                      name="city"
+                      value={form.city}
+                      onChange={handleChange}
+                      className="form-control"
+                      placeholder="City"
+                    />
+                  </div>
+
+                  {/* District */}
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold">District</label>
+                    <input
+                      name="district"
+                      value={form.district}
+                      onChange={handleChange}
+                      className="form-control"
+                      placeholder="District"
+                    />
+                  </div>
+
+                  {/* State */}
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold">State</label>
+                    <input
+                      name="state"
+                      value={form.state}
+                      onChange={handleChange}
+                      className="form-control"
+                      placeholder="State"
+                    />
                   </div>
 
                 </div>

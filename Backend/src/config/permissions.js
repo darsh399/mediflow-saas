@@ -7,7 +7,7 @@ const rolePermissions = {
     'leave.view', 'leave.apply', 'leave.update', 'leave.cancel', 'leave.approve', 'leave.reject', 'leave.adjust_balance', 'leave.manage_policy', 'leave.view_ledger', 'leave.view_history',
     'attendance.view', 'attendance.create', 'attendance.approve',
     'doctor.view', 'doctor.create', 'doctor.update', 'doctor.delete',
-    'visit.view', 'visit.create', 'visit.update', 'visit.approve', 'visit.reject',
+    'visit.view', 'visit.create', 'visit.assign', 'visit.update', 'visit.approve', 'visit.reject',
     'task.view', 'task.create', 'task.assign', 'task.update',
     'document.view', 'document.upload', 'document.verify', 'document.delete',
     'report.view', 'report.export', 'audit.view', 'performance.view', 'performance.manage',
@@ -19,7 +19,7 @@ const rolePermissions = {
   ],
   hr_manager: [
     'employee.view', 'employee.create', 'employee.update', 'employee.delete',
-    'visit.view',
+    'visit.view', 'visit.assign',
     'leave.view', 'leave.apply', 'leave.update', 'leave.cancel', 'leave.approve', 'leave.reject', 'leave.adjust_balance', 'leave.manage_policy', 'leave.view_ledger', 'leave.view_history',
     'attendance.view', 'attendance.create', 'attendance.approve',
     'document.view', 'document.upload', 'document.verify', 'document.delete',
@@ -55,7 +55,7 @@ const rolePermissions = {
     'employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.approve', 'leave.reject', 'leave.view_history', 'leave.view_ledger',
     'attendance.view', 'attendance.approve', 'doctor.view', 'doctor.create',
     'doctor.update', 'medical.view', 'medical.create', 'medical.update',
-    'visit.view', 'visit.create', 'visit.update', 'visit.approve', 'visit.reject',
+    'visit.view', 'visit.create', 'visit.assign', 'visit.update', 'visit.approve', 'visit.reject',
     'task.view', 'task.create', 'task.assign', 'task.update',
     'report.view', 'performance.view', 'performance.manage',
     // View-only, same as employee — controllers scope non-manager roles

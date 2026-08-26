@@ -67,8 +67,8 @@ function monthRange(year, month) {
 
 // Resolves a query's {range, startDate, endDate} into a concrete [start, end)
 // window. `range` supports TODAY/YESTERDAY/LAST_7_DAYS/THIS_WEEK/LAST_WEEK/
-// THIS_MONTH/LAST_MONTH/LAST_3_MONTHS, or an explicit startDate/endDate pair
-// (YYYY-MM-DD) overrides the preset entirely.
+// THIS_MONTH/LAST_MONTH/THIS_YEAR/LAST_3_MONTHS, or an explicit
+// startDate/endDate pair (YYYY-MM-DD) overrides the preset entirely.
 function resolveDateRange(query, now = new Date()) {
   const todayParts = localDateParts(now)
   const today = dateValueFromParts(todayParts)
@@ -95,6 +95,9 @@ function resolveDateRange(query, now = new Date()) {
       end = addDays(firstThisMonth, -1)
       const endParts = new Date(`${end}T00:00:00Z`)
       start = firstOfMonthValue(endParts.getUTCFullYear(), endParts.getUTCMonth() + 1)
+    } else if (range === 'THIS_YEAR') {
+      start = `${todayParts.year}-01-01`
+      end = today
     } else if (range === 'LAST_3_MONTHS') {
       const firstThisMonth = new Date(`${firstOfMonthValue(todayParts.year, todayParts.month)}T00:00:00Z`)
       firstThisMonth.setUTCMonth(firstThisMonth.getUTCMonth() - 2)

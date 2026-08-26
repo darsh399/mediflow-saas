@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { fetchEmployeeVisitSummary, fetchEmployeeVisits, fetchVisitCalendarSummary } from '../../redux/slices/visitSlice'
 import { addDays, endOfMonth, formatDateInput, startOfMonth, startOfWeek, toDateKey } from '../../utils/calendarDates'
+import visitApi from '../../api/visitApi'
 
 const RANGE_OPTIONS = [
   ['TODAY', 'Today'],
@@ -12,6 +13,7 @@ const RANGE_OPTIONS = [
   ['LAST_WEEK', 'Last week'],
   ['THIS_MONTH', 'This month'],
   ['LAST_MONTH', 'Last month'],
+  ['THIS_YEAR', 'This year'],
   ['CUSTOM', 'Custom range'],
 ]
 
@@ -37,6 +39,8 @@ export default function VisitRecords() {
   const { employeeId } = useParams()
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const [searchParams] = useSearchParams()
+  const highlightVisitId = searchParams.get('visitId')
   const summary = useSelector((state) => state.visits.employeeSummary)
   const history = useSelector((state) => state.visits.employeeHistory)
   const calendarSummary = useSelector((state) => state.visits.calendarSummary)
@@ -47,6 +51,27 @@ export default function VisitRecords() {
   const [customEnd, setCustomEnd] = useState('')
   const [limit, setLimit] = useState(20)
   const [calendarMonth, setCalendarMonth] = useState(new Date())
+
+  // Arriving from a "visit rescheduled/cancelled" notification link — jump
+  // the date range to that visit's own date so it's guaranteed to be in view.
+  useEffect(() => {
+    if (!highlightVisitId || !employeeId) return
+    let active = true
+    visitApi.getVisit(highlightVisitId)
+      .then((data) => {
+        if (!active) return
+        const visit = data.visit || data
+        const visitDate = visit?.visitedAt ? new Date(visit.visitedAt).toISOString().slice(0, 10) : null
+        if (visitDate) {
+          setRange('CUSTOM')
+          setCustomStart(visitDate)
+          setCustomEnd(visitDate)
+          setPage(1)
+        }
+      })
+      .catch(() => {})
+    return () => { active = false }
+  }, [highlightVisitId, employeeId])
 
   useEffect(() => {
     if (range === 'CUSTOM' && (!customStart || !customEnd)) return
@@ -126,7 +151,7 @@ export default function VisitRecords() {
 
       {error && <div className="alert alert-danger" role="alert">{error.message || String(error)}</div>}
       {dateRange.startDate && <p className="text-muted small">Showing {formatDate(dateRange.startDate)} to {formatDate(dateRange.endDate)}</p>}
-      {loading ? <div className="alert alert-info">Loading {employeeId ? 'visits' : 'employees'}...</div> : items.length === 0 ? <div className="card border-0 shadow-sm"><div className="card-body text-center py-5"><i className="bi bi-clipboard-x fs-1 text-primary" /><h5 className="fw-bold mt-3">No {employeeId ? 'visits' : 'employees'} found</h5><p className="text-muted mb-0">{employeeId ? `No visits found for ${formatDate(dateRange.startDate)}.` : 'No employees match your search.'}</p></div></div> : employeeId ? <div className="card border-0 shadow-sm"><div className="card-body"><div className="table-responsive"><table className="table align-middle"><thead><tr><th>Visit</th><th>Type</th><th>Date and time</th><th>Location</th><th>Distance</th><th>Status</th></tr></thead><tbody>{items.map((visit) => { const target = visitTarget(visit); return <tr key={visit._id}><td><div className="fw-semibold">{target.name}</div><div className="small text-muted">{visit.purpose || '-'}</div></td><td>{target.type}</td><td>{formatDateTime(visit.visitedAt)}</td><td>{visit.visitLatitude != null && visit.visitLongitude != null ? `${visit.visitLatitude}, ${visit.visitLongitude}` : '-'}</td><td>{visit.distanceInMeters != null ? `${visit.distanceInMeters} m` : '-'}</td><td><span className="badge text-bg-light">{visit.status || '-'}</span></td></tr> })}</tbody></table></div></div></div> : <div className="card border-0 shadow-sm"><div className="card-body"><div className="table-responsive"><table className="table align-middle"><thead><tr><th>Employee</th><th>Employee ID</th><th>Visits in range</th><th>Last visit</th><th>Status</th><th /></tr></thead><tbody>{items.map((employee) => <tr key={employee._id}><td><div className="fw-semibold">{employee.name || `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Unknown employee'}</div><div className="small text-muted">{employee.email || '-'}</div></td><td>{employee.employeeId || '-'}</td><td>{employee.visitCount || 0}</td><td>{formatTime(employee.lastVisit)}</td><td>{employee.active === false ? 'Inactive' : 'Active'}</td><td className="text-end"><button type="button" className="btn btn-sm btn-outline-primary" onClick={() => navigate(`/admin/visits/${employee._id}`)}>View visits</button></td></tr>)}</tbody></table></div></div></div>}
+      {loading ? <div className="alert alert-info">Loading {employeeId ? 'visits' : 'employees'}...</div> : items.length === 0 ? <div className="card border-0 shadow-sm"><div className="card-body text-center py-5"><i className="bi bi-clipboard-x fs-1 text-primary" /><h5 className="fw-bold mt-3">No {employeeId ? 'visits' : 'employees'} found</h5><p className="text-muted mb-0">{employeeId ? `No visits found for ${formatDate(dateRange.startDate)}.` : 'No employees match your search.'}</p></div></div> : employeeId ? <div className="card border-0 shadow-sm"><div className="card-body"><div className="table-responsive"><table className="table align-middle"><thead><tr><th>Visit</th><th>Type</th><th>Date and time</th><th>Assigned By</th><th>Location</th><th>Distance</th><th>Status</th></tr></thead><tbody>{items.map((visit) => { const target = visitTarget(visit); const reason = visit.rescheduleReason || visit.cancellationReason; return <tr key={visit._id} className={visit._id === highlightVisitId ? 'table-primary' : ''}><td><div className="fw-semibold">{target.name}</div><div className="small text-muted">{visit.purpose || '-'}</div></td><td>{target.type}</td><td>{formatDateTime(visit.visitedAt)}</td><td>{visit.assignedBy?.name || <span className="text-muted">Self-logged</span>}</td><td>{visit.visitLatitude != null && visit.visitLongitude != null ? `${visit.visitLatitude}, ${visit.visitLongitude}` : '-'}</td><td>{visit.distanceInMeters != null ? `${visit.distanceInMeters} m` : '-'}</td><td><span className="badge text-bg-light">{visit.status || '-'}</span>{reason && <div className="small text-muted mt-1">{reason}</div>}</td></tr> })}</tbody></table></div></div></div> : <div className="card border-0 shadow-sm"><div className="card-body"><div className="table-responsive"><table className="table align-middle"><thead><tr><th>Employee</th><th>Employee ID</th><th>Visits in range</th><th>Last visit</th><th>Status</th><th /></tr></thead><tbody>{items.map((employee) => <tr key={employee._id}><td><div className="fw-semibold">{employee.name || `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Unknown employee'}</div><div className="small text-muted">{employee.email || '-'}</div></td><td>{employee.employeeId || '-'}</td><td>{employee.visitCount || 0}</td><td>{formatTime(employee.lastVisit)}</td><td>{employee.active === false ? 'Inactive' : 'Active'}</td><td className="text-end"><button type="button" className="btn btn-sm btn-outline-primary" onClick={() => navigate(`/admin/visits/${employee._id}`)}>View visits</button></td></tr>)}</tbody></table></div></div></div>}
 
       {totalPages > 1 && <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3"><span className="text-muted small">Showing {(page - 1) * limit + 1}-{Math.min(page * limit, total)} of {total}</span><div className="btn-group"><button type="button" className="btn btn-outline-secondary" disabled={page <= 1 || loading} onClick={() => setPage((value) => value - 1)}>Previous</button><span className="btn btn-outline-secondary disabled">{page} / {totalPages}</span><button type="button" className="btn btn-outline-secondary" disabled={page >= totalPages || loading} onClick={() => setPage((value) => value + 1)}>Next</button></div></div>}
     </div>

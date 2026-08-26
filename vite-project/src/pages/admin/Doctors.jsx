@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchDoctors, deleteDoctor } from '../../redux/slices/doctorSlice'
 import { Link } from 'react-router-dom'
 import SearchBar from '../../components/SearchBar'
+import AssignVisitModal from '../../components/AssignVisitModal'
+
+const ASSIGN_ROLES = ['admin', 'company_owner', 'hr_manager', 'manager', 'superadmin', 'super_admin']
 
 function formatDateOfBirth(value) {
   if (!value) return '-'
@@ -14,8 +17,14 @@ function formatDateOfBirth(value) {
 const Doctors = () => {
   const dispatch = useDispatch()
   const { items, loading, error } = useSelector(s => s.doctors)
+  const role = useSelector((s) => s.auth.user?.role)
+  const canAssign = ASSIGN_ROLES.includes(role)
   const [refreshKey, setRefreshKey] = useState(0)
   const [q, setQ] = useState('')
+  const [cityFilter, setCityFilter] = useState('')
+  const [stateFilter, setStateFilter] = useState('')
+  const [districtFilter, setDistrictFilter] = useState('')
+  const [assignTarget, setAssignTarget] = useState(null)
 
   useEffect(() => {
     dispatch(fetchDoctors())
@@ -26,9 +35,23 @@ const Doctors = () => {
     dispatch(deleteDoctor(id)).then(() => setRefreshKey(k => k + 1))
   }
 
+  const uniqueValues = (field) => Array.from(new Set(items.map(d => d[field]).filter(Boolean))).sort()
+  const cityOptions = useMemo(() => uniqueValues('city'), [items])
+  const stateOptions = useMemo(() => uniqueValues('state'), [items])
+  const districtOptions = useMemo(() => uniqueValues('district'), [items])
+
   const filteredDoctors = items.filter(d =>
-    d.name?.toLowerCase().includes(q.toLowerCase())
+    (d.name?.toLowerCase().includes(q.toLowerCase())) &&
+    (!cityFilter || d.city === cityFilter) &&
+    (!stateFilter || d.state === stateFilter) &&
+    (!districtFilter || d.district === districtFilter)
   )
+
+  const clearLocationFilters = () => {
+    setCityFilter('')
+    setStateFilter('')
+    setDistrictFilter('')
+  }
 
   return (
     <div className="container-fluid py-4">
@@ -149,6 +172,37 @@ const Doctors = () => {
 
           </div>
 
+          <div className="row g-3 mb-4">
+            <div className="col-sm-4">
+              <label className="form-label small fw-semibold text-muted mb-1">City</label>
+              <select className="form-select form-select-sm" value={cityFilter} onChange={e => setCityFilter(e.target.value)}>
+                <option value="">All Cities</option>
+                {cityOptions.map(city => <option key={city} value={city}>{city}</option>)}
+              </select>
+            </div>
+            <div className="col-sm-4">
+              <label className="form-label small fw-semibold text-muted mb-1">District</label>
+              <select className="form-select form-select-sm" value={districtFilter} onChange={e => setDistrictFilter(e.target.value)}>
+                <option value="">All Districts</option>
+                {districtOptions.map(district => <option key={district} value={district}>{district}</option>)}
+              </select>
+            </div>
+            <div className="col-sm-4">
+              <label className="form-label small fw-semibold text-muted mb-1">State</label>
+              <select className="form-select form-select-sm" value={stateFilter} onChange={e => setStateFilter(e.target.value)}>
+                <option value="">All States</option>
+                {stateOptions.map(state => <option key={state} value={state}>{state}</option>)}
+              </select>
+            </div>
+            {(cityFilter || stateFilter || districtFilter) && (
+              <div className="col-12">
+                <button type="button" className="btn btn-link btn-sm px-0" onClick={clearLocationFilters}>
+                  <i className="bi bi-x-circle me-1"></i>Clear location filters
+                </button>
+              </div>
+            )}
+          </div>
+
           {loading && (
             <div className="text-center py-5">
               <div
@@ -233,6 +287,10 @@ const Doctors = () => {
                     </th>
 
                     <th className="py-3 text-muted small text-uppercase">
+                      Location
+                    </th>
+
+                    <th className="py-3 text-muted small text-uppercase">
                       Phone
                     </th>
 
@@ -310,6 +368,16 @@ const Doctors = () => {
                       </td>
 
                       <td className="py-3">
+                        {doctor.city || doctor.district || doctor.state ? (
+                          <span className="small">
+                            {[doctor.city, doctor.district, doctor.state].filter(Boolean).join(', ')}
+                          </span>
+                        ) : (
+                          <span className="text-muted">N/A</span>
+                        )}
+                      </td>
+
+                      <td className="py-3">
 
                         {doctor.phone ? (
                           <div className="d-flex align-items-center gap-2">
@@ -340,6 +408,16 @@ const Doctors = () => {
                             View
                           </Link>
 
+                          {canAssign && (
+                            <button
+                              className="btn btn-sm btn-outline-success rounded-3 px-3"
+                              onClick={() => setAssignTarget(doctor)}
+                            >
+                              <i className="bi bi-person-check me-1"></i>
+                              Assign
+                            </button>
+                          )}
+
                           <button
                             className="btn btn-sm btn-outline-danger rounded-3 px-3"
                             onClick={() => handleDelete(doctor._id)}
@@ -365,6 +443,15 @@ const Doctors = () => {
         </div>
 
       </div>
+
+      {assignTarget && (
+        <AssignVisitModal
+          doctorId={assignTarget._id}
+          targetName={assignTarget.name}
+          onClose={() => setAssignTarget(null)}
+          onAssigned={() => alert(`Visit to ${assignTarget.name} assigned successfully.`)}
+        />
+      )}
 
       <style>
         {`

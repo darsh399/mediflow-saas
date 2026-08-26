@@ -7,7 +7,9 @@ const Visits = () => {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [dateRangeFilter, setDateRangeFilter] = useState("all");
+  const [customDate, setCustomDate] = useState("");
+  const [assignedOnly, setAssignedOnly] = useState(false);
   const [photoLoading, setPhotoLoading] = useState(false);
 
   useEffect(() => {
@@ -32,6 +34,55 @@ const Visits = () => {
     loadVisits();
   }, []);
 
+  const getStartOfDay = (date) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const getEndOfDay = (date) => {
+    const d = new Date(date);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  };
+
+  const dateBounds = useMemo(() => {
+    const now = new Date();
+
+    if (dateRangeFilter === "today") {
+      return { start: getStartOfDay(now), end: getEndOfDay(now) };
+    }
+
+    if (dateRangeFilter === "week") {
+      const weekStart = new Date(now);
+      const day = weekStart.getDay();
+      const diff = day === 0 ? 6 : day - 1;
+      weekStart.setDate(weekStart.getDate() - diff);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      return { start: getStartOfDay(weekStart), end: getEndOfDay(weekEnd) };
+    }
+
+    if (dateRangeFilter === "month") {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return { start: getStartOfDay(start), end: getEndOfDay(end) };
+    }
+
+    if (dateRangeFilter === "year") {
+      const start = new Date(now.getFullYear(), 0, 1);
+      const end = new Date(now.getFullYear(), 11, 31);
+      return { start: getStartOfDay(start), end: getEndOfDay(end) };
+    }
+
+    if (dateRangeFilter === "custom" && customDate) {
+      const day = new Date(`${customDate}T00:00:00`);
+      return { start: getStartOfDay(day), end: getEndOfDay(day) };
+    }
+
+    return null;
+  }, [dateRangeFilter, customDate]);
+
   const filteredVisits = useMemo(() => {
     const searchValue = search.trim().toLowerCase();
 
@@ -55,16 +106,16 @@ const Visits = () => {
         employeeEmail.toLowerCase().includes(searchValue) ||
         doctorName.toLowerCase().includes(searchValue);
 
+      const visitDate = visit.visitedAt ? new Date(visit.visitedAt) : null;
       const matchesDate =
-        !dateFilter ||
-        (visit.visitedAt &&
-          new Date(visit.visitedAt)
-            .toISOString()
-            .slice(0, 10) === dateFilter);
+        !dateBounds ||
+        (visitDate && visitDate >= dateBounds.start && visitDate <= dateBounds.end);
 
-      return matchesSearch && matchesDate;
+      const matchesAssigned = !assignedOnly || Boolean(visit.assignedBy);
+
+      return matchesSearch && matchesDate && matchesAssigned;
     });
-  }, [visits, search, dateFilter]);
+  }, [visits, search, dateBounds, assignedOnly]);
 
   const verifiedVisits = filteredVisits.filter(
     (visit) => visit.locationVerified
@@ -81,7 +132,9 @@ const Visits = () => {
 
   const clearFilters = () => {
     setSearch("");
-    setDateFilter("");
+    setDateRangeFilter("all");
+    setCustomDate("");
+    setAssignedOnly(false);
   };
 
   const viewPhoto = async (visit) => {
@@ -124,10 +177,15 @@ const Visits = () => {
   const getStatusClass = (status) => {
     switch (status?.toUpperCase()) {
       case "COMPLETED":
+      case "APPROVED":
         return "bg-success-subtle text-success";
 
       case "CANCELLED":
+      case "REJECTED":
         return "bg-danger-subtle text-danger";
+
+      case "SCHEDULED":
+        return "bg-primary-subtle text-primary";
 
       case "IN_PROGRESS":
         return "bg-primary-subtle text-primary";
@@ -140,10 +198,15 @@ const Visits = () => {
   const getStatusIcon = (status) => {
     switch (status?.toUpperCase()) {
       case "COMPLETED":
+      case "APPROVED":
         return "bi-check-circle-fill";
 
       case "CANCELLED":
+      case "REJECTED":
         return "bi-x-circle-fill";
+
+      case "SCHEDULED":
+        return "bi-calendar-event";
 
       case "IN_PROGRESS":
         return "bi-arrow-repeat";
@@ -333,29 +396,57 @@ const Visits = () => {
 
               </div>
 
-              <div className="col-lg-4">
+              <div className="col-lg-3">
 
                 <label className="form-label fw-semibold">
-                  Filter by Date
+                  Date Range
                 </label>
 
-                <div className="input-group">
+                <select
+                  className="form-select"
+                  value={dateRangeFilter}
+                  onChange={(e) => {
+                    setDateRangeFilter(e.target.value);
+                    if (e.target.value !== "custom") setCustomDate("");
+                  }}
+                >
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="year">This Year</option>
+                  <option value="custom">Custom Date</option>
+                </select>
 
-                  <span className="input-group-text bg-light border-end-0">
-                    <i className="bi bi-calendar3 text-muted"></i>
-                  </span>
+              </div>
 
+              {dateRangeFilter === "custom" && (
+                <div className="col-lg-3">
+                  <label className="form-label fw-semibold">
+                    Pick Date
+                  </label>
                   <input
                     type="date"
-                    className="form-control border-start-0"
-                    value={dateFilter}
-                    onChange={(e) =>
-                      setDateFilter(e.target.value)
-                    }
+                    className="form-control"
+                    value={customDate}
+                    onChange={(e) => setCustomDate(e.target.value)}
                   />
-
                 </div>
+              )}
 
+              <div className="col-lg-2 d-flex align-items-end">
+                <div className="form-check">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="assignedOnlyCheck"
+                    checked={assignedOnly}
+                    onChange={(e) => setAssignedOnly(e.target.checked)}
+                  />
+                  <label className="form-check-label fw-semibold" htmlFor="assignedOnlyCheck">
+                    Assigned only
+                  </label>
+                </div>
               </div>
 
               <div className="col-lg-2 d-flex align-items-end">
@@ -403,7 +494,7 @@ const Visits = () => {
 
               </div>
 
-              {(search || dateFilter) && (
+              {(search || dateRangeFilter !== "all" || assignedOnly) && (
                 <span className="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
                   Filters Applied
                 </span>
@@ -452,7 +543,7 @@ const Visits = () => {
                 search or date filter.
               </p>
 
-              {(search || dateFilter) && (
+              {(search || dateRangeFilter !== "all" || assignedOnly) && (
                 <button
                   type="button"
                   className="btn btn-outline-primary btn-sm"
@@ -483,6 +574,10 @@ const Visits = () => {
 
                     <th>
                       Employee
+                    </th>
+
+                    <th>
+                      Assigned By
                     </th>
 
                     <th>
@@ -621,6 +716,17 @@ const Visits = () => {
                             "-"
                           )}
 
+                        </td>
+
+                        <td>
+                          {visit.assignedBy?.name ? (
+                            <span className="badge bg-info-subtle text-info-emphasis rounded-pill px-3 py-2">
+                              <i className="bi bi-person-check me-1"></i>
+                              {visit.assignedBy.name}
+                            </span>
+                          ) : (
+                            <span className="text-muted small">Self-logged</span>
+                          )}
                         </td>
 
                         <td>

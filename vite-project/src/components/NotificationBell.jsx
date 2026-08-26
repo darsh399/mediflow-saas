@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import notificationApi from '../api/notificationApi'
 
 const TYPE_META = {
@@ -11,6 +12,7 @@ const TYPE_META = {
   EMPLOYEE_PROMOTED: { icon: 'bi-arrow-up-circle', color: '#fd7e14' },
   DOCTOR_BIRTHDAY: { icon: 'bi-gift', color: '#0dcaf0' },
   company_message: { icon: 'bi-megaphone', color: '#0d6efd' },
+  DEMO_REQUEST: { icon: 'bi-megaphone', color: '#d63384' },
 }
 const DEFAULT_META = { icon: 'bi-bell', color: '#6c757d' }
 
@@ -31,6 +33,7 @@ function timeAgo(value) {
 }
 
 const NotificationBell = () => {
+  const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -61,6 +64,12 @@ const NotificationBell = () => {
   const markRead = async (id) => {
     setItems((current) => current.map((item) => (item._id === id ? { ...item, readAt: new Date().toISOString() } : item)))
     try { await notificationApi.markNotificationRead(id) } catch { /* keep optimistic state */ }
+  }
+
+  const handleItemClick = (item) => {
+    markRead(item._id)
+    setOpen(false)
+    if (item.link) navigate(item.link)
   }
 
   const markAllRead = async () => {
@@ -109,7 +118,7 @@ const NotificationBell = () => {
             ) : items.map((item) => {
               const meta = metaFor(item.type)
               return (
-                <button type="button" key={item._id} className={`notification-item ${item.readAt ? '' : 'is-unread'}`} onClick={() => markRead(item._id)}>
+                <button type="button" key={item._id} className={`notification-item ${item.readAt ? '' : 'is-unread'}`} onClick={() => handleItemClick(item)}>
                   <span className="notification-icon" style={{ background: `${meta.color}1a`, color: meta.color }}>
                     <i className={`bi ${meta.icon}`}></i>
                   </span>
