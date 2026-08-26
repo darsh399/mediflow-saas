@@ -9,6 +9,7 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { canActOn } from '../utils/authorize.js';
+import { resolveDateRange as getVisitDateRange } from '../utils/dateRange.js';
 
 const privateUploadDirectory = path.resolve(process.cwd(), 'private_uploads');
 const allowedPhotoTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -34,66 +35,6 @@ const COMPANY_VISIT_ROLES = ['admin', 'company_owner', 'hr_manager', 'hr', 'mana
 
 function canViewEmployeeVisitRecords(user) {
   return COMPANY_VISIT_ROLES.includes(user?.role);
-}
-
-function localDateValue(date) {
-  const offset = Number(process.env.APP_TIMEZONE_OFFSET_MINUTES || 330);
-  const local = new Date(date.getTime() + offset * 60000);
-  return { year: local.getUTCFullYear(), month: local.getUTCMonth() + 1, day: local.getUTCDate() };
-}
-
-function dateAtStart(value) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) throw new Error('Dates must use YYYY-MM-DD format');
-  const [year, month, day] = value.split('-').map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) throw new Error('Invalid date');
-  const offset = Number(process.env.APP_TIMEZONE_OFFSET_MINUTES || 330);
-  return new Date(date.getTime() - offset * 60000);
-}
-
-function dateValueFromParts({ year, month, day }) {
-  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
-
-function addDays(value, days) {
-  const date = new Date(`${value}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + days);
-  return dateValueFromParts({ year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate() });
-}
-
-function getVisitDateRange(query, now = new Date()) {
-  const todayParts = localDateValue(now);
-  const today = dateValueFromParts(todayParts);
-  const range = String(query.range || 'TODAY').toUpperCase();
-  let start = query.startDate;
-  let end = query.endDate;
-  if (!start && !end) {
-    if (range === 'YESTERDAY') start = end = addDays(today, -1);
-    else if (range === 'LAST_7_DAYS') start = addDays(today, -6), end = today;
-    else if (range === 'THIS_WEEK') {
-      const weekday = new Date(`${today}T00:00:00Z`).getUTCDay();
-      start = addDays(today, weekday === 0 ? -6 : 1 - weekday);
-      end = today;
-    } else if (range === 'LAST_WEEK') {
-      const weekday = new Date(`${today}T00:00:00Z`).getUTCDay();
-      const thisWeek = addDays(today, weekday === 0 ? -6 : 1 - weekday);
-      start = addDays(thisWeek, -7);
-      end = addDays(thisWeek, -1);
-    } else if (range === 'THIS_MONTH') {
-      start = `${todayParts.year}-${String(todayParts.month).padStart(2, '0')}-01`;
-      end = today;
-    } else if (range === 'LAST_MONTH') {
-      const firstThisMonth = `${todayParts.year}-${String(todayParts.month).padStart(2, '0')}-01`;
-      end = addDays(firstThisMonth, -1);
-      const endParts = new Date(`${end}T00:00:00Z`);
-      start = `${endParts.getUTCFullYear()}-${String(endParts.getUTCMonth() + 1).padStart(2, '0')}-01`;
-    } else start = end = today;
-  }
-  if (!start || !end) throw new Error('Both startDate and endDate are required');
-  const startDate = dateAtStart(start);
-  const endDate = new Date(dateAtStart(end).getTime() + 86400000);
-  if (startDate >= endDate) throw new Error('startDate cannot be after endDate');
-  return { start, end, startDate, endDate };
 }
 
 function escapeRegex(value) {

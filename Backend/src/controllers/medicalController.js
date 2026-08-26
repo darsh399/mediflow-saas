@@ -43,11 +43,14 @@ export const getMedical = async (req, res) => {
   }
 };
 
+const UPDATABLE_MEDICAL_FIELDS = ['name', 'contactPerson', 'mobile', 'email', 'licenseNumber', 'address', 'area', 'city', 'latitude', 'longitude'];
+
 export const updateMedical = async (req, res) => {
   try {
     const id = req.params.id;
     const companyId = req.user?.companyId;
-    const updated = await Medical.findOneAndUpdate(companyId ? { _id: id, companyId } : { _id: id }, req.body, { new: true });
+    const update = Object.fromEntries(UPDATABLE_MEDICAL_FIELDS.filter((field) => req.body?.[field] !== undefined).map((field) => [field, req.body[field]]));
+    const updated = await Medical.findOneAndUpdate(companyId ? { _id: id, companyId } : { _id: id }, update, { new: true, runValidators: true });
     if (!updated) return res.status(404).json({ message: 'Medical not found' });
     return res.status(200).json({ medical: updated });
   } catch (error) {

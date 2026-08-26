@@ -12,8 +12,11 @@ export const createProduct = async (req, res) => {
   return res.status(201).json({ product });
 };
 
+const UPDATABLE_PRODUCT_FIELDS = ['name', 'sku', 'description', 'unitPrice', 'active'];
+
 export const updateProduct = async (req, res) => {
-  const product = await Product.findOneAndUpdate({ _id: req.params.id, companyId: req.user.companyId }, req.body, { new: true, runValidators: true });
+  const update = Object.fromEntries(UPDATABLE_PRODUCT_FIELDS.filter((field) => req.body?.[field] !== undefined).map((field) => [field, req.body[field]]));
+  const product = await Product.findOneAndUpdate({ _id: req.params.id, companyId: req.user.companyId }, update, { new: true, runValidators: true });
   if (!product) return res.status(404).json({ message: 'Product not found' });
   return res.json({ product });
 };

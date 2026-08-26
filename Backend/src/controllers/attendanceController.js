@@ -1,6 +1,7 @@
 import Attendance from '../models/Attendance.js'
 import User from '../models/User.js'
 import attendanceService, { calculateWorkingHours, startOfDay, endOfDay } from '../services/attendanceService.js'
+import { resolveDateRange, monthRange, localDateParts } from '../utils/dateRange.js'
 import recordAudit from '../utils/audit.js'
 
 const reviewerRoles = ['admin', 'company_owner', 'hr_manager', 'hr']
@@ -16,35 +17,14 @@ function parseDate(value, field) {
   return date
 }
 
-function addDays(value, days) {
-  const date = new Date(value)
-  date.setDate(date.getDate() + days)
-  return date
-}
-
-// Mirrors how attendance dates are already stored (startOfDay/endOfDay use
-// server-local time, not a fixed IST offset like the visits module), so the
-// range presets here stay in sync with the plain calendar-date filtering
-// listAttendance already does for month/year.
-function getAttendanceDateRange(query, now = new Date()) {
-  const range = String(query.range || 'LAST_7_DAYS').toUpperCase()
-  let start = parseDate(query.startDate, 'startDate')
-  let end = parseDate(query.endDate, 'endDate')
-  if (!start && !end) {
-    const today = startOfDay(now)
-    if (range === 'TODAY') { start = today; end = today }
-    else if (range === 'YESTERDAY') { start = addDays(today, -1); end = start }
-    else if (range === 'LAST_7_DAYS') { start = addDays(today, -6); end = today }
-    else if (range === 'THIS_MONTH') { start = new Date(today.getFullYear(), today.getMonth(), 1); end = today }
-    else if (range === 'LAST_MONTH') { start = new Date(today.getFullYear(), today.getMonth() - 1, 1); end = new Date(today.getFullYear(), today.getMonth(), 0) }
-    else if (range === 'LAST_3_MONTHS') { start = new Date(today.getFullYear(), today.getMonth() - 2, 1); end = today }
-    else { start = addDays(today, -6); end = today }
-  }
-  if (!start || !end) throw new Error('Both startDate and endDate are required')
-  const rangeStart = startOfDay(start)
-  const rangeEnd = endOfDay(end)
-  if (rangeStart >= rangeEnd) throw new Error('startDate cannot be after endDate')
-  return { start: rangeStart, end: rangeEnd }
+// Thin wrapper matching the shape callers already use ({start, end} as Date
+// instances) around the shared, offset-aware range resolver — the same one
+// visitController.js uses, so "today"/"this week"/etc mean the same instant
+// across attendance and visits instead of drifting by the server's local
+// timezone.
+function getAttendanceDateRange(query) {
+  const { startDate, endDate } = resolveDateRange({ ...query, range: query.range || 'LAST_7_DAYS' })
+  return { start: startDate, end: endDate }
 }
 
 export async function checkIn(req, res) {
@@ -137,13 +117,11 @@ export async function listAttendance(req, res) {
       const date = parseDate(req.query.date, 'date')
       filter.date = { $gte: startOfDay(date), $lt: endOfDay(date) }
     } else if (req.query.month || req.query.year) {
-      const now = new Date()
-      const year = Number(req.query.year) || now.getFullYear()
+      const year = Number(req.query.year) || localDateParts().year
       const month = req.query.month ? Number(req.query.month) : null
       if (month && (month < 1 || month > 12)) return res.status(400).json({ message: 'month must be between 1 and 12' })
-      const rangeStart = month ? new Date(year, month - 1, 1) : new Date(year, 0, 1)
-      const rangeEnd = month ? new Date(year, month, 1) : new Date(year + 1, 0, 1)
-      filter.date = { $gte: rangeStart, $lt: rangeEnd }
+      const { start, end } = monthRange(year, month)
+      filter.date = { $gte: start, $lt: end }
     }
     if (!isReviewer(req.user)) filter.employeeId = req.user.id
     const page = Math.max(Number(req.query.page) || 1, 1)

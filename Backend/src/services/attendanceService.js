@@ -1,16 +1,5 @@
 import Attendance from '../models/Attendance.js'
-
-function startOfDay(value = new Date()) {
-  const date = new Date(value)
-  date.setHours(0, 0, 0, 0)
-  return date
-}
-
-function endOfDay(value = new Date()) {
-  const date = startOfDay(value)
-  date.setDate(date.getDate() + 1)
-  return date
-}
+import { startOfDay, endOfDay } from '../utils/dateRange.js'
 
 function calculateSessionHours(session) {
   if (!session.checkIn || !session.checkOut) return 0
