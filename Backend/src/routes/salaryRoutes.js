@@ -3,6 +3,7 @@ import authMiddleware from '../middleware/authMiddleware.js'
 import companyMiddleware from '../middleware/companyMiddleware.js'
 import authorize from '../middleware/permissionMiddleware.js'
 import roleMiddleware from '../middleware/roleMiddleware.js'
+import requireModule from '../middleware/moduleMiddleware.js'
 import controller from '../controllers/salaryController.js'
 
 const router = express.Router()
@@ -10,7 +11,7 @@ const router = express.Router()
 // assignments, salary slips and offer letters (admin retains its platform-wide
 // override). Normal hr must not.
 const manager = roleMiddleware('admin', 'company_owner', 'hr_manager')
-router.use(authMiddleware, companyMiddleware)
+router.use(authMiddleware, companyMiddleware, requireModule('payroll'))
 
 router.get('/structures', manager, authorize('salary.view'), controller.listStructures)
 router.post('/structures', manager, authorize('salary.manage'), controller.createStructure)
