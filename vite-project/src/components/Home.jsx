@@ -45,19 +45,9 @@ const Home = () => {
 
               <div className="d-flex flex-wrap gap-3">
 
-                <Link to="/signup">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    className="px-4"
-                  >
-                    Get Started
-                  </Button>
-                </Link>
-
                 <Link to="/login">
                   <Button
-                    variant="outline-dark"
+                    variant="primary"
                     size="lg"
                     className="px-4"
                   >
@@ -443,13 +433,13 @@ const Home = () => {
               className="text-md-end"
             >
 
-              <Link to="/signup">
+              <Link to="/login">
                 <Button
                   variant="light"
                   size="lg"
                   className="px-4 fw-semibold text-primary"
                 >
-                  Create Your Account
+                  Sign In
                 </Button>
               </Link>
 

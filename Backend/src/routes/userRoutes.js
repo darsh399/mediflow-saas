@@ -24,8 +24,6 @@ import authorize from '../middleware/permissionMiddleware.js';
 
 const router = express.Router();
 
-router.post('/register', createUser);
-
 router.post(
   '/users',
   authMiddleware,
