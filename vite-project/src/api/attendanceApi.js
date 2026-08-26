@@ -25,4 +25,9 @@ export async function listAttendance(params) {
   return response.data
 }
 
-export default { getToday, checkIn, checkOut, toggleBreak, listAttendance }
+export async function getEmployeeAttendance(employeeId, params) {
+  const response = await axios.get(`/api/attendance/employee/${employeeId}`, { params })
+  return response.data
+}
+
+export default { getToday, checkIn, checkOut, toggleBreak, listAttendance, getEmployeeAttendance }

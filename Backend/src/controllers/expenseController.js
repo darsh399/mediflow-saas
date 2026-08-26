@@ -2,6 +2,7 @@ import Expense from '../models/Expense.js';
 import Notification from '../models/Notification.js';
 import recordAudit from '../utils/audit.js';
 import { hasAnyRole } from '../utils/authorize.js';
+import { sendCsv } from '../utils/csv.js';
 
 // Only company_owner and hr_manager review expense claims (admin retains its
 // platform-wide override) — same restriction already applied to leave review,
@@ -54,20 +55,48 @@ export const applyExpense = async (req, res) => {
   }
 };
 
+// Shared by listExpenses and exportExpenses so the CSV export always
+// reflects exactly the same company-scoping/visibility rules as the list.
+function buildExpenseQuery(req) {
+  const companyId = req.user?.companyId;
+  const query = companyId ? { companyId } : {};
+  if (req.query.mine === 'true' || !isApprover(req.user)) query.employeeId = req.user.id;
+  if (req.query.status) query.status = String(req.query.status).toLowerCase();
+  if (req.query.category) query.category = String(req.query.category).toUpperCase();
+  if (req.query.employeeId && isApprover(req.user)) query.employeeId = req.query.employeeId;
+  return query;
+}
+
 export const listExpenses = async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    const query = companyId ? { companyId } : {};
-    // The personal endpoint is also used by approvers on their own expenses page.
-    if (req.query.mine === 'true' || !isApprover(req.user)) query.employeeId = req.user.id;
-    if (req.query.status) query.status = String(req.query.status).toLowerCase();
-    if (req.query.category) query.category = String(req.query.category).toUpperCase();
-    if (req.query.employeeId && isApprover(req.user)) query.employeeId = req.query.employeeId;
+    const query = buildExpenseQuery(req);
     const expenses = await Expense.find(query).populate('employeeId reviewedBy', 'name email role').sort({ createdAt: -1 });
     return res.status(200).json({ expenses });
   } catch (error) {
     console.error('List expenses error:', error);
     return res.status(500).json({ message: 'Error listing expenses', error: error.message });
+  }
+};
+
+export const exportExpenses = async (req, res) => {
+  try {
+    const query = buildExpenseQuery(req);
+    const expenses = await Expense.find(query).populate('employeeId reviewedBy', 'name email').sort({ createdAt: -1 }).lean();
+    return sendCsv(res, 'expense-claims.csv', expenses, [
+      { label: 'Employee', value: (expense) => expense.employeeId?.name || '' },
+      { label: 'Email', value: (expense) => expense.employeeId?.email || '' },
+      { label: 'Category', value: (expense) => expense.category || '' },
+      { label: 'Amount', value: (expense) => expense.amount ?? '' },
+      { label: 'Expense Date', value: (expense) => expense.expenseDate ? new Date(expense.expenseDate).toLocaleDateString('en-IN') : '' },
+      { label: 'Description', value: (expense) => expense.description || '' },
+      { label: 'Status', value: (expense) => expense.status || '' },
+      { label: 'Reviewed By', value: (expense) => expense.reviewedBy?.name || '' },
+      { label: 'Review Note', value: (expense) => expense.reviewNote || '' },
+      { label: 'Submitted On', value: (expense) => expense.createdAt ? new Date(expense.createdAt).toLocaleDateString('en-IN') : '' },
+    ]);
+  } catch (error) {
+    console.error('Export expenses error:', error);
+    return res.status(500).json({ message: 'Error exporting expenses', error: error.message });
   }
 };
 
@@ -107,4 +136,4 @@ export const reviewExpense = async (req, res) => {
   }
 };
 
-export default { applyExpense, listExpenses, reviewExpense };
+export default { applyExpense, listExpenses, exportExpenses, reviewExpense };

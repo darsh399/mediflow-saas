@@ -24,6 +24,14 @@ const EXPENSE_APPROVER_ROLES = ["admin", "company_owner", "hr_manager"];
 // company_owner/hr_manager/admin can add/edit/delete products.
 const PRODUCT_VIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager", "employee", "mr"];
 const PRODUCT_MANAGER_ROLES = ["admin", "company_owner", "hr_manager"];
+// Matches the audit.view permission (company_owner/hr_manager/admin only).
+const AUDIT_VIEWER_ROLES = ["admin", "company_owner", "hr_manager"];
+// Matches the subscription.view permission (company_owner/admin only).
+const BILLING_VIEWER_ROLES = ["admin", "company_owner"];
+// Company owner and HR only, per the visit.view permission scope used for
+// the top-performers leaderboard (broader than COMPANY_ROLES, which is
+// manager/project_manager focused and excludes hr_manager).
+const TOP_PERFORMER_ROLES = ["admin", "company_owner", "hr_manager"];
 
 const AdminLayout = () => {
   const role = useSelector((state) => state.auth.user?.role);
@@ -39,9 +47,21 @@ const AdminLayout = () => {
   const canReviewExpenses = EXPENSE_APPROVER_ROLES.includes(role);
   const canViewProducts = PRODUCT_VIEWER_ROLES.includes(role);
   const canManageProducts = PRODUCT_MANAGER_ROLES.includes(role);
+  const canViewAuditLog = AUDIT_VIEWER_ROLES.includes(role);
+  const canViewBilling = BILLING_VIEWER_ROLES.includes(role);
+  const canViewTopPerformers = TOP_PERFORMER_ROLES.includes(role);
+  const isPayrollPath = (pathname) => pathname.startsWith("/salary") || pathname.startsWith("/offers");
+  const isMrToolsPath = (pathname) => pathname.startsWith("/doctors") || pathname.startsWith("/medicals") || pathname.startsWith("/mr/") || pathname.startsWith("/employee/visits") || pathname.startsWith("/users");
+  const isCompanyPath = (pathname) => pathname.startsWith("/users") || pathname.startsWith("/doctors") || pathname.startsWith("/medicals") || pathname.startsWith("/admin/visits") || pathname.startsWith("/admin/top-performers");
+  const isInsightsPath = (pathname) => pathname.startsWith("/audit-log") || pathname.startsWith("/billing");
+
   const [leavesOpen, setLeavesOpen] = useState(location.pathname.startsWith("/leaves"));
   const [expensesOpen, setExpensesOpen] = useState(location.pathname.startsWith("/expenses"));
   const [productsOpen, setProductsOpen] = useState(location.pathname.startsWith("/products"));
+  const [payrollOpen, setPayrollOpen] = useState(isPayrollPath(location.pathname));
+  const [mrToolsOpen, setMrToolsOpen] = useState(isMrToolsPath(location.pathname));
+  const [companyOpen, setCompanyOpen] = useState(isCompanyPath(location.pathname));
+  const [insightsOpen, setInsightsOpen] = useState(isInsightsPath(location.pathname));
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -54,6 +74,22 @@ const AdminLayout = () => {
 
   useEffect(() => {
     if (location.pathname.startsWith("/products")) setProductsOpen(true);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (isPayrollPath(location.pathname)) setPayrollOpen(true);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (isMrToolsPath(location.pathname)) setMrToolsOpen(true);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (isCompanyPath(location.pathname)) setCompanyOpen(true);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (isInsightsPath(location.pathname)) setInsightsOpen(true);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -120,17 +156,31 @@ const AdminLayout = () => {
             </div>}
           </>}
 
-          {canViewSalary && <><p className="sidebar-label">{canManageSalary ? "SALARY" : "MY SALARY"}</p><NavLink className={navClass} to="/salary/slips" onClick={closeSidebar}><i className="bi bi-receipt"></i> Salary Slips</NavLink>{canManageSalary && <NavLink className={navClass} to="/salary/structures" onClick={closeSidebar}><i className="bi bi-diagram-3"></i> Salary Structures</NavLink>}</>}
-          {canViewSalary && <><p className="sidebar-label">{canManageSalary ? "OFFERS" : "MY OFFER"}</p>{canManageSalary && <NavLink className={navClass} to="/offers/create" onClick={closeSidebar}><i className="bi bi-file-earmark-plus"></i> Create Offer</NavLink>}<NavLink className={navClass} to="/offers" onClick={closeSidebar}><i className="bi bi-file-earmark-text"></i> {canManageSalary ? "Offer Letters" : "Offer Details"}</NavLink></>}
+          {canViewSalary && <><p className="sidebar-label">{canManageSalary ? "PAYROLL" : "MY PAYROLL"}</p>
+            <button type="button" className={`sidebar-link folder-button ${isPayrollPath(location.pathname) ? "active" : ""}`} onClick={() => setPayrollOpen((open) => !open)} aria-expanded={payrollOpen}>
+              <i className="bi bi-cash-stack"></i><span>{canManageSalary ? "Salary & Offers" : "Salary & Offer"}</span><i className={`bi ms-auto ${payrollOpen ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+            </button>
+            {payrollOpen && <div className="sidebar-submenu">
+              <NavLink className={navClass} to="/salary/slips" onClick={closeSidebar}><i className="bi bi-receipt"></i> Salary Slips</NavLink>
+              {canManageSalary && <NavLink className={navClass} to="/salary/structures" onClick={closeSidebar}><i className="bi bi-diagram-3"></i> Salary Structures</NavLink>}
+              {canManageSalary && <NavLink className={navClass} to="/offers/create" onClick={closeSidebar}><i className="bi bi-file-earmark-plus"></i> Create Offer</NavLink>}
+              <NavLink className={navClass} to="/offers" onClick={closeSidebar}><i className="bi bi-file-earmark-text"></i> {canManageSalary ? "Offer Letters" : "Offer Details"}</NavLink>
+            </div>}
+          </>}
 
           {isMr && <><p className="sidebar-label">MR TOOLS</p>
-            <NavLink className={navClass} to="/users"><i className="bi bi-people"></i> Employees</NavLink>
-            <NavLink className={navClass} to="/doctors"><i className="bi bi-heart-pulse"></i> Doctors</NavLink>
-            <NavLink className={navClass} to="/doctors/add"><i className="bi bi-person-plus"></i> Add Doctor</NavLink>
-            <NavLink className={navClass} to="/mr/add-visit"><i className="bi bi-geo-alt"></i> Add Visit</NavLink>
-            <NavLink className={navClass} to="/employee/visits"><i className="bi bi-map"></i> My Visits</NavLink>
-            <NavLink className={navClass} to="/medicals"><i className="bi bi-hospital"></i> Medicals</NavLink>
-            <NavLink className={navClass} to="/medicals/add"><i className="bi bi-plus-square"></i> Add Medical</NavLink>
+            <button type="button" className={`sidebar-link folder-button ${isMrToolsPath(location.pathname) ? "active" : ""}`} onClick={() => setMrToolsOpen((open) => !open)} aria-expanded={mrToolsOpen}>
+              <i className="bi bi-briefcase"></i><span>Field Tools</span><i className={`bi ms-auto ${mrToolsOpen ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+            </button>
+            {mrToolsOpen && <div className="sidebar-submenu">
+              <NavLink className={navClass} to="/users" onClick={closeSidebar}><i className="bi bi-people"></i> Employees</NavLink>
+              <NavLink className={navClass} to="/doctors" onClick={closeSidebar}><i className="bi bi-heart-pulse"></i> Doctors</NavLink>
+              <NavLink className={navClass} to="/doctors/add" onClick={closeSidebar}><i className="bi bi-person-plus"></i> Add Doctor</NavLink>
+              <NavLink className={navClass} to="/mr/add-visit" onClick={closeSidebar}><i className="bi bi-geo-alt"></i> Add Visit</NavLink>
+              <NavLink className={navClass} to="/employee/visits" onClick={closeSidebar}><i className="bi bi-map"></i> My Visits</NavLink>
+              <NavLink className={navClass} to="/medicals" onClick={closeSidebar}><i className="bi bi-hospital"></i> Medicals</NavLink>
+              <NavLink className={navClass} to="/medicals/add" onClick={closeSidebar}><i className="bi bi-plus-square"></i> Add Medical</NavLink>
+            </div>}
           </>}
 
           <p className="sidebar-label">WORK</p>
@@ -142,12 +192,29 @@ const AdminLayout = () => {
           <NavLink className={navClass} to="/notifications" onClick={closeSidebar}><i className="bi bi-bell"></i> Notifications</NavLink>
           {canSendCompanyMessages && <NavLink className={navClass} to="/messages/send" onClick={closeSidebar}><i className="bi bi-send"></i> Send Message</NavLink>}
 
-          {(canViewEmployees || canManageCompany) && <p className="sidebar-label">COMPANY</p>}
-          {canViewEmployees && <NavLink className={navClass} to="/users"><i className="bi bi-people"></i> Employees</NavLink>}
-          {canManageCompany && <>
-            <NavLink className={navClass} to="/doctors"><i className="bi bi-heart-pulse"></i> Doctors</NavLink>
-            <NavLink className={navClass} to="/medicals"><i className="bi bi-hospital"></i> Medicals</NavLink>
-            <NavLink className={navClass} to="/admin/visits"><i className="bi bi-clipboard-data"></i> MR Visit Records</NavLink>
+          {(canViewEmployees || canManageCompany || canViewTopPerformers) && <><p className="sidebar-label">COMPANY</p>
+            <button type="button" className={`sidebar-link folder-button ${isCompanyPath(location.pathname) ? "active" : ""}`} onClick={() => setCompanyOpen((open) => !open)} aria-expanded={companyOpen}>
+              <i className="bi bi-building"></i><span>Company</span><i className={`bi ms-auto ${companyOpen ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+            </button>
+            {companyOpen && <div className="sidebar-submenu">
+              {canViewEmployees && <NavLink className={navClass} to="/users" onClick={closeSidebar}><i className="bi bi-people"></i> Employees</NavLink>}
+              {canManageCompany && <>
+                <NavLink className={navClass} to="/doctors" onClick={closeSidebar}><i className="bi bi-heart-pulse"></i> Doctors</NavLink>
+                <NavLink className={navClass} to="/medicals" onClick={closeSidebar}><i className="bi bi-hospital"></i> Medicals</NavLink>
+                <NavLink className={navClass} to="/admin/visits" onClick={closeSidebar}><i className="bi bi-clipboard-data"></i> MR Visit Records</NavLink>
+              </>}
+              {canViewTopPerformers && <NavLink className={navClass} to="/admin/top-performers" onClick={closeSidebar}><i className="bi bi-trophy"></i> Top Performers</NavLink>}
+            </div>}
+          </>}
+
+          {(canViewAuditLog || canViewBilling) && <><p className="sidebar-label">INSIGHTS</p>
+            <button type="button" className={`sidebar-link folder-button ${isInsightsPath(location.pathname) ? "active" : ""}`} onClick={() => setInsightsOpen((open) => !open)} aria-expanded={insightsOpen}>
+              <i className="bi bi-graph-up"></i><span>Reports</span><i className={`bi ms-auto ${insightsOpen ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+            </button>
+            {insightsOpen && <div className="sidebar-submenu">
+              {canViewAuditLog && <NavLink className={navClass} to="/audit-log" onClick={closeSidebar}><i className="bi bi-clock-history"></i> Audit Log</NavLink>}
+              {canViewBilling && <NavLink className={navClass} to="/billing" onClick={closeSidebar}><i className="bi bi-credit-card"></i> Billing</NavLink>}
+            </div>}
           </>}
         </nav>
       </aside>

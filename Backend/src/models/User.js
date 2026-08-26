@@ -46,6 +46,10 @@ const userSchema = new mongoose.Schema({
     // Personal/alternate mailbox used to deliver onboarding credentials when
     // `email` is an auto-generated company login ID rather than a real inbox.
     personalEmail: { type: String, lowercase: true, trim: true },
+    // Company name submitted at public self-signup (role stays 'user' with no
+    // companyId until a super_admin reviews the request and creates the real
+    // Company via the existing invite flow). Kept only for that review step.
+    requestedCompanyName: { type: String, trim: true },
     password: { type: String, required: true },
     role: {
         type: String,

@@ -56,6 +56,24 @@ router.get(
 );
 
 router.get(
+  '/users',
+  authMiddleware,
+  requireRole('admin', 'company_owner', 'hr_manager', 'hr', 'super_admin', 'mr'),
+  authorize('employee.view'),
+  listUsers
+);
+
+// Must be registered before /users/:id — otherwise Express matches "search"
+// as the :id param and this route is never reached.
+router.get(
+  '/users/search',
+  authMiddleware,
+  requireRole('admin', 'company_owner', 'hr_manager', 'hr', 'super_admin'),
+  authorize('employee.view'),
+  searchUsers
+);
+
+router.get(
   '/users/:id',
   authMiddleware,
   companyMiddleware,
@@ -77,22 +95,6 @@ router.delete(
   requireRole('admin', 'company_owner', 'hr_manager', 'hr', 'super_admin'),
   authorize('employee.delete'),
   deleteUser
-);
-
-router.get(
-  '/users',
-  authMiddleware,
-  requireRole('admin', 'company_owner', 'hr_manager', 'hr', 'super_admin', 'mr'),
-  authorize('employee.view'),
-  listUsers
-);
-
-router.get(
-  '/users/search',
-  authMiddleware,
-  requireRole('admin', 'company_owner', 'hr_manager', 'hr', 'super_admin'),
-  authorize('employee.view'),
-  searchUsers
 );
 
 // Profile routes

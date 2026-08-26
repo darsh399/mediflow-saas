@@ -579,6 +579,7 @@ import AddMedical from "../pages/admin/AddMedical";
 import MedicalDetails from "../pages/admin/MedicalDetails";
 
 import VisitRecords from "../pages/admin/VisitRecords";
+import TopPerformers from "../pages/admin/TopPerformers";
 
 import AddVisit from "../pages/mr/AddVisit";
 
@@ -617,8 +618,11 @@ import Products from "../pages/products/Products";
 import AddProduct from "../pages/products/AddProduct";
 import EditProduct from "../pages/products/EditProduct";
 import ProductDetails from "../pages/products/ProductDetails";
+import AuditLog from "../pages/audit/AuditLog";
+import Billing from "../pages/billing/Billing";
 import NotFound from "../pages/NotFound";
 import Attendance from "../pages/attendance/Attendance";
+import EmployeeAttendanceHistory from "../pages/attendance/EmployeeAttendanceHistory";
 import Calendar from "../pages/calendar/Calendar";
 import SalaryPortal from "../pages/salary/SalaryPortal";
 
@@ -827,6 +831,7 @@ const AppRoutes = () => {
                 >
                     <Route path="attendance" element={<AdminLayout />}>
                         <Route index element={<Attendance />} />
+                        <Route path=":employeeId" element={<EmployeeAttendanceHistory />} />
                     </Route>
                 </Route>
 
@@ -1185,6 +1190,11 @@ const AppRoutes = () => {
                         />
 
                         <Route
+                            path="top-performers"
+                            element={<TopPerformers />}
+                        />
+
+                        <Route
                             path="users/add"
                             element={<AddEmployee />}
                         />
@@ -1337,6 +1347,26 @@ const AppRoutes = () => {
                     <Route path="products" element={<AdminLayout />}>
                         <Route path="add" element={<AddProduct />} />
                         <Route path=":id/edit" element={<EditProduct />} />
+                    </Route>
+                </Route>
+
+                {/* ================= AUDIT LOG ================= */}
+
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager"]} />}
+                >
+                    <Route path="audit-log" element={<AdminLayout />}>
+                        <Route index element={<AuditLog />} />
+                    </Route>
+                </Route>
+
+                {/* ================= BILLING ================= */}
+
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner"]} />}
+                >
+                    <Route path="billing" element={<AdminLayout />}>
+                        <Route index element={<Billing />} />
                     </Route>
                 </Route>
 

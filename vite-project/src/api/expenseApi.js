@@ -22,4 +22,9 @@ export async function reviewExpense(id, data) {
   return resp.data
 }
 
-export default { applyExpense, listExpenses, listMyExpenses, reviewExpense }
+export async function exportExpenses(params) {
+  const resp = await axios.get('/api/expenses/export', { params, responseType: 'blob' })
+  return resp.data
+}
+
+export default { applyExpense, listExpenses, listMyExpenses, reviewExpense, exportExpenses }

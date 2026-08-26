@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const subscriptionSchema = new mongoose.Schema({
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
-  plan: { type: String, enum: ['FREE', 'TRIAL', 'BASIC', 'PROFESSIONAL', 'ENTERPRISE', '6_MONTHS', '1_YEAR'], required: true },
+  plan: { type: String, enum: ['FREE', 'TRIAL', 'BASIC', 'PROFESSIONAL', 'ENTERPRISE', '1_MONTH', '3_MONTHS', '6_MONTHS', '1_YEAR', '2_YEAR', '3_YEAR'], required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   status: { type: String, enum: ['ACTIVE', 'TRIAL', 'GRACE', 'EXPIRED', 'CANCELLED'], default: 'ACTIVE' },

@@ -6,6 +6,7 @@ import Notification from '../models/Notification.js';
 import leaveService from '../services/leaveService.js';
 import recordAudit from '../utils/audit.js';
 import { hasAnyRole } from '../utils/authorize.js';
+import { sendCsv } from '../utils/csv.js';
 
 // Who can see every leave request in the company. Leave review is reserved for
 // hr_manager, company_owner and admin (plus people managers over their own
@@ -80,28 +81,59 @@ export const applyLeave = async (req, res) => {
   }
 };
 
+// Shared by listLeaves and exportLeaves so the CSV export always reflects
+// exactly the same company-scoping/visibility rules as the on-screen list.
+function buildLeaveQuery(req) {
+  const companyId = req.user?.companyId;
+  const query = companyId ? { companyId } : {};
+  if (req.query.mine === 'true' || !isViewer(req.user)) query.userId = req.user.id;
+  if (req.query.status) query.status = String(req.query.status).toLowerCase();
+  if (req.query.leaveType) query.leaveType = String(req.query.leaveType).toUpperCase();
+  if (req.query.from || req.query.to) {
+    const from = new Date(`${req.query.from || req.query.to}T00:00:00.000Z`);
+    const to = new Date(`${req.query.to || req.query.from}T23:59:59.999Z`);
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) return { error: 'Invalid leave date range' };
+    query.$or = [
+      { startDate: { $lte: to }, endDate: { $gte: from } },
+      { fromDate: { $lte: to }, toDate: { $gte: from } },
+    ];
+  }
+  return { query };
+}
+
 export const listLeaves = async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    const query = companyId ? { companyId } : {};
-    // The personal endpoint is also used by reviewers on their own leave pages.
-    if (req.query.mine === 'true' || !isViewer(req.user)) query.userId = req.user.id;
-    if (req.query.status) query.status = String(req.query.status).toLowerCase();
-    if (req.query.leaveType) query.leaveType = String(req.query.leaveType).toUpperCase();
-    if (req.query.from || req.query.to) {
-      const from = new Date(`${req.query.from || req.query.to}T00:00:00.000Z`);
-      const to = new Date(`${req.query.to || req.query.from}T23:59:59.999Z`);
-      if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) return res.status(400).json({ message: 'Invalid leave date range' });
-      query.$or = [
-        { startDate: { $lte: to }, endDate: { $gte: from } },
-        { fromDate: { $lte: to }, toDate: { $gte: from } },
-      ];
-    }
+    const { query, error } = buildLeaveQuery(req);
+    if (error) return res.status(400).json({ message: error });
     const leaves = await Leave.find(query).populate('userId appliedBy reviewedBy', '-password');
     return res.status(200).json({ leaves });
   } catch (error) {
     console.error('List leaves error:', error);
     return res.status(500).json({ message: 'Error listing leaves', error: error.message });
+  }
+};
+
+export const exportLeaves = async (req, res) => {
+  try {
+    const { query, error } = buildLeaveQuery(req);
+    if (error) return res.status(400).json({ message: error });
+    const leaves = await Leave.find(query).populate('userId reviewedBy', 'name email').sort({ createdAt: -1 }).lean();
+    return sendCsv(res, 'leave-requests.csv', leaves, [
+      { label: 'Employee', value: (leave) => leave.userId?.name || '' },
+      { label: 'Email', value: (leave) => leave.userId?.email || '' },
+      { label: 'Leave Type', value: (leave) => leave.leaveType || leave.type || '' },
+      { label: 'From', value: (leave) => (leave.fromDate || leave.startDate) ? new Date(leave.fromDate || leave.startDate).toLocaleDateString('en-IN') : '' },
+      { label: 'To', value: (leave) => (leave.toDate || leave.endDate) ? new Date(leave.toDate || leave.endDate).toLocaleDateString('en-IN') : '' },
+      { label: 'Days', value: (leave) => leave.numberOfDays ?? '' },
+      { label: 'Reason', value: (leave) => leave.reason || '' },
+      { label: 'Status', value: (leave) => leave.status || '' },
+      { label: 'Reviewed By', value: (leave) => leave.reviewedBy?.name || '' },
+      { label: 'Review Note', value: (leave) => leave.reviewNote || '' },
+      { label: 'Applied On', value: (leave) => leave.createdAt ? new Date(leave.createdAt).toLocaleDateString('en-IN') : '' },
+    ]);
+  } catch (error) {
+    console.error('Export leaves error:', error);
+    return res.status(500).json({ message: 'Error exporting leaves', error: error.message });
   }
 };
 
@@ -139,4 +171,4 @@ export const reviewLeave = async (req, res) => {
   }
 };
 
-export default { applyLeave, listLeaves, reviewLeave };
+export default { applyLeave, listLeaves, exportLeaves, reviewLeave };

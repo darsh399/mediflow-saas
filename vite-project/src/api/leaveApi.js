@@ -26,5 +26,6 @@ export async function getPolicy(){ return (await axios.get('/api/leaves/policy')
 export async function updatePolicy(leaveTypes){ return (await axios.patch('/api/leaves/policy', { leaveTypes })).data }
 export async function getMyBalances(){ return (await axios.get('/api/leaves/balances/me')).data }
 export async function getLeaveHistory(id){ return (await axios.get(`/api/leaves/${id}/history`)).data }
+export async function exportLeaves(params){ return (await axios.get('/api/leaves/export', { params, responseType: 'blob' })).data }
 
-export default { applyLeave, listLeaves, listMyLeaves, reviewLeave, getPolicy, updatePolicy, getMyBalances, getLeaveHistory }
+export default { applyLeave, listLeaves, listMyLeaves, reviewLeave, getPolicy, updatePolicy, getMyBalances, getLeaveHistory, exportLeaves }
