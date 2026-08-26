@@ -6,7 +6,7 @@ const STATUS_OPTIONS = ['NEW', 'CONTACTED', 'CONVERTED', 'DISMISSED']
 
 const STATUS_STYLES = {
   NEW: { backgroundColor: '#fff9e0', color: '#997404' },
-  CONTACTED: { backgroundColor: '#e7f1ff', color: '#0d6efd' },
+  CONTACTED: { backgroundColor: '#e7f1ff', color: 'var(--mf-color-primary)' },
   CONVERTED: { backgroundColor: '#e8f8ef', color: '#198754' },
   DISMISSED: { backgroundColor: '#f1f3f5', color: '#6c757d' },
 }
@@ -53,7 +53,7 @@ const DemoRequests = () => {
   return (
     <div className="container-fluid py-4">
       <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div className="card-body p-4 p-lg-5 text-white" style={{ background: 'linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)' }}>
+        <div className="card-body p-4 p-lg-5 text-white" style={{ background: 'linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)' }}>
           <div className="d-flex flex-wrap align-items-center gap-3 mb-2">
             <BackButton />
             <span className="opacity-75 small">SUPER ADMIN</span>

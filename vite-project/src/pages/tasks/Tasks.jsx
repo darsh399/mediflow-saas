@@ -797,7 +797,7 @@ const Tasks = () => {
           min-width: 40px;
           border-radius: 11px;
           background: #eef4ff;
-          color: #0d6efd;
+          color: var(--mf-color-primary);
           display: flex;
           align-items: center;
           justify-content: center;

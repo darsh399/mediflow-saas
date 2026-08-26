@@ -663,7 +663,7 @@ const EditProfile = () => {
         }
 
         .breadcrumb-link:hover {
-          color: #0d6efd;
+          color: var(--mf-color-primary);
         }
 
         .edit-title {
@@ -697,8 +697,8 @@ const EditProfile = () => {
           height: 105px;
           background: linear-gradient(
             135deg,
-            #0d6efd 0%,
-            #6610f2 100%
+            var(--mf-color-primary) 0%,
+            var(--mf-color-accent) 100%
           );
         }
 
@@ -722,7 +722,7 @@ const EditProfile = () => {
           background: #fff;
           border: 5px solid #fff;
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-          color: #0d6efd;
+          color: var(--mf-color-primary);
           font-size: 36px;
           font-weight: 700;
         }
@@ -732,8 +732,8 @@ const EditProfile = () => {
           align-items: center;
           padding: 7px 14px;
           border-radius: 50px;
-          background: rgba(13, 110, 253, 0.08);
-          color: #0d6efd;
+          background: rgba(37, 99, 235, 0.08);
+          color: var(--mf-color-primary);
           font-size: 0.78rem;
           font-weight: 600;
         }
@@ -754,8 +754,8 @@ const EditProfile = () => {
           justify-content: center;
           margin-bottom: 14px;
           border-radius: 12px;
-          background: rgba(13, 110, 253, 0.08);
-          color: #0d6efd;
+          background: rgba(37, 99, 235, 0.08);
+          color: var(--mf-color-primary);
           font-size: 20px;
         }
 
@@ -798,8 +798,8 @@ const EditProfile = () => {
         }
 
         .section-icon.primary {
-          color: #0d6efd;
-          background: rgba(13, 110, 253, 0.09);
+          color: var(--mf-color-primary);
+          background: rgba(37, 99, 235, 0.09);
         }
 
         .section-icon.danger {
@@ -848,13 +848,13 @@ const EditProfile = () => {
         .modern-input .form-control:focus,
         .modern-input .form-select:focus {
           border-color: #86b7fe;
-          box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+          box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
         }
 
         .modern-input:focus-within .input-group-text {
           border-color: #86b7fe;
-          color: #0d6efd;
-          background: rgba(13, 110, 253, 0.04);
+          color: var(--mf-color-primary);
+          background: rgba(37, 99, 235, 0.04);
         }
 
         .edit-actions {

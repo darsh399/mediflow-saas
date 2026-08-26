@@ -219,7 +219,7 @@ const MyLeaves = () => {
             className="card-body p-4 p-lg-5 text-white"
             style={{
               background:
-                "linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)",
+                "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)",
             }}
           >
             <div className="row align-items-center">

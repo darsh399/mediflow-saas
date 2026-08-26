@@ -185,7 +185,7 @@ const ApplyLeave = () => {
             className="card-body p-4 p-lg-5 text-white"
             style={{
               background:
-                "linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)",
+                "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)",
             }}
           >
             <div className="row align-items-center">
@@ -286,7 +286,7 @@ const ApplyLeave = () => {
                   width: "45px",
                   height: "45px",
                   backgroundColor: "#e7f1ff",
-                  color: "#0d6efd",
+                  color: "var(--mf-color-primary)",
                 }}
               >
                 <i className="bi bi-pencil-square fs-5"></i>
@@ -380,7 +380,7 @@ const ApplyLeave = () => {
                         width: "45px",
                         height: "45px",
                         backgroundColor: "#dbeafe",
-                        color: "#0d6efd",
+                        color: "var(--mf-color-primary)",
                       }}
                     >
                       <i className="bi bi-calendar3 fs-5"></i>

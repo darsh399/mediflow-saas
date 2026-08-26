@@ -206,7 +206,7 @@ const ExpenseManagement = () => {
 
         {/* HEADER */}
         <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)" }}>
+          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}>
             <div className="row align-items-center">
               <div className="col-lg-7">
                 <div className="d-flex align-items-center gap-3 mb-3">
@@ -438,7 +438,7 @@ const ExpenseManagement = () => {
                           <div className="d-flex align-items-center gap-3">
                             <div
                               className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                              style={{ width: "40px", height: "40px", background: "linear-gradient(135deg, #e7f1ff, #ede7ff)", color: "#0d6efd" }}
+                              style={{ width: "40px", height: "40px", background: "linear-gradient(135deg, #e7f1ff, #ede7ff)", color: "var(--mf-color-primary)" }}
                             >
                               <i className="bi bi-person-fill"></i>
                             </div>

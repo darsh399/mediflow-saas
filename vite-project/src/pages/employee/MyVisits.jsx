@@ -78,7 +78,7 @@ const MyVisits = () => {
       case "approved":
         return { backgroundColor: "#e8f8ef", color: "#198754", icon: "bi-check-circle-fill", label: "Completed" };
       case "scheduled":
-        return { backgroundColor: "#e7f1ff", color: "#0d6efd", icon: "bi-calendar-event", label: "Scheduled" };
+        return { backgroundColor: "#e7f1ff", color: "var(--mf-color-primary)", icon: "bi-calendar-event", label: "Scheduled" };
       case "cancelled":
       case "rejected":
         return { backgroundColor: "#fdecec", color: "#dc3545", icon: "bi-x-circle-fill", label: status === "rejected" ? "Rejected" : "Cancelled" };
@@ -271,7 +271,7 @@ const MyVisits = () => {
             className="card-body p-4 p-lg-5 text-white"
             style={{
               background:
-                "linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)",
+                "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)",
             }}
           >
             <div className="row align-items-center">
@@ -508,7 +508,7 @@ const MyVisits = () => {
                   width: "90px",
                   height: "90px",
                   background:
-                    "linear-gradient(135deg, rgba(13,110,253,.1), rgba(102,16,242,.1))",
+                    "linear-gradient(135deg, rgba(37,99,235,.1), rgba(102,16,242,.1))",
                 }}
               >
                 <i className="bi bi-clipboard2-x text-primary fs-1"></i>
@@ -559,7 +559,7 @@ const MyVisits = () => {
                   className="d-flex align-items-center gap-2 px-3 py-2 rounded-pill"
                   style={{
                     backgroundColor: "#f0f6ff",
-                    color: "#0d6efd",
+                    color: "var(--mf-color-primary)",
                   }}
                 >
                   <i className="bi bi-calendar-check"></i>

@@ -405,7 +405,7 @@ const EmployeeOnboarding = () => {
           className="p-4 text-white"
           style={{
             background:
-              'linear-gradient(135deg, #0d6efd, #6610f2)'
+              'linear-gradient(135deg, var(--mf-color-primary), var(--mf-color-accent))'
           }}
         >
 

@@ -193,7 +193,7 @@ const Profile = () => {
             style={{
               height: "150px",
               background:
-                "linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)",
+                "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)",
             }}
           ></div>
 
@@ -559,7 +559,7 @@ const Profile = () => {
 
         .detail-box:hover {
           transform: translateY(-3px);
-          border-color: rgba(13, 110, 253, 0.2);
+          border-color: rgba(37, 99, 235, 0.2);
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
         }
 

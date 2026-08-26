@@ -14,7 +14,7 @@ const formatDate = (date) => {
 const getActionStyle = (action = "") => {
   if (/reject|delet|block|fail/i.test(action)) return { backgroundColor: "#fdecec", color: "#dc3545" };
   if (/approv|creat|activat|add/i.test(action)) return { backgroundColor: "#e8f8ef", color: "#198754" };
-  return { backgroundColor: "#e5f0ff", color: "#0d6efd" };
+  return { backgroundColor: "#e5f0ff", color: "var(--mf-color-primary)" };
 };
 
 const AuditLog = () => {
@@ -76,7 +76,7 @@ const AuditLog = () => {
       <div className="container-fluid px-0">
 
         <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)" }}>
+          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}>
             <div className="d-flex align-items-center gap-3">
               <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: "55px", height: "55px" }}>
                 <i className="bi bi-clock-history fs-3"></i>
