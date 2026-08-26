@@ -122,7 +122,7 @@ const Features = () => {
         className="py-5"
         style={{
           background:
-            "linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)",
+            "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)",
         }}
       >
         <div className="container py-5">
@@ -195,7 +195,7 @@ const Features = () => {
             className="rounded-4 p-5 text-center text-white"
             style={{
               background:
-                "linear-gradient(135deg, #212529 0%, #343a40 100%)",
+                "linear-gradient(135deg, var(--mf-slate-900) 0%, var(--mf-slate-800) 100%)",
             }}
           >
             <div className="row justify-content-center">

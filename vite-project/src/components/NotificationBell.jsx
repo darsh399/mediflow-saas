@@ -8,10 +8,10 @@ const TYPE_META = {
   LEAVE_CANCELLED: { icon: 'bi-calendar-minus', color: '#6c757d' },
   EXPENSE_APPROVED: { icon: 'bi-cash-coin', color: '#198754' },
   EXPENSE_REJECTED: { icon: 'bi-cash-coin', color: '#dc3545' },
-  TASK_ASSIGNED: { icon: 'bi-check2-square', color: '#0d6efd' },
+  TASK_ASSIGNED: { icon: 'bi-check2-square', color: 'var(--mf-color-primary)' },
   EMPLOYEE_PROMOTED: { icon: 'bi-arrow-up-circle', color: '#fd7e14' },
   DOCTOR_BIRTHDAY: { icon: 'bi-gift', color: '#0dcaf0' },
-  company_message: { icon: 'bi-megaphone', color: '#0d6efd' },
+  company_message: { icon: 'bi-megaphone', color: 'var(--mf-color-primary)' },
   DEMO_REQUEST: { icon: 'bi-megaphone', color: '#d63384' },
 }
 const DEFAULT_META = { icon: 'bi-bell', color: '#6c757d' }
@@ -147,9 +147,9 @@ const NotificationBell = () => {
           }
 
           .notification-toggle:hover {
-            border-color: #0d6efd;
+            border-color: var(--mf-color-primary);
             background: #f3f7ff;
-            color: #0d6efd;
+            color: var(--mf-color-primary);
           }
 
           .notification-badge {
@@ -243,7 +243,7 @@ const NotificationBell = () => {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #0d6efd;
+            background: var(--mf-color-primary);
             position: absolute;
             top: 16px;
             right: 14px;

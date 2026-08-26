@@ -52,7 +52,7 @@ const Login = () => {
         style={{
           width: "420px",
           height: "420px",
-          background: "rgba(13, 110, 253, 0.08)",
+          background: "rgba(37, 99, 235, 0.08)",
           top: "-180px",
           left: "-150px",
         }}
@@ -89,7 +89,7 @@ const Login = () => {
                       borderRadius: "20px",
                       fontSize: "30px",
                       background:
-                        "linear-gradient(135deg, #0d6efd, #6610f2)",
+                        "linear-gradient(135deg, var(--mf-color-primary), var(--mf-color-accent))",
                     }}
                   >
                     M
@@ -226,9 +226,9 @@ const Login = () => {
                     style={{
                       borderRadius: "12px",
                       background:
-                        "linear-gradient(135deg, #0d6efd, #6610f2)",
+                        "linear-gradient(135deg, var(--mf-color-primary), var(--mf-color-accent))",
                       boxShadow:
-                        "0 8px 20px rgba(13, 110, 253, 0.25)",
+                        "0 8px 20px rgba(37, 99, 235, 0.25)",
                     }}
                   >
                     <i className="bi bi-box-arrow-in-right me-2"></i>
@@ -284,7 +284,7 @@ const Login = () => {
           }
 
           .form-control:focus {
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
             border-color: #86b7fe;
           }
 

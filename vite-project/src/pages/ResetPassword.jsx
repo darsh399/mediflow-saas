@@ -190,7 +190,7 @@ const ResetPassword = () => {
       className="change-password-page min-vh-100 d-flex align-items-center justify-content-center py-5"
       style={{
         background:
-          "linear-gradient(135deg, #f5f8ff 0%, #eef3f8 100%)",
+          "linear-gradient(135deg, var(--mf-bg) 0%, var(--mf-color-primary-subtle) 100%)",
       }}
     >
       <div className="container px-3">
@@ -454,17 +454,17 @@ const ResetPassword = () => {
         }
 
         .password-input button {
-          border: 1px solid #dee2e6;
+          border: 1px solid var(--mf-border);
           cursor: pointer;
         }
 
         .password-input button:hover {
-          background-color: #e9ecef !important;
+          background-color: var(--mf-slate-100) !important;
         }
 
         .form-control:focus {
-          box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
-          border-color: #86b7fe;
+          box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
+          border-color: var(--mf-color-primary);
         }
 
         .btn-primary {

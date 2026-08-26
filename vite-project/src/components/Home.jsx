@@ -227,7 +227,7 @@ const Home = () => {
                       fontSize: "22px",
                     }}
                   >
-                    👥
+                    <i className="bi bi-people"></i>
                   </div>
 
                   <h5 className="fw-bold">
@@ -259,7 +259,7 @@ const Home = () => {
                       fontSize: "22px",
                     }}
                   >
-                    📋
+                    <i className="bi bi-clipboard-check"></i>
                   </div>
 
                   <h5 className="fw-bold">
@@ -290,7 +290,7 @@ const Home = () => {
                       fontSize: "22px",
                     }}
                   >
-                    🩺
+                    <i className="bi bi-heart-pulse"></i>
                   </div>
 
                   <h5 className="fw-bold">
@@ -321,7 +321,7 @@ const Home = () => {
                       fontSize: "22px",
                     }}
                   >
-                    📍
+                    <i className="bi bi-geo-alt"></i>
                   </div>
 
                   <h5 className="fw-bold">
@@ -353,7 +353,7 @@ const Home = () => {
                       fontSize: "22px",
                     }}
                   >
-                    📊
+                    <i className="bi bi-bar-chart-line"></i>
                   </div>
 
                   <h5 className="fw-bold">
@@ -385,7 +385,7 @@ const Home = () => {
                       fontSize: "22px",
                     }}
                   >
-                    🔐
+                    <i className="bi bi-shield-lock"></i>
                   </div>
 
                   <h5 className="fw-bold">
