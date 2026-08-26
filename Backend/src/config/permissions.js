@@ -58,14 +58,18 @@ const rolePermissions = {
     'visit.view', 'visit.create', 'visit.update', 'visit.approve', 'visit.reject',
     'task.view', 'task.create', 'task.assign', 'task.update',
     'report.view', 'performance.view', 'performance.manage',
+    // View-only, same as employee — controllers scope non-manager roles
+    // (salaryController's MANAGERS list) to their own records automatically.
+    'salary.view', 'salary_slip.view', 'offer.view',
     'expense.apply', 'expense.view', 'companyProduct.view',
   ],
   project_manager: [
     'employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.view_history', 'attendance.view', 'task.view', 'task.create', 'task.assign', 'task.update',
     'project.view', 'project.create', 'project.update', 'report.view',
+    'salary.view', 'salary_slip.view', 'offer.view',
     'expense.apply', 'expense.view', 'companyProduct.view',
   ],
-  mr: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.view_history', 'doctor.view', 'doctor.create', 'medical.view', 'medical.create', 'visit.view', 'visit.create', 'attendance.view', 'attendance.create', 'task.view', 'task.update', 'calendar.view', 'expense.apply', 'expense.view', 'companyProduct.view'],
+  mr: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'leave.view_history', 'doctor.view', 'doctor.create', 'medical.view', 'medical.create', 'visit.view', 'visit.create', 'attendance.view', 'attendance.create', 'task.view', 'task.update', 'calendar.view', 'salary.view', 'salary_slip.view', 'offer.view', 'expense.apply', 'expense.view', 'companyProduct.view'],
   employee: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'attendance.view', 'attendance.create', 'doctor.view', 'medical.view', 'visit.view', 'visit.create', 'task.view', 'task.update', 'document.view', 'document.upload', 'performance.view', 'calendar.view', 'leave.view_history', 'salary.view', 'salary_slip.view', 'offer.view', 'expense.apply', 'expense.view', 'companyProduct.view'],
   user: ['employee.view', 'leave.view', 'leave.apply', 'leave.cancel', 'attendance.view', 'attendance.create', 'task.view', 'task.update', 'calendar.view', 'leave.view_history'],
 }
