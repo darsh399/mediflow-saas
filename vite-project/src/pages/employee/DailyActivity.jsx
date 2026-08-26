@@ -828,7 +828,10 @@ const DailyActivity = () => {
           border-radius: 9px;
         }
 
-        .activity-table {
+        /* Needs to out-specificity styles/ui-system.css's
+           .table-responsive > .table min-width rule (0,2,0),
+           otherwise this override is silently ignored. */
+        .table-responsive > .table.activity-table {
           min-width: 950px;
         }
 
@@ -935,10 +938,6 @@ const DailyActivity = () => {
 
           .activity-date-card {
             width: 100%;
-          }
-
-          .activity-table {
-            min-width: 950px;
           }
         }
       `}</style>

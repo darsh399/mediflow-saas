@@ -106,13 +106,11 @@ const AddVisit = ()=>{
         </select>
       </div>
 
-       <div className="d-flex justify-content-between align-items-center mb-3">
-              <h2>Doctors</h2>
-              <Link className="btn btn-primary" to="/admin/doctors/add">Add Doctor</Link>
-            </div>
-
       <div className="mb-3">
-        <label className="form-label">Select {type === 'doctor' ? 'Doctor' : 'Medical'}</label>
+        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+          <label className="form-label mb-0">Select {type === 'doctor' ? 'Doctor' : 'Medical'}</label>
+          {type === 'doctor' && <Link className="btn btn-sm btn-outline-primary" to="/admin/doctors/add">+ Add Doctor</Link>}
+        </div>
         <select className="form-select" value={selected} onChange={e=>setSelected(e.target.value)}>
           <option value="">-- choose --</option>
           {(type==='doctor' ? doctors : medicals).map(i=> <option value={i._id} key={i._id}>{i.name} {i.clinicName?('- '+i.clinicName):''}</option>)}

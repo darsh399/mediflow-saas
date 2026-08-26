@@ -186,7 +186,7 @@ const Header = () => {
     <>
       <nav
         ref={navbarRef}
-        className="navbar navbar-expand-lg bg-white sticky-top"
+        className="navbar navbar-expand-lg mf-navbar sticky-top"
         style={{
           zIndex: 1100,
           borderBottom: "1px solid var(--mf-border)",
@@ -201,7 +201,7 @@ const Header = () => {
             onClick={closeMenus}
           >
             <div
-              className="d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+              className="d-flex align-items-center justify-content-center text-white fw-bold"
               style={{
                 width: "42px",
                 height: "42px",
@@ -334,14 +334,8 @@ const Header = () => {
                 <>
                   <NotificationBell />
 
-                  <span
-                    className="badge rounded-pill text-bg-light border px-3 py-2"
-                    style={{
-                      fontSize: "11px",
-                      color: "#495057",
-                    }}
-                  >
-                    <i className="bi bi-person-badge me-1"></i>
+                  <span className="mf-role-badge">
+                    <i className="bi bi-person-badge"></i>
                     {formattedRole}
                   </span>
 
@@ -568,6 +562,34 @@ const Header = () => {
 
       <style>
         {`
+          .mf-navbar {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: saturate(180%) blur(10px);
+            -webkit-backdrop-filter: saturate(180%) blur(10px);
+            border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 0 4px 24px rgba(15, 23, 42, 0.05);
+          }
+
+          body.dark-mode .mf-navbar {
+            background: rgba(17, 24, 39, 0.88);
+            border-bottom-color: rgba(148, 163, 184, 0.14);
+          }
+
+          .mf-role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: #fff;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            text-transform: capitalize;
+          }
+
           .navbar .nav-link {
             color: var(--mf-text-muted);
             transition: all 0.2s ease;

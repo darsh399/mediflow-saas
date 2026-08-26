@@ -18,7 +18,7 @@ const ActivateAccount = ()=>{
     if(password.length < 8) return notify('Password min 8 chars')
     if(password !== confirm) return notify('Passwords do not match')
     try{
-      const resp = await authApi.acceptInviteApi(token, { password })
+      await authApi.acceptInviteApi(token, { password })
       notify('Account activated', 'Please login.')
       navigate('/login')
     }catch(err){ console.error(err); notify('Activation failed', err?.response?.data?.message || err?.message || 'Activation failed') }

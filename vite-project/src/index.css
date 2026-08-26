@@ -1,8 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* You can add global styles below */
+/* Global styles. Bootstrap 5 (imported in main.jsx) is this project's sole
+   CSS framework — Tailwind was previously wired in alongside it but never
+   actually used, and its generated utilities (e.g. .border, .rounded) were
+   silently shadowing Bootstrap's same-named classes in the compiled bundle. */
 html, body, #root {
 	height: 100%;
 }
