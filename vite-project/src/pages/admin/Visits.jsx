@@ -871,7 +871,10 @@ const Visits = () => {
             width: 100%;
           }
 
-          .visits-table {
+          /* Needs to out-specificity styles/ui-system.css's
+             .table-responsive > .table min-width rule (0,2,0),
+             otherwise this override is silently ignored. */
+          .table-responsive > .table.visits-table {
             min-width: 950px;
           }
 

@@ -204,7 +204,7 @@ const Medicals = () => {
 
             </div>
 
-            <div style={{ minWidth: "320px" }}>
+            <div className="search-bar-wrap">
 
               <SearchBar
                 value={q}
@@ -307,7 +307,7 @@ const Medicals = () => {
             filteredMedicals.length > 0 && (
               <div className="table-responsive">
 
-                <table className="table align-middle mb-0">
+                <table className="table align-middle mb-0 medicals-table">
 
                   <thead>
 
@@ -509,7 +509,10 @@ const Medicals = () => {
           }
 
           @media (max-width: 768px) {
-            .table {
+            /* Needs to out-specificity styles/ui-system.css's
+               .table-responsive > .table min-width rule (0,2,0),
+               otherwise this override is silently ignored. */
+            .table-responsive > .table.medicals-table {
               min-width: 850px;
             }
           }
