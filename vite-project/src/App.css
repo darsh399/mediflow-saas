@@ -1,19 +1,11 @@
-.app-container{
-    display: flex;
-}
-
-.content{
-    width: 100%;
-}
-
 /* Small responsive polish */
 @media (max-width: 767px){
-    .sidebar { display: none }
     .navbar .navbar-brand { font-size: 1rem }
 }
 
-.card { border-radius: 8px }
-.table-responsive { overflow-x: auto }
+/* .card and .table-responsive base rules live in styles/ui-system.css —
+   defining them here too meant this file (loaded later) silently overrode
+   ui-system.css's border-radius token for every card in the app. */
 .global-loader {
   position: fixed;
   z-index: 2000;

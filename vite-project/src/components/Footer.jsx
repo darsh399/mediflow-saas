@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-dark text-white">
+    <footer className="mf-footer text-white">
 
       {/* Main Footer */}
       <div className="container py-5">
@@ -17,11 +17,13 @@ const Footer = () => {
               className="text-decoration-none text-white d-flex align-items-center gap-2 mb-3"
             >
               <div
-                className="bg-primary rounded-3 d-flex align-items-center justify-content-center fw-bold"
+                className="rounded-3 d-flex align-items-center justify-content-center fw-bold"
                 style={{
                   width: "42px",
                   height: "42px",
                   fontSize: "18px",
+                  background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+                  boxShadow: "0 6px 16px rgba(59,130,246,.35)",
                 }}
               >
                 M
@@ -43,26 +45,26 @@ const Footer = () => {
 
               <a
                 href="#"
-                className="btn btn-outline-light btn-sm rounded-circle"
+                className="mf-footer-social"
                 aria-label="Facebook"
               >
-                f
+                <i className="bi bi-facebook"></i>
               </a>
 
               <a
                 href="#"
-                className="btn btn-outline-light btn-sm rounded-circle"
+                className="mf-footer-social"
                 aria-label="LinkedIn"
               >
-                in
+                <i className="bi bi-linkedin"></i>
               </a>
 
               <a
                 href="#"
-                className="btn btn-outline-light btn-sm rounded-circle"
+                className="mf-footer-social"
                 aria-label="Twitter"
               >
-                X
+                <i className="bi bi-twitter-x"></i>
               </a>
 
             </div>
@@ -213,18 +215,18 @@ const Footer = () => {
 
             <ul className="list-unstyled text-white-50">
 
-              <li className="mb-3">
-                <span className="me-2">✉</span>
+              <li className="mb-3 d-flex align-items-center gap-2">
+                <i className="bi bi-envelope"></i>
                 support@mediflow.com
               </li>
 
-              <li className="mb-3">
-                <span className="me-2">☎</span>
+              <li className="mb-3 d-flex align-items-center gap-2">
+                <i className="bi bi-telephone"></i>
                 +91 98765 43210
               </li>
 
-              <li>
-                <span className="me-2">📍</span>
+              <li className="d-flex align-items-center gap-2">
+                <i className="bi bi-geo-alt"></i>
                 Pune, Maharashtra, India
               </li>
 
@@ -237,7 +239,7 @@ const Footer = () => {
       </div>
 
       {/* Bottom Footer */}
-      <div className="border-top border-secondary">
+      <div className="mf-footer-bottom">
 
         <div className="container py-3">
 
@@ -264,6 +266,43 @@ const Footer = () => {
         </div>
 
       </div>
+
+      <style>
+        {`
+          .mf-footer {
+            background: linear-gradient(160deg, #172554 0%, #1e2a5e 32%, #14183a 68%, #0b0f24 100%);
+          }
+          .mf-footer h6 {
+            letter-spacing: .02em;
+          }
+          .mf-footer a.text-white-50:hover {
+            color: #fff !important;
+            text-decoration: underline;
+          }
+          .mf-footer-social {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: #dbeafe;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.14);
+            transition: background-color .16s ease, transform .16s ease, border-color .16s ease;
+          }
+          .mf-footer-social:hover {
+            color: #fff;
+            background: rgba(255,255,255,.14);
+            border-color: rgba(255,255,255,.3);
+            transform: translateY(-2px);
+          }
+          .mf-footer-bottom {
+            border-top: 1px solid rgba(148,163,184,.16);
+            background: rgba(0,0,0,.12);
+          }
+        `}
+      </style>
 
     </footer>
   );

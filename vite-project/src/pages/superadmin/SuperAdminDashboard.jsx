@@ -32,8 +32,8 @@ const SuperAdminDashboard = ()=>{
   if(!data) return <div className="container my-4">Loading...</div>
   return (
     <div className="container my-4">
-      <div className="d-flex align-items-center justify-content-between">
-        <div className="d-flex align-items-center">
+      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div className="d-flex align-items-center flex-wrap gap-2">
           <BackButton />
           <h3 className="mb-0">Super Admin Dashboard</h3>
         </div>
