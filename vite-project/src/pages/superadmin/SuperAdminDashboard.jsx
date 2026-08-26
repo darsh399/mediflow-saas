@@ -40,6 +40,7 @@ const SuperAdminDashboard = ()=>{
         <div>
           <Link to="/superadmin/companies" className="btn btn-sm btn-outline-primary me-2">Create Company</Link>
           <Link to="/superadmin/companies/list" className="btn btn-sm btn-outline-secondary me-2">View Companies</Link>
+          <Link to="/superadmin/demo-requests" className="btn btn-sm btn-outline-secondary me-2">Demo Requests{data.newDemoRequests > 0 ? ` (${data.newDemoRequests})` : ''}</Link>
           <button className="btn btn-sm btn-danger" onClick={async ()=>{ try{ await axios.post('/api/superadmin/logout'); dispatch(clearAuth()); navigate('/superadmin/login') }catch(e){ console.error(e); dispatch(clearAuth()); navigate('/superadmin/login') } }}>Logout</button>
         </div>
       </div>
@@ -54,6 +55,7 @@ const SuperAdminDashboard = ()=>{
           { label: 'Active Subscriptions', value: data.activeSubs, color: '#198754', icon: 'bi-credit-card' },
           { label: 'Trial Companies', value: data.trialSubs ?? 0, color: '#0dcaf0', icon: 'bi-stopwatch' },
           { label: 'New This Month', value: data.newCompaniesThisMonth ?? 0, color: '#6610f2', icon: 'bi-graph-up-arrow' },
+          { label: 'New Demo Requests', value: data.newDemoRequests ?? 0, color: '#d63384', icon: 'bi-megaphone' },
           { label: 'Monthly Revenue', value: Number(data.monthlyRevenue ?? 0).toLocaleString(), color: '#20c997', icon: 'bi-currency-rupee' },
           { label: 'Total Users', value: data.totalUsers, color: '#0d6efd', icon: 'bi-people' },
           { label: 'Employees', value: data.totalEmployees, color: '#6f42c1', icon: 'bi-person-badge' },
