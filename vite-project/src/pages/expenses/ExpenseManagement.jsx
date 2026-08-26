@@ -11,10 +11,23 @@ const CATEGORY_LABELS = {
   OTHER: "Other",
 };
 
+const monthKeyOf = (date) => {
+  if (!date) return null;
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+};
+
+const monthLabelOf = (key) => {
+  const [year, month] = key.split("-").map(Number);
+  return new Date(year, month - 1, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+};
+
 const ExpenseManagement = () => {
   const [expenses, setExpenses] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedMonth, setSelectedMonth] = useState("");
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
   const [exporting, setExporting] = useState(false);
@@ -52,10 +65,27 @@ const ExpenseManagement = () => {
   const getEmployeeName = (expense) => expense.employeeId?.name || "Unknown Employee";
   const getEmployeeEmail = (expense) => expense.employeeId?.email || "";
 
+  const monthOptions = useMemo(() => {
+    const byMonth = new Map();
+    expenses.forEach((expense) => {
+      const key = monthKeyOf(expense.expenseDate || expense.createdAt);
+      if (!key) return;
+      byMonth.set(key, (byMonth.get(key) || 0) + 1);
+    });
+    return Array.from(byMonth.entries())
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .map(([key, count]) => ({ key, count, label: monthLabelOf(key) }));
+  }, [expenses]);
+
+  const monthFilteredExpenses = useMemo(() => {
+    if (!selectedMonth) return expenses;
+    return expenses.filter((expense) => monthKeyOf(expense.expenseDate || expense.createdAt) === selectedMonth);
+  }, [expenses, selectedMonth]);
+
   const filteredExpenses = useMemo(() => {
     const searchValue = search.trim().toLowerCase();
 
-    return expenses.filter((expense) => {
+    return monthFilteredExpenses.filter((expense) => {
       const employeeName = getEmployeeName(expense).toLowerCase();
       const employeeEmail = getEmployeeEmail(expense).toLowerCase();
       const category = String(expense.category || "").toLowerCase();
@@ -73,7 +103,35 @@ const ExpenseManagement = () => {
 
       return matchesSearch && matchesStatus;
     });
-  }, [expenses, search, statusFilter]);
+  }, [monthFilteredExpenses, search, statusFilter]);
+
+  const employeeSummary = useMemo(() => {
+    const byEmployee = new Map();
+    monthFilteredExpenses.forEach((expense) => {
+      const id = expense.employeeId?._id || expense.employeeId || "unknown";
+      if (!byEmployee.has(id)) {
+        byEmployee.set(id, {
+          id,
+          name: getEmployeeName(expense),
+          email: getEmployeeEmail(expense),
+          count: 0,
+          total: 0,
+          approved: 0,
+          pending: 0,
+          rejected: 0,
+        });
+      }
+      const entry = byEmployee.get(id);
+      const amount = Number(expense.amount || 0);
+      const status = String(expense.status || "pending").toLowerCase();
+      entry.count += 1;
+      entry.total += amount;
+      if (status === "approved") entry.approved += amount;
+      else if (status === "rejected") entry.rejected += amount;
+      else entry.pending += amount;
+    });
+    return Array.from(byEmployee.values()).sort((a, b) => b.total - a.total);
+  }, [monthFilteredExpenses]);
 
   const review = async (id, action) => {
     try {
@@ -109,6 +167,7 @@ const ExpenseManagement = () => {
   const clearFilters = () => {
     setSearch("");
     setStatusFilter("all");
+    setSelectedMonth("");
   };
 
   const pending = expenses.filter((expense) => expense.status === "pending").length;
@@ -210,6 +269,80 @@ const ExpenseManagement = () => {
           </div>
         </div>
 
+        {/* MONTH SELECTOR */}
+        {monthOptions.length > 0 && (
+          <div className="card border-0 shadow-sm rounded-4 mb-4">
+            <div className="card-body p-4">
+              <label className="form-label fw-semibold mb-2">Filter by Month</label>
+              <div className="d-flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className={`btn btn-sm rounded-pill px-3 ${selectedMonth === "" ? "btn-primary" : "btn-outline-secondary"}`}
+                  onClick={() => setSelectedMonth("")}
+                >
+                  All Time
+                </button>
+                {monthOptions.map((month) => (
+                  <button
+                    key={month.key}
+                    type="button"
+                    className={`btn btn-sm rounded-pill px-3 ${selectedMonth === month.key ? "btn-primary" : "btn-outline-secondary"}`}
+                    onClick={() => setSelectedMonth(month.key)}
+                  >
+                    {month.label} <span className="opacity-75">({month.count})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* EXPENSE BY EMPLOYEE */}
+        {employeeSummary.length > 0 && (
+          <div className="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+            <div className="card-header bg-white border-0 p-4">
+              <h5 className="fw-bold mb-1">
+                Expense Totals by Employee
+                {selectedMonth && <span className="text-primary"> — {monthLabelOf(selectedMonth)}</span>}
+              </h5>
+              <p className="text-muted small mb-0">
+                {selectedMonth
+                  ? `Breakdown of claimed amounts per employee for ${monthLabelOf(selectedMonth)}.`
+                  : "Breakdown of claimed amounts per employee, across all claims. Pick a month above to narrow it down."}
+              </p>
+            </div>
+            <div className="table-responsive">
+              <table className="table align-middle mb-0">
+                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                  <tr>
+                    <th className="px-4 py-3 border-0">Employee</th>
+                    <th className="py-3 border-0">Claims</th>
+                    <th className="py-3 border-0">Approved</th>
+                    <th className="py-3 border-0">Pending</th>
+                    <th className="py-3 border-0">Rejected</th>
+                    <th className="py-3 border-0 pe-4">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employeeSummary.map((entry) => (
+                    <tr key={entry.id}>
+                      <td className="px-4 py-3">
+                        <div className="fw-bold">{entry.name}</div>
+                        <small className="text-muted">{entry.email}</small>
+                      </td>
+                      <td className="py-3">{entry.count}</td>
+                      <td className="py-3 text-success fw-semibold">{formatAmount(entry.approved)}</td>
+                      <td className="py-3 text-warning fw-semibold">{formatAmount(entry.pending)}</td>
+                      <td className="py-3 text-danger fw-semibold">{formatAmount(entry.rejected)}</td>
+                      <td className="py-3 pe-4 fw-bold">{formatAmount(entry.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* FILTERS */}
         <div className="card border-0 shadow-sm rounded-4 mb-4">
           <div className="card-body p-4">
@@ -258,7 +391,10 @@ const ExpenseManagement = () => {
             <div className="d-flex justify-content-between align-items-center">
               <div>
                 <h5 className="fw-bold mb-1">Expense Claims</h5>
-                <p className="text-muted small mb-0">Showing {filteredExpenses.length} of {expenses.length} claims</p>
+                <p className="text-muted small mb-0">
+                  Showing {filteredExpenses.length} of {monthFilteredExpenses.length} claims
+                  {selectedMonth ? ` for ${monthLabelOf(selectedMonth)}` : ""}
+                </p>
               </div>
               <div className="d-flex align-items-center gap-2">
                 <button type="button" className="btn btn-outline-secondary btn-sm rounded-3" disabled={exporting} onClick={exportCsv}>
