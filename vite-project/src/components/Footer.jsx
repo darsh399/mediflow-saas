@@ -43,26 +43,29 @@ const Footer = () => {
 
               <a
                 href="#"
-                className="btn btn-outline-light btn-sm rounded-circle"
+                className="btn btn-outline-light btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                style={{ width: "36px", height: "36px" }}
                 aria-label="Facebook"
               >
-                f
+                <i className="bi bi-facebook"></i>
               </a>
 
               <a
                 href="#"
-                className="btn btn-outline-light btn-sm rounded-circle"
+                className="btn btn-outline-light btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                style={{ width: "36px", height: "36px" }}
                 aria-label="LinkedIn"
               >
-                in
+                <i className="bi bi-linkedin"></i>
               </a>
 
               <a
                 href="#"
-                className="btn btn-outline-light btn-sm rounded-circle"
+                className="btn btn-outline-light btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                style={{ width: "36px", height: "36px" }}
                 aria-label="Twitter"
               >
-                X
+                <i className="bi bi-twitter-x"></i>
               </a>
 
             </div>
@@ -213,18 +216,18 @@ const Footer = () => {
 
             <ul className="list-unstyled text-white-50">
 
-              <li className="mb-3">
-                <span className="me-2">✉</span>
+              <li className="mb-3 d-flex align-items-center gap-2">
+                <i className="bi bi-envelope"></i>
                 support@mediflow.com
               </li>
 
-              <li className="mb-3">
-                <span className="me-2">☎</span>
+              <li className="mb-3 d-flex align-items-center gap-2">
+                <i className="bi bi-telephone"></i>
                 +91 98765 43210
               </li>
 
-              <li>
-                <span className="me-2">📍</span>
+              <li className="d-flex align-items-center gap-2">
+                <i className="bi bi-geo-alt"></i>
                 Pune, Maharashtra, India
               </li>
 

@@ -1,4 +1,152 @@
-:root { --mf-radius: 14px; --mf-page-gap: clamp(1rem, 2.5vw, 1.5rem); }
+/* ==========================================================================
+   Design tokens
+   Layered on top of Bootstrap 5.3 (imported before this file), so overriding
+   Bootstrap's own CSS custom properties here re-themes every `btn`, `card`,
+   `badge`, `alert`, `table`, `form-control`, `dropdown-menu`, etc. across the
+   whole app without touching a single page's markup or className.
+   ========================================================================== */
+:root {
+  /* --- Brand & semantic colors --- */
+  --mf-color-primary: #2563eb;
+  --mf-color-primary-hover: #1d4ed8;
+  --mf-color-primary-subtle: #dbeafe;
+  --mf-color-primary-emphasis: #1e40af;
+  --mf-color-accent: #6366f1; /* indigo — pairs with primary for gradients, matches sidebar */
+  --mf-color-accent-hover: #4f46e5;
+
+  --mf-color-success: #16a34a;
+  --mf-color-success-subtle: #dcfce7;
+  --mf-color-success-emphasis: #14532d;
+
+  --mf-color-warning: #d97706;
+  --mf-color-warning-subtle: #fef3c7;
+  --mf-color-warning-emphasis: #78350f;
+
+  --mf-color-danger: #dc2626;
+  --mf-color-danger-subtle: #fee2e2;
+  --mf-color-danger-emphasis: #7f1d1d;
+
+  --mf-color-info: #0891b2;
+  --mf-color-info-subtle: #cffafe;
+  --mf-color-info-emphasis: #164e63;
+
+  /* --- Neutrals (slate) --- */
+  --mf-slate-50: #f8fafc;
+  --mf-slate-100: #f1f5f9;
+  --mf-slate-200: #e2e8f0;
+  --mf-slate-300: #cbd5e1;
+  --mf-slate-400: #94a3b8;
+  --mf-slate-500: #64748b;
+  --mf-slate-600: #475569;
+  --mf-slate-700: #334155;
+  --mf-slate-800: #1e293b;
+  --mf-slate-900: #0f172a;
+
+  --mf-bg: var(--mf-slate-50);
+  --mf-surface: #ffffff;
+  --mf-border: var(--mf-slate-200);
+  --mf-text: var(--mf-slate-800);
+  --mf-text-muted: var(--mf-slate-500);
+
+  /* --- Dedicated dark-sidebar palette (separate from the light-surface tokens above) --- */
+  --mf-sidebar-bg-start: #172554;
+  --mf-sidebar-bg-end: #111827;
+  --mf-sidebar-text: #cbd5e1;
+  --mf-sidebar-text-muted: #94a3b8;
+  --mf-sidebar-active-start: var(--mf-color-primary);
+  --mf-sidebar-active-end: var(--mf-color-accent);
+  --mf-sidebar-hover-bg: rgba(255,255,255,.09);
+
+  /* --- Typography scale (sizes/weights only — no new font family/webfont) --- */
+  --mf-text-page-title: 700 clamp(1.3rem, 2vw, 1.5rem) / 1.25 inherit;
+  --mf-text-section-title: 700 1.0625rem / 1.3 inherit;
+  --mf-text-card-title: 600 0.9375rem / 1.35 inherit;
+  --mf-text-label: 600 0.8125rem / 1.3 inherit;
+  --mf-text-helper: 400 0.8125rem / 1.4 inherit;
+
+  /* --- Spacing scale --- */
+  --mf-space-xs: 0.5rem;
+  --mf-space-sm: 0.75rem;
+  --mf-space-md: 1rem;
+  --mf-space-lg: 1.5rem;
+  --mf-space-xl: 2rem;
+
+  /* --- Radius scale --- */
+  --mf-radius-sm: 8px;
+  --mf-radius: 14px;
+  --mf-radius-lg: 18px;
+  --mf-radius-pill: 999px;
+
+  /* --- Shadow scale (subtle, layered) --- */
+  --mf-shadow-sm: 0 1px 2px rgba(15,23,42,.06), 0 1px 1px rgba(15,23,42,.04);
+  --mf-shadow-md: 0 6px 16px rgba(15,23,42,.08), 0 2px 6px rgba(15,23,42,.04);
+  --mf-shadow-lg: 0 16px 40px rgba(15,23,42,.14), 0 4px 10px rgba(15,23,42,.05);
+
+  --mf-page-gap: clamp(1rem, 2.5vw, 1.5rem);
+
+  /* --- Retint Bootstrap's own variables so existing bs-* classes inherit the new system --- */
+  --bs-body-bg: var(--mf-bg);
+  --bs-body-color: var(--mf-text);
+  --bs-border-color: var(--mf-border);
+  --bs-tertiary-bg: var(--mf-slate-100);
+  --bs-secondary-color: var(--mf-text-muted);
+
+  --bs-primary: var(--mf-color-primary);
+  --bs-primary-rgb: 37, 99, 235;
+  --bs-primary-text-emphasis: var(--mf-color-primary-emphasis);
+  --bs-primary-bg-subtle: var(--mf-color-primary-subtle);
+  --bs-primary-border-subtle: #bfdbfe;
+  --bs-link-color: var(--mf-color-primary);
+  --bs-link-color-rgb: 37, 99, 235;
+  --bs-link-hover-color: var(--mf-color-primary-hover);
+  --bs-link-hover-color-rgb: 29, 78, 216;
+
+  --bs-secondary: var(--mf-slate-500);
+  --bs-secondary-rgb: 100, 116, 139;
+  --bs-secondary-text-emphasis: var(--mf-slate-700);
+  --bs-secondary-bg-subtle: var(--mf-slate-100);
+  --bs-secondary-border-subtle: var(--mf-slate-200);
+
+  --bs-success: var(--mf-color-success);
+  --bs-success-rgb: 22, 163, 74;
+  --bs-success-text-emphasis: var(--mf-color-success-emphasis);
+  --bs-success-bg-subtle: var(--mf-color-success-subtle);
+  --bs-success-border-subtle: #bbf7d0;
+
+  --bs-warning: var(--mf-color-warning);
+  --bs-warning-rgb: 217, 119, 6;
+  --bs-warning-text-emphasis: var(--mf-color-warning-emphasis);
+  --bs-warning-bg-subtle: var(--mf-color-warning-subtle);
+  --bs-warning-border-subtle: #fde68a;
+
+  --bs-danger: var(--mf-color-danger);
+  --bs-danger-rgb: 220, 38, 38;
+  --bs-danger-text-emphasis: var(--mf-color-danger-emphasis);
+  --bs-danger-bg-subtle: var(--mf-color-danger-subtle);
+  --bs-danger-border-subtle: #fecaca;
+
+  --bs-info: var(--mf-color-info);
+  --bs-info-rgb: 8, 145, 178;
+  --bs-info-text-emphasis: var(--mf-color-info-emphasis);
+  --bs-info-bg-subtle: var(--mf-color-info-subtle);
+  --bs-info-border-subtle: #a5f3fc;
+
+  --bs-light: var(--mf-slate-50);
+  --bs-light-rgb: 248, 250, 252;
+  --bs-dark: var(--mf-slate-800);
+  --bs-dark-rgb: 30, 41, 59;
+
+  --bs-border-radius: var(--mf-radius-sm);
+  --bs-border-radius-sm: 6px;
+  --bs-border-radius-lg: var(--mf-radius);
+  --bs-border-radius-xl: var(--mf-radius-lg);
+  --bs-border-radius-2xl: var(--mf-radius-lg);
+  --bs-border-radius-pill: var(--mf-radius-pill);
+
+  --bs-box-shadow: var(--mf-shadow-md);
+  --bs-box-shadow-sm: var(--mf-shadow-sm);
+  --bs-box-shadow-lg: var(--mf-shadow-lg);
+}
 
 * { min-width: 0; }
 html, body, #root, .App { min-height: 100%; }
@@ -23,8 +171,8 @@ body.mf-drawer-open { overflow: hidden; }
 .modal-body { overflow-y: auto; }
 .text-break, td, th { overflow-wrap: anywhere; }
 
-.app-shell { min-height: calc(100vh - 68px); background: #f8f9fc; }
-.app-sidebar { position: fixed; top: 68px; bottom: 0; left: 0; width: 260px; overflow-y: auto; padding: 20px 14px; color: #dbeafe; background: linear-gradient(180deg,#172554,#111827); z-index: 1040; scrollbar-width: thin; scrollbar-color: rgba(148,163,184,.35) transparent; }
+.app-shell { min-height: calc(100vh - 68px); background: var(--mf-bg); }
+.app-sidebar { position: fixed; top: 68px; bottom: 0; left: 0; width: 260px; overflow-y: auto; padding: 20px 14px; color: var(--mf-sidebar-text); background: linear-gradient(180deg,var(--mf-sidebar-bg-start),var(--mf-sidebar-bg-end)); z-index: 1040; scrollbar-width: thin; scrollbar-color: rgba(148,163,184,.35) transparent; }
 .app-sidebar::-webkit-scrollbar { width: 6px; }
 .app-sidebar::-webkit-scrollbar-track { background: transparent; }
 .app-sidebar::-webkit-scrollbar-thumb { background: rgba(148,163,184,.35); border-radius: 999px; }
@@ -33,12 +181,12 @@ body.mf-drawer-open { overflow: hidden; }
 .sidebar-backdrop { display: none; }
 .sidebar-close { display: none; }
 .sidebar-brand { display:flex; align-items:center; gap:10px; padding:0 10px 22px; color:#fff; font-size:16px; }
-.sidebar-brand small { display:block; color:#94a3b8; font-size:11px; font-weight:500; }
-.brand-icon { width:36px; height:36px; border-radius:10px; display:grid; place-items:center; background:linear-gradient(135deg,#3b82f6,#8b5cf6); font-weight:800; }
-.sidebar-label { margin:20px 10px 7px; color:#94a3b8; font-size:10px; font-weight:700; letter-spacing:.09em; }
-.sidebar-link { position:relative; width:100%; display:flex; align-items:center; gap:11px; padding:10px 12px; margin:2px 0; border:0; border-radius:9px; color:#cbd5e1; background:transparent; text-decoration:none; font-size:14px; font-weight:500; text-align:left; transition:.18s ease; }
-.sidebar-link:hover { color:#fff; background:rgba(255,255,255,.09); }
-.sidebar-link.active { color:#fff; font-weight:600; background:linear-gradient(90deg,rgba(37,99,235,.94),rgba(79,70,229,.8)); box-shadow:inset 3px 0 0 #93c5fd, 0 5px 14px rgba(37,99,235,.28); }
+.sidebar-brand small { display:block; color: var(--mf-sidebar-text-muted); font-size:11px; font-weight:500; }
+.brand-icon { width:36px; height:36px; border-radius: var(--mf-radius-sm); display:grid; place-items:center; background:linear-gradient(135deg,var(--mf-color-primary),var(--mf-color-accent)); font-weight:800; }
+.sidebar-label { margin:20px 10px 7px; color: var(--mf-sidebar-text-muted); font-size:10px; font-weight:700; letter-spacing:.09em; }
+.sidebar-link { position:relative; width:100%; display:flex; align-items:center; gap:11px; padding:10px 12px; margin:2px 0; border:0; border-radius: var(--mf-radius-sm); color: var(--mf-sidebar-text); background:transparent; text-decoration:none; font-size:14px; font-weight:500; text-align:left; transition:.18s ease; }
+.sidebar-link:hover { color:#fff; background: var(--mf-sidebar-hover-bg); }
+.sidebar-link.active { color:#fff; font-weight:600; background:linear-gradient(90deg,var(--mf-sidebar-active-start),var(--mf-sidebar-active-end)); box-shadow:inset 3px 0 0 rgba(255,255,255,.55), 0 5px 14px rgba(37,99,235,.28); }
 .sidebar-link.active i { color:#fff; }
 .sidebar-link i { font-size:16px; width:18px; text-align:center; color:#93a3c2; transition:color .18s ease; }
 .folder-button { cursor:pointer; }
@@ -46,6 +194,34 @@ body.mf-drawer-open { overflow: hidden; }
 .folder-button[aria-expanded="true"]:not(.active) i { color:#93c5fd; }
 .sidebar-submenu { margin:2px 0 6px 13px; padding-left:10px; border-left:1px solid rgba(148,163,184,.35); }
 .sidebar-submenu .sidebar-link { font-size:13px; padding:8px 10px; }
+
+/* ==========================================================================
+   Shared presentational primitives (StatCard, Badge, EmptyState, PageHeader)
+   Purely visual — these classes have no JS behavior attached.
+   ========================================================================== */
+.mf-page-header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap: var(--mf-space-md); margin-bottom: var(--mf-space-lg); }
+.mf-page-header__eyebrow { color: var(--mf-color-primary); font-weight:600; font-size:.8125rem; letter-spacing:.02em; text-transform:uppercase; }
+.mf-page-header__title { font-weight:700; margin:.15rem 0 .25rem; font-size: clamp(1.3rem, 2vw, 1.5rem); color: var(--mf-text); }
+.mf-page-header__description { color: var(--mf-text-muted); margin:0; }
+.mf-page-header__actions { display:flex; flex-wrap:wrap; gap:.5rem; }
+
+.mf-stat-card { background: var(--mf-surface); border:1px solid var(--mf-border); border-radius: var(--mf-radius); box-shadow: var(--mf-shadow-sm); padding: var(--mf-space-lg); height:100%; transition: box-shadow .18s ease, transform .18s ease; }
+.mf-stat-card:hover { box-shadow: var(--mf-shadow-md); transform: translateY(-1px); }
+.mf-stat-card__label { color: var(--mf-text-muted); font-size:.8125rem; font-weight:600; margin-bottom:.4rem; }
+.mf-stat-card__value { font-weight:700; font-size:1.6rem; color: var(--mf-text); line-height:1.2; }
+.mf-stat-card__icon { width:44px; height:44px; border-radius: var(--mf-radius-sm); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+.mf-stat-card__error { color: var(--mf-color-danger); font-size:.8125rem; }
+
+.mf-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.35rem .7rem; border-radius: var(--mf-radius-pill); font-size:.75rem; font-weight:600; line-height:1; white-space:nowrap; }
+
+.mf-empty-state { text-align:center; padding: var(--mf-space-xl) var(--mf-space-lg); }
+.mf-empty-state__icon { width:72px; height:72px; margin:0 auto var(--mf-space-md); border-radius:50%; background: var(--mf-color-primary-subtle); color: var(--mf-color-primary); display:flex; align-items:center; justify-content:center; font-size:1.75rem; }
+.mf-empty-state__title { font-weight:700; margin-bottom:.35rem; color: var(--mf-text); }
+.mf-empty-state__description { color: var(--mf-text-muted); max-width:420px; margin:0 auto var(--mf-space-md); }
+
+body.dark-mode .mf-stat-card { background:#1f2937; border-color:#374151; }
+body.dark-mode .mf-stat-card__value, body.dark-mode .mf-page-header__title, body.dark-mode .mf-empty-state__title { color:#e5e7eb; }
+body.dark-mode .mf-empty-state__icon { background: rgba(37,99,235,.18); }
 
 @media (max-width: 991.98px) {
   .app-sidebar { top: 0; width: min(290px, calc(100vw - 48px)); padding-top: 18px; transform: translateX(-105%); transition: transform .2s ease; box-shadow: 16px 0 40px rgba(15,23,42,.28); }
