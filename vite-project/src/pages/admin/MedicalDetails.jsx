@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import medicalApi from "../../api/medicalApi";
 import { useDispatch, useSelector } from "react-redux";
-import { doctorVisit } from "../../redux/slices/visitSlice";
+import { medicalVisit } from "../../redux/slices/visitSlice";
 
 const MedicalDetails = () => {
   const { id } = useParams();
@@ -102,7 +102,7 @@ const MedicalDetails = () => {
         notes,
       };
 
-      await dispatch(doctorVisit(payload)).unwrap();
+      await dispatch(medicalVisit(payload)).unwrap();
 
       alert("Visit recorded successfully");
       setNotes("");
