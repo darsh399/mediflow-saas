@@ -697,7 +697,7 @@ const AddDoctor = () => {
           }
 
           .form-control:focus {
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
           }
 
           .btn {

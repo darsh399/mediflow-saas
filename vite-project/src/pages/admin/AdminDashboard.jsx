@@ -16,6 +16,7 @@ import doctorApi from '../../api/doctorApi'
 import medicalApi from '../../api/medicalApi'
 import visitApi from '../../api/visitApi'
 import leaveApi from '../../api/leaveApi'
+import { PageHeader, StatCard } from '../../components/ui'
 
 ChartJS.register(
   CategoryScale,
@@ -129,58 +130,58 @@ const AdminDashboard = () => {
     {
       title: 'Users',
       value: counts.users,
-      icon: '👥'
+      icon: 'bi-people',
+      iconBg: 'var(--mf-color-primary-subtle)',
+      iconColor: 'var(--mf-color-primary)'
     },
     {
       title: 'Doctors',
       value: counts.doctors,
-      icon: '👨‍⚕️'
+      icon: 'bi-heart-pulse',
+      iconBg: 'var(--mf-color-danger-subtle)',
+      iconColor: 'var(--mf-color-danger)'
     },
     {
       title: 'Medicals',
       value: counts.medicals,
-      icon: '🏥'
+      icon: 'bi-hospital',
+      iconBg: 'var(--mf-color-info-subtle)',
+      iconColor: 'var(--mf-color-info)'
     },
     {
       title: 'Visits',
       value: counts.visits,
-      icon: '📍'
+      icon: 'bi-geo-alt',
+      iconBg: 'var(--mf-color-success-subtle)',
+      iconColor: 'var(--mf-color-success)'
     },
     {
       title: 'Leaves',
       value: counts.leaves,
-      icon: '📅'
+      icon: 'bi-calendar3',
+      iconBg: 'var(--mf-color-warning-subtle)',
+      iconColor: 'var(--mf-color-warning)'
     }
   ]
 
   return (
     <div className="container-fluid py-4">
 
-      <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-
-        <div>
-          <span className="text-primary fw-semibold small">
-            ADMINISTRATION
-          </span>
-
-          <h2 className="fw-bold mb-1 mt-1">
-            Admin Dashboard
-          </h2>
-
-          <p className="text-muted mb-0">
-            Monitor your organization's activities and resources.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="btn btn-outline-secondary"
-          onClick={() => navigate(-1)}
-        >
-          ← Back
-        </button>
-
-      </div>
+      <PageHeader
+        eyebrow="Administration"
+        title="Admin Dashboard"
+        description="Monitor your organization's activities and resources."
+        actions={
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={() => navigate(-1)}
+          >
+            <i className="bi bi-arrow-left me-1"></i>
+            Back
+          </button>
+        }
+      />
 
       {loading && (
         <div className="alert alert-info">
@@ -195,39 +196,14 @@ const AdminDashboard = () => {
             className="col-xl col-lg-4 col-md-6"
             key={card.title}
           >
-            <div className="card border-0 shadow-sm h-100">
-
-              <div className="card-body p-4">
-
-                <div className="d-flex justify-content-between align-items-start">
-
-                  <div>
-                    <p className="text-muted small mb-2">
-                      {card.title}
-                    </p>
-
-                    <h3 className="fw-bold mb-0">
-                      {errors[card.title.toLowerCase()] ? '—' : card.value}
-                    </h3>
-                    {errors[card.title.toLowerCase()] && <small className="text-danger">{errors[card.title.toLowerCase()]}</small>}
-                  </div>
-
-                  <div
-                    className="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: '45px',
-                      height: '45px',
-                      fontSize: '20px'
-                    }}
-                  >
-                    {card.icon}
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
+            <StatCard
+              label={card.title}
+              value={card.value}
+              error={errors[card.title.toLowerCase()]}
+              icon={card.icon}
+              iconBg={card.iconBg}
+              iconColor={card.iconColor}
+            />
           </div>
         ))}
 
