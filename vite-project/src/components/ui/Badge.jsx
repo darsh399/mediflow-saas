@@ -8,6 +8,7 @@ const STATUS_COLOR = {
   success: "success",
   paid: "success",
   verified: "success",
+  present: "success",
 
   pending: "warning",
   scheduled: "warning",
@@ -15,6 +16,8 @@ const STATUS_COLOR = {
   correction_requested: "warning",
   trial: "warning",
   draft: "warning",
+  late: "warning",
+  half_day: "warning",
 
   rejected: "danger",
   cancelled: "danger",
@@ -25,8 +28,11 @@ const STATUS_COLOR = {
   suspended: "danger",
   expired: "danger",
   overdue: "danger",
+  absent: "danger",
 
   info: "info",
+  holiday: "info",
+  weekly_off: "secondary",
 };
 
 const Badge = ({ status, children, className = "" }) => {
