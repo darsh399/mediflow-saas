@@ -7,6 +7,14 @@ const visitSchema = new mongoose.Schema({
   medicalId: { type: mongoose.Schema.Types.ObjectId, ref: 'Medical' },
   purpose: { type: String },
   notes: { type: String },
+  // What the rep discussed with the doctor during the visit.
+  discussion: { type: String, trim: true, maxlength: 2000 },
+  // The doctor's overall reaction.
+  doctorResponse: {
+    type: String,
+    enum: ['POSITIVE', 'NEGATIVE', 'NEUTRAL', 'INTERESTED', 'NOT_INTERESTED', 'FOLLOW_UP_REQUIRED'],
+  },
+  doctorResponseNotes: { type: String, trim: true, maxlength: 1000 },
   visitLatitude: { type: Number },
   visitLongitude: { type: Number },
   registeredLatitude: { type: Number },

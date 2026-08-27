@@ -199,9 +199,12 @@ const AdminLayout = () => {
           <NavLink className={navClass} to="/attendance" onClick={closeSidebar}><i className="bi bi-clock-history"></i> Attendance</NavLink>
           <NavLink className={navClass} to="/calendar" onClick={closeSidebar}><i className="bi bi-calendar3"></i> Calendar</NavLink>
           <NavLink className={navClass} to="/organization" onClick={closeSidebar}><i className="bi bi-diagram-3"></i> Org Chart</NavLink>
+          <NavLink className={navClass} to="/tours" onClick={closeSidebar}><i className="bi bi-signpost-split"></i> Tour Plans</NavLink>
           <NavLink className={navClass} to="/tasks" onClick={closeSidebar}><i className="bi bi-check2-square"></i> Tasks</NavLink>
           {canManageCompany && <NavLink className={navClass} to="/projects" onClick={closeSidebar}><i className="bi bi-kanban"></i> Projects</NavLink>}
           <NavLink className={navClass} to="/orders" onClick={closeSidebar}><i className="bi bi-bag"></i> Orders</NavLink>
+          <NavLink className={navClass} to="/sales" onClick={closeSidebar}><i className="bi bi-graph-up-arrow"></i> Sales Target</NavLink>
+          <NavLink className={navClass} to="/reports/visits" onClick={closeSidebar}><i className="bi bi-clipboard-data"></i> Visit Report</NavLink>
           <NavLink className={navClass} to="/notifications" onClick={closeSidebar}><i className="bi bi-bell"></i> Notifications</NavLink>
           {canSendCompanyMessages && <NavLink className={navClass} to="/messages/send" onClick={closeSidebar}><i className="bi bi-send"></i> Send Message</NavLink>}
 
