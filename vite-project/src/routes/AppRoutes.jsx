@@ -73,6 +73,10 @@ import AddProduct from "../pages/products/AddProduct";
 import EditProduct from "../pages/products/EditProduct";
 import ProductDetails from "../pages/products/ProductDetails";
 import AuditLog from "../pages/audit/AuditLog";
+import ApprovalsInbox from "../pages/approvals/ApprovalsInbox";
+import OrgChart from "../pages/organization/OrgChart";
+import Territories from "../pages/territories/Territories";
+import TerritoryDetail from "../pages/territories/TerritoryDetail";
 import Billing from "../pages/billing/Billing";
 import NotFound from "../pages/NotFound";
 import Attendance from "../pages/attendance/Attendance";
@@ -472,6 +476,112 @@ const AppRoutes = () => {
                     <Route path="messages" element={<AdminLayout />}>
                         <Route path="send" element={<SendMessage />} />
                     </Route>
+                </Route>
+
+
+                {/* ================= TERRITORIES ================= */}
+
+                <Route
+                    element={
+                        <ProtectedRoute
+                            rolesAllowed={[
+                                "admin",
+                                "company_owner",
+                                "hr_manager",
+                                "hr",
+                                "manager",
+                                "project_manager"
+                            ]}
+                        />
+                    }
+                >
+
+                    <Route
+                        path="territories"
+                        element={<AdminLayout />}
+                    >
+
+                        <Route
+                            index
+                            element={<Territories />}
+                        />
+
+                        <Route
+                            path=":id"
+                            element={<TerritoryDetail />}
+                        />
+
+                    </Route>
+
+                </Route>
+
+
+                {/* ================= ORGANIZATION CHART ================= */}
+
+                {/* The reporting chart is company-wide context every member can
+                    see — same visibility as the calendar. */}
+                <Route
+                    element={
+                        <ProtectedRoute
+                            rolesAllowed={[
+                                "admin",
+                                "company_owner",
+                                "hr_manager",
+                                "hr",
+                                "manager",
+                                "project_manager",
+                                "employee",
+                                "mr",
+                                "user"
+                            ]}
+                        />
+                    }
+                >
+
+                    <Route
+                        path="organization"
+                        element={<AdminLayout />}
+                    >
+
+                        <Route
+                            index
+                            element={<OrgChart />}
+                        />
+
+                    </Route>
+
+                </Route>
+
+
+                {/* ================= APPROVALS INBOX ================= */}
+
+                <Route
+                    element={
+                        <ProtectedRoute
+                            rolesAllowed={[
+                                "admin",
+                                "company_owner",
+                                "hr_manager",
+                                "hr",
+                                "manager",
+                                "project_manager"
+                            ]}
+                        />
+                    }
+                >
+
+                    <Route
+                        path="approvals"
+                        element={<AdminLayout />}
+                    >
+
+                        <Route
+                            index
+                            element={<ApprovalsInbox />}
+                        />
+
+                    </Route>
+
                 </Route>
 
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getDashboardRoute } from "../utils/dashboardRoute";
+import { useApprovals } from "../hooks/useApprovals";
 
 // Leave "Review Requests" (approve/reject) is reserved for hr_manager,
 // company_owner and admin — normal hr does not get this link.
@@ -20,10 +21,9 @@ const EMPLOYEE_VIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr", "ma
 // Expense claim review (view-all + approve/reject) is reserved for
 // company_owner/hr_manager/admin — not hr, matching leave review.
 const EXPENSE_APPROVER_ROLES = ["admin", "company_owner", "hr_manager"];
-// Everyone with company context can view the product catalog; only
-// company_owner/hr_manager/admin can add/edit/delete products.
+// Everyone with company context can view the product catalog; adding
+// products is gated in-page by the Products list itself.
 const PRODUCT_VIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager", "employee", "mr"];
-const PRODUCT_MANAGER_ROLES = ["admin", "company_owner", "hr_manager"];
 // Matches the audit.view permission (company_owner/hr_manager/admin only).
 const AUDIT_VIEWER_ROLES = ["admin", "company_owner", "hr_manager"];
 // Matches the subscription.view permission (company_owner/admin only).
@@ -36,6 +36,7 @@ const TOP_PERFORMER_ROLES = ["admin", "company_owner", "hr_manager"];
 const AdminLayout = () => {
   const role = useSelector((state) => state.auth.user?.role);
   const location = useLocation();
+  const { total: approvalsCount, active: hasApprovals } = useApprovals();
   const canManageCompany = COMPANY_ROLES.includes(role);
   const canViewEmployees = EMPLOYEE_VIEWER_ROLES.includes(role);
   const canSendCompanyMessages = MESSAGE_SENDER_ROLES.includes(role);
@@ -46,13 +47,12 @@ const AdminLayout = () => {
   const canViewSalary = canManageSalary || role === "employee";
   const canReviewExpenses = EXPENSE_APPROVER_ROLES.includes(role);
   const canViewProducts = PRODUCT_VIEWER_ROLES.includes(role);
-  const canManageProducts = PRODUCT_MANAGER_ROLES.includes(role);
   const canViewAuditLog = AUDIT_VIEWER_ROLES.includes(role);
   const canViewBilling = BILLING_VIEWER_ROLES.includes(role);
   const canViewTopPerformers = TOP_PERFORMER_ROLES.includes(role);
   const isPayrollPath = (pathname) => pathname.startsWith("/salary") || pathname.startsWith("/offers");
   const isMrToolsPath = (pathname) => pathname.startsWith("/doctors") || pathname.startsWith("/medicals") || pathname.startsWith("/mr/") || pathname.startsWith("/employee/visits") || pathname.startsWith("/users");
-  const isCompanyPath = (pathname) => pathname.startsWith("/users") || pathname.startsWith("/doctors") || pathname.startsWith("/medicals") || pathname.startsWith("/admin/visits") || pathname.startsWith("/admin/top-performers");
+  const isCompanyPath = (pathname) => pathname.startsWith("/users") || pathname.startsWith("/doctors") || pathname.startsWith("/medicals") || pathname.startsWith("/admin/visits") || pathname.startsWith("/admin/top-performers") || pathname.startsWith("/territories");
   const isInsightsPath = (pathname) => pathname.startsWith("/audit-log") || pathname.startsWith("/billing");
 
   const [leavesOpen, setLeavesOpen] = useState(location.pathname.startsWith("/leaves"));
@@ -112,6 +112,20 @@ const AdminLayout = () => {
     return () => document.body.classList.remove("mf-drawer-open");
   }, [sidebarOpen]);
 
+  // Keep the mobile drawer in sync with browser back/forward navigation —
+  // without this, using the back button while the drawer is open leaves it
+  // open over the new page.
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return undefined;
+    const handleEscape = (event) => { if (event.key === "Escape") setSidebarOpen(false); };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [sidebarOpen]);
+
   const navClass = ({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`;
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -126,6 +140,7 @@ const AdminLayout = () => {
           <NavLink className={navClass} to="/profile" onClick={closeSidebar}><i className="bi bi-person"></i> My Profile</NavLink>
           <NavLink className={navClass} to="/employee/onboarding" onClick={closeSidebar}><i className="bi bi-clipboard2-check"></i> Complete Profile</NavLink>
           {canViewOnboarding && <NavLink className={navClass} to="/employee/profiles" onClick={closeSidebar}><i className="bi bi-people-fill"></i> Onboarding Review</NavLink>}
+          {hasApprovals && <NavLink className={navClass} to="/approvals" onClick={closeSidebar}><i className="bi bi-inbox"></i> Approvals{approvalsCount > 0 && <span className="badge rounded-pill bg-danger ms-auto">{approvalsCount > 99 ? "99+" : approvalsCount}</span>}</NavLink>}
 
           <p className="sidebar-label">LEAVE MANAGEMENT</p>
           <button type="button" className={`sidebar-link folder-button ${location.pathname.startsWith("/leaves") ? "active" : ""}`} onClick={() => setLeavesOpen((open) => !open)} aria-expanded={leavesOpen}>
@@ -152,7 +167,6 @@ const AdminLayout = () => {
             </button>
             {productsOpen && <div className="sidebar-submenu">
               <NavLink className={navClass} to="/products" end onClick={closeSidebar}><i className="bi bi-grid"></i> All Products</NavLink>
-              {canManageProducts && <NavLink className={navClass} to="/products/add" onClick={closeSidebar}><i className="bi bi-plus-circle"></i> Add Product</NavLink>}
             </div>}
           </>}
 
@@ -175,17 +189,16 @@ const AdminLayout = () => {
             {mrToolsOpen && <div className="sidebar-submenu">
               <NavLink className={navClass} to="/users" onClick={closeSidebar}><i className="bi bi-people"></i> Employees</NavLink>
               <NavLink className={navClass} to="/doctors" onClick={closeSidebar}><i className="bi bi-heart-pulse"></i> Doctors</NavLink>
-              <NavLink className={navClass} to="/doctors/add" onClick={closeSidebar}><i className="bi bi-person-plus"></i> Add Doctor</NavLink>
               <NavLink className={navClass} to="/mr/add-visit" onClick={closeSidebar}><i className="bi bi-geo-alt"></i> Add Visit</NavLink>
               <NavLink className={navClass} to="/employee/visits" onClick={closeSidebar}><i className="bi bi-map"></i> My Visits</NavLink>
               <NavLink className={navClass} to="/medicals" onClick={closeSidebar}><i className="bi bi-hospital"></i> Medicals</NavLink>
-              <NavLink className={navClass} to="/medicals/add" onClick={closeSidebar}><i className="bi bi-plus-square"></i> Add Medical</NavLink>
             </div>}
           </>}
 
           <p className="sidebar-label">WORK</p>
           <NavLink className={navClass} to="/attendance" onClick={closeSidebar}><i className="bi bi-clock-history"></i> Attendance</NavLink>
           <NavLink className={navClass} to="/calendar" onClick={closeSidebar}><i className="bi bi-calendar3"></i> Calendar</NavLink>
+          <NavLink className={navClass} to="/organization" onClick={closeSidebar}><i className="bi bi-diagram-3"></i> Org Chart</NavLink>
           <NavLink className={navClass} to="/tasks" onClick={closeSidebar}><i className="bi bi-check2-square"></i> Tasks</NavLink>
           {canManageCompany && <NavLink className={navClass} to="/projects" onClick={closeSidebar}><i className="bi bi-kanban"></i> Projects</NavLink>}
           <NavLink className={navClass} to="/orders" onClick={closeSidebar}><i className="bi bi-bag"></i> Orders</NavLink>
@@ -201,6 +214,7 @@ const AdminLayout = () => {
               {canManageCompany && <>
                 <NavLink className={navClass} to="/doctors" onClick={closeSidebar}><i className="bi bi-heart-pulse"></i> Doctors</NavLink>
                 <NavLink className={navClass} to="/medicals" onClick={closeSidebar}><i className="bi bi-hospital"></i> Medicals</NavLink>
+                <NavLink className={navClass} to="/territories" onClick={closeSidebar}><i className="bi bi-geo"></i> Territories</NavLink>
                 <NavLink className={navClass} to="/admin/visits" onClick={closeSidebar}><i className="bi bi-clipboard-data"></i> MR Visit Records</NavLink>
               </>}
               {canViewTopPerformers && <NavLink className={navClass} to="/admin/top-performers" onClick={closeSidebar}><i className="bi bi-trophy"></i> Top Performers</NavLink>}
