@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useState, useEffect, useRef } from "react";
 
 import NotificationBell from "./NotificationBell";
+import GlobalSearch from "./GlobalSearch";
 import { logout, clearAuth } from "../redux/slices/authSlice";
 import employeeProfileApi from "../api/employeeProfileApi";
 
@@ -332,6 +333,8 @@ const Header = () => {
 
               {signedIn ? (
                 <>
+                  <GlobalSearch />
+
                   <NotificationBell />
 
                   <span className="mf-role-badge">
