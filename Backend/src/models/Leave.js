@@ -22,6 +22,7 @@ const leaveSchema = new mongoose.Schema({
   reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   reviewedAt: Date,
   numberOfDays: { type: Number, min: 0 },
+  calendarDays: { type: Number, min: 0 },
   reviewNote: { type: String, trim: true, maxlength: 1000 }
 }, { timestamps: true });
 

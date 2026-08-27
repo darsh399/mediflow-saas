@@ -54,4 +54,43 @@ export function formatDateInput(date) {
   return toDateKey(date)
 }
 
+const WEEKDAY_KEYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
+const DEFAULT_WORKING_DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']
+
+// Expand company holidays (single day or date range) into a Set of date keys.
+export function holidayKeySet(holidays = []) {
+  const keys = new Set()
+  for (const holiday of holidays) {
+    if (!holiday?.date) continue
+    const start = fromDateKey(String(holiday.date).slice(0, 10))
+    const end = holiday.endDate ? fromDateKey(String(holiday.endDate).slice(0, 10)) : new Date(start)
+    for (let cursor = new Date(start); cursor <= end; cursor = addDays(cursor, 1)) keys.add(toDateKey(cursor))
+  }
+  return keys
+}
+
+// Mirror of the backend Backend/src/utils/workingDays.js — the days in
+// [start, end] that fall on a working weekday and are not a company holiday.
+// `holidays` should be the COMPANY-type list; weeklyWorkingDays is the company
+// setting (falls back to Mon-Fri).
+export function workingDaysBetween(start, end, weeklyWorkingDays, holidays = []) {
+  if (!start || !end) return 0
+  const from = start instanceof Date ? start : fromDateKey(String(start).slice(0, 10))
+  const to = end instanceof Date ? end : fromDateKey(String(end).slice(0, 10))
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || to < from) return 0
+  const working = new Set(
+    (weeklyWorkingDays && weeklyWorkingDays.length ? weeklyWorkingDays : DEFAULT_WORKING_DAYS).map((day) =>
+      String(day).toUpperCase()
+    )
+  )
+  const offDays = holidayKeySet(holidays)
+  let count = 0
+  for (let cursor = new Date(from); cursor <= to; cursor = addDays(cursor, 1)) {
+    if (!working.has(WEEKDAY_KEYS[cursor.getDay()])) continue
+    if (offDays.has(toDateKey(cursor))) continue
+    count += 1
+  }
+  return count
+}
+
 export { DAY_MS }

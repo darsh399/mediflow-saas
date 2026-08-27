@@ -1,11 +1,14 @@
 import Leave from '../models/Leave.js';
 import User from '../models/User.js';
+import Company from '../models/Company.js';
+import Holiday from '../models/Holiday.js';
 import LeaveBalance from '../models/LeaveBalance.js';
 import LeaveActionHistory from '../models/LeaveActionHistory.js';
 import Notification from '../models/Notification.js';
 import leaveService from '../services/leaveService.js';
 import recordAudit from '../utils/audit.js';
 import { hasAnyRole } from '../utils/authorize.js';
+import { countWorkingDays, calendarDaySpan } from '../utils/workingDays.js';
 import { sendCsv } from '../utils/csv.js';
 
 // Who can see every leave request in the company. Leave review is reserved for
@@ -38,13 +41,27 @@ export const applyLeave = async (req, res) => {
     const policy = await leaveService.getPolicy(companyId);
     const leavePolicy = policy.leaveTypes.find(type => type.code === String(leaveType).toUpperCase() && type.enabled);
     if (!leavePolicy) return res.status(400).json({ message: 'Leave type is not available for this company' });
-    const days = Math.floor((new Date(end).setHours(0, 0, 0, 0) - new Date(start).setHours(0, 0, 0, 0)) / 86400000) + 1;
+    // Charge leave only for the days the employee would actually have worked —
+    // skip weekly off days and COMPANY holidays that fall inside the range.
+    const [company, companyHolidays] = await Promise.all([
+      Company.findById(companyId).select('weeklyWorkingDays').lean(),
+      Holiday.find({
+        companyId,
+        active: true,
+        type: 'COMPANY',
+        date: { $lte: end },
+        $or: [{ endDate: { $gte: start } }, { endDate: null, date: { $gte: start } }],
+      }).select('date endDate').lean(),
+    ]);
+    const calendarDays = calendarDaySpan(start, end);
+    const days = countWorkingDays(start, end, company?.weeklyWorkingDays, companyHolidays);
+    if (days < 1) return res.status(400).json({ message: 'The selected dates fall entirely on weekly offs or company holidays' });
     const now = new Date();
     const minimumDate = new Date(now);
     minimumDate.setHours(0, 0, 0, 0);
     minimumDate.setDate(minimumDate.getDate() + leavePolicy.minimumNoticeDays);
     if (start < minimumDate) return res.status(400).json({ message: `This leave requires ${leavePolicy.minimumNoticeDays} day(s) notice` });
-    if (leavePolicy.maximumConsecutiveDays && days > leavePolicy.maximumConsecutiveDays) return res.status(400).json({ message: `Maximum consecutive days allowed is ${leavePolicy.maximumConsecutiveDays}` });
+    if (leavePolicy.maximumConsecutiveDays && calendarDays > leavePolicy.maximumConsecutiveDays) return res.status(400).json({ message: `Maximum consecutive days allowed is ${leavePolicy.maximumConsecutiveDays}` });
     const employee = await User.findOne({ _id: userId, companyId }).select('employeeStatus role name');
     if (employee?.employeeStatus === 'PROBATION' && !leavePolicy.allowDuringProbation) return res.status(400).json({ message: 'This leave type is not available during probation' });
     if (leavePolicy.documentRequired && !req.file) return res.status(400).json({ message: 'A supporting document is required for this leave type' });
@@ -61,6 +78,7 @@ export const applyLeave = async (req, res) => {
       type: leaveType.toLowerCase() === 'sick' ? 'sick' : leaveType.toLowerCase() === 'unpaid' ? 'unpaid' : leaveType === 'OTHER' ? 'other' : 'annual',
       startDate: fromDate, endDate: toDate,
       numberOfDays: days,
+      calendarDays,
     };
     if (req.file) data.document = {
       filename: req.file.filename,

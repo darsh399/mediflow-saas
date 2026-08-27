@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import leaveApi from "../../api/leaveApi";
+import calendarApi from "../../api/calendarApi";
+import { workingDaysBetween } from "../../utils/calendarDates";
 
 const ApplyLeave = () => {
   const [form, setForm] = useState({
@@ -15,6 +17,8 @@ const ApplyLeave = () => {
   const [leaves, setLeaves] = useState([]);
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [balances, setBalances] = useState([]);
+  const [holidays, setHolidays] = useState([]);
+  const [workingWeek, setWorkingWeek] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -42,24 +46,37 @@ const ApplyLeave = () => {
     loadLeaves();
   }, []);
 
-  const calculateDays = () => {
-    if (!form.fromDate || !form.toDate) return 0;
+  useEffect(() => {
+    // The calendar module may be disabled for the company — fall back silently
+    // to a plain calendar-day count if these can't be loaded.
+    Promise.allSettled([calendarApi.listHolidays(), calendarApi.getSettings()]).then(
+      ([holidayResult, settingsResult]) => {
+        if (holidayResult.status === "fulfilled") setHolidays(holidayResult.value.holidays || []);
+        if (settingsResult.status === "fulfilled") setWorkingWeek(settingsResult.value.weeklyWorkingDays || []);
+      }
+    );
+  }, []);
 
+  const companyHolidays = holidays.filter((holiday) => holiday.type === "COMPANY");
+
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const upcomingHolidays = holidays
+    .filter((holiday) => String(holiday.endDate || holiday.date || "").slice(0, 10) >= todayKey)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+    .slice(0, 6);
+
+  const calendarSpan = (() => {
+    if (!form.fromDate || !form.toDate) return 0;
     const from = new Date(`${form.fromDate}T00:00:00`);
     const to = new Date(`${form.toDate}T00:00:00`);
-
     if (to < from) return 0;
+    return Math.floor((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  })();
 
-    const difference =
-      Math.floor(
-        (to.getTime() - from.getTime()) /
-          (1000 * 60 * 60 * 24)
-      ) + 1;
-
-    return difference;
-  };
-
-  const days = calculateDays();
+  const days = form.fromDate && form.toDate && calendarSpan > 0
+    ? workingDaysBetween(form.fromDate, form.toDate, workingWeek, companyHolidays)
+    : 0;
+  const excludedDays = calendarSpan > 0 ? calendarSpan - days : 0;
   const selectedPolicy = leaveTypes.find(type => type.code === form.leaveType);
 
   const submit = async (event) => {
@@ -80,6 +97,11 @@ const ApplyLeave = () => {
 
     if (!form.reason.trim()) {
       setError("Please provide a reason for leave.");
+      return;
+    }
+
+    if (calendarSpan > 0 && days < 1) {
+      setError("The selected dates fall entirely on weekly offs or company holidays.");
       return;
     }
 
@@ -392,14 +414,17 @@ const ApplyLeave = () => {
                       </div>
 
                       <div className="fw-bold">
-                        {days > 0
-                          ? `${days} ${
-                              days === 1
-                                ? "Day"
-                                : "Days"
-                            }`
+                        {calendarSpan > 0
+                          ? `${days} working ${days === 1 ? "day" : "days"}`
                           : "Select dates"}
                       </div>
+
+                      {excludedDays > 0 && (
+                        <div className="small text-muted">
+                          {excludedDays} {excludedDays === 1 ? "day" : "days"} not charged
+                          (weekly offs / company holidays) · {calendarSpan}-day span
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -469,6 +494,34 @@ const ApplyLeave = () => {
             <div className="row g-3">{balances.length ? balances.map(balance => <div className="col-sm-6 col-lg-4" key={balance._id}><div className="border rounded p-3"><div className="fw-semibold">{leaveTypes.find(type => type.code === balance.leaveTypeCode)?.name || balance.leaveTypeCode}</div><div className="small text-muted mt-2">Available: {balance.available} · Pending: {balance.pending} · Used: {balance.used}</div></div></div>) : <div className="col-12 text-muted">No leave balances configured.</div>}</div>
           </div>
         </div>
+
+        {upcomingHolidays.length > 0 && (
+          <div className="card border-0 shadow-sm rounded-4 mb-4">
+            <div className="card-body p-4">
+              <h5 className="fw-bold mb-1">Upcoming Company Holidays</h5>
+              <p className="text-muted small mb-3">These days are not deducted from your leave balance.</p>
+              <div className="row g-3">
+                {upcomingHolidays.map((holiday) => (
+                  <div className="col-sm-6 col-lg-4" key={holiday._id}>
+                    <div className="border rounded p-3 h-100">
+                      <div className="d-flex justify-content-between gap-2">
+                        <span className="fw-semibold">{holiday.name}</span>
+                        <span className={`badge rounded-pill ${holiday.type === "OPTIONAL" ? "text-bg-warning" : "text-bg-danger"}`}>
+                          {holiday.type === "OPTIONAL" ? "Optional" : "Company"}
+                        </span>
+                      </div>
+                      <div className="small text-muted mt-2">
+                        <i className="bi bi-calendar3 me-1"></i>
+                        {formatDate(holiday.date)}
+                        {holiday.endDate ? ` – ${formatDate(holiday.endDate)}` : ""}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* RECENT LEAVES */}
         <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
