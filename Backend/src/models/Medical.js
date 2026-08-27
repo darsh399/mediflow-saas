@@ -12,7 +12,10 @@ const medicalSchema = new mongoose.Schema({
   city: { type: String },
   latitude: { type: Number },
   longitude: { type: Number },
+  territoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Territory', default: null },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
+
+medicalSchema.index({ companyId: 1, territoryId: 1 });
 
 export default mongoose.model('Medical', medicalSchema);

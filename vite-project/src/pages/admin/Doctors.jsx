@@ -25,6 +25,7 @@ const Doctors = () => {
   const [cityFilter, setCityFilter] = useState('')
   const [stateFilter, setStateFilter] = useState('')
   const [districtFilter, setDistrictFilter] = useState('')
+  const [territoryFilter, setTerritoryFilter] = useState('')
   const [assignTarget, setAssignTarget] = useState(null)
 
   useEffect(() => {
@@ -40,18 +41,25 @@ const Doctors = () => {
   const cityOptions = useMemo(() => uniqueValues('city'), [items])
   const stateOptions = useMemo(() => uniqueValues('state'), [items])
   const districtOptions = useMemo(() => uniqueValues('district'), [items])
+  const territoryOptions = useMemo(
+    () => Array.from(new Map(items.filter(d => d.territoryId).map(d => [d.territoryId._id, d.territoryId.name])).entries()),
+    [items]
+  )
 
   const filteredDoctors = items.filter(d =>
     (d.name?.toLowerCase().includes(q.toLowerCase())) &&
     (!cityFilter || d.city === cityFilter) &&
     (!stateFilter || d.state === stateFilter) &&
-    (!districtFilter || d.district === districtFilter)
+    (!districtFilter || d.district === districtFilter) &&
+    (!territoryFilter
+      || (territoryFilter === '__none__' ? !d.territoryId : d.territoryId?._id === territoryFilter))
   )
 
   const clearLocationFilters = () => {
     setCityFilter('')
     setStateFilter('')
     setDistrictFilter('')
+    setTerritoryFilter('')
   }
 
   return (
@@ -123,28 +131,36 @@ const Doctors = () => {
           </div>
 
           <div className="row g-3 mb-4">
-            <div className="col-sm-4">
+            <div className="col-sm-3">
+              <label className="form-label small fw-semibold text-muted mb-1">Territory</label>
+              <select className="form-select form-select-sm" value={territoryFilter} onChange={e => setTerritoryFilter(e.target.value)}>
+                <option value="">All Territories</option>
+                <option value="__none__">Unassigned</option>
+                {territoryOptions.map(([tId, tName]) => <option key={tId} value={tId}>{tName}</option>)}
+              </select>
+            </div>
+            <div className="col-sm-3">
               <label className="form-label small fw-semibold text-muted mb-1">City</label>
               <select className="form-select form-select-sm" value={cityFilter} onChange={e => setCityFilter(e.target.value)}>
                 <option value="">All Cities</option>
                 {cityOptions.map(city => <option key={city} value={city}>{city}</option>)}
               </select>
             </div>
-            <div className="col-sm-4">
+            <div className="col-sm-3">
               <label className="form-label small fw-semibold text-muted mb-1">District</label>
               <select className="form-select form-select-sm" value={districtFilter} onChange={e => setDistrictFilter(e.target.value)}>
                 <option value="">All Districts</option>
                 {districtOptions.map(district => <option key={district} value={district}>{district}</option>)}
               </select>
             </div>
-            <div className="col-sm-4">
+            <div className="col-sm-3">
               <label className="form-label small fw-semibold text-muted mb-1">State</label>
               <select className="form-select form-select-sm" value={stateFilter} onChange={e => setStateFilter(e.target.value)}>
                 <option value="">All States</option>
                 {stateOptions.map(state => <option key={state} value={state}>{state}</option>)}
               </select>
             </div>
-            {(cityFilter || stateFilter || districtFilter) && (
+            {(cityFilter || stateFilter || districtFilter || territoryFilter) && (
               <div className="col-12">
                 <button type="button" className="btn btn-link btn-sm px-0" onClick={clearLocationFilters}>
                   <i className="bi bi-x-circle me-1"></i>Clear location filters
@@ -192,7 +208,7 @@ const Doctors = () => {
               action={
                 !q && (
                   <Link
-                    to="/admin/doctors/add"
+                    to="/doctors/add"
                     className="btn btn-primary rounded-3"
                   >
                     <i className="bi bi-plus-lg me-2"></i>
@@ -225,6 +241,10 @@ const Doctors = () => {
 
                     <th className="py-3 text-muted small text-uppercase">
                       Location
+                    </th>
+
+                    <th className="py-3 text-muted small text-uppercase">
+                      Territory
                     </th>
 
                     <th className="py-3 text-muted small text-uppercase">
@@ -311,6 +331,16 @@ const Doctors = () => {
                           </span>
                         ) : (
                           <span className="text-muted">N/A</span>
+                        )}
+                      </td>
+
+                      <td className="py-3">
+                        {doctor.territoryId ? (
+                          <span className="badge bg-primary bg-opacity-10 text-primary-emphasis rounded-pill px-3 py-2">
+                            {doctor.territoryId.name}
+                          </span>
+                        ) : (
+                          <span className="text-muted small">Unassigned</span>
                         )}
                       </td>
 

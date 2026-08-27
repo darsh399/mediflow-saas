@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchMedicals,
@@ -17,6 +17,12 @@ const Medicals = () => {
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [q, setQ] = useState("");
+  const [territoryFilter, setTerritoryFilter] = useState("");
+
+  const territoryOptions = useMemo(
+    () => Array.from(new Map(items.filter((m) => m.territoryId).map((m) => [m.territoryId._id, m.territoryId.name])).entries()),
+    [items]
+  );
 
   useEffect(() => {
     dispatch(fetchMedicals());
@@ -41,11 +47,18 @@ const Medicals = () => {
     const city = medical?.city?.toLowerCase() || "";
     const mobile = medical?.mobile?.toLowerCase() || "";
 
+    const matchesTerritory = !territoryFilter
+      ? true
+      : territoryFilter === "__none__"
+        ? !medical.territoryId
+        : medical.territoryId?._id === territoryFilter;
+
     return (
-      name.includes(searchValue) ||
-      contactPerson.includes(searchValue) ||
-      city.includes(searchValue) ||
-      mobile.includes(searchValue)
+      matchesTerritory &&
+      (name.includes(searchValue) ||
+        contactPerson.includes(searchValue) ||
+        city.includes(searchValue) ||
+        mobile.includes(searchValue))
     );
   });
 
@@ -93,7 +106,7 @@ const Medicals = () => {
 
         <Link
           className="btn btn-primary px-4 py-2 rounded-3 fw-semibold"
-          to="/admin/medicals/add"
+          to="/medicals/add"
         >
           <i className="bi bi-plus-lg me-2"></i>
           Add Medical
@@ -204,13 +217,29 @@ const Medicals = () => {
 
             </div>
 
-            <div className="search-bar-wrap">
+            <div className="search-bar-wrap d-flex flex-column flex-sm-row gap-2" style={{ minWidth: "320px" }}>
 
-              <SearchBar
-                value={q}
-                onChange={setQ}
-                placeholder="Search by name, contact, city or phone"
-              />
+              <select
+                className="form-select"
+                style={{ maxWidth: "200px" }}
+                value={territoryFilter}
+                onChange={(e) => setTerritoryFilter(e.target.value)}
+                aria-label="Filter by territory"
+              >
+                <option value="">All Territories</option>
+                <option value="__none__">Unassigned</option>
+                {territoryOptions.map(([tId, tName]) => (
+                  <option key={tId} value={tId}>{tName}</option>
+                ))}
+              </select>
+
+              <div className="flex-grow-1">
+                <SearchBar
+                  value={q}
+                  onChange={setQ}
+                  placeholder="Search by name, contact, city or phone"
+                />
+              </div>
 
             </div>
 
@@ -279,7 +308,7 @@ const Medicals = () => {
 
                 {!q && (
                   <Link
-                    to="/admin/medicals/add"
+                    to="/medicals/add"
                     className="btn btn-primary rounded-3"
                   >
                     <i className="bi bi-plus-lg me-2"></i>
@@ -323,6 +352,10 @@ const Medicals = () => {
 
                       <th className="py-3 text-muted small text-uppercase">
                         City
+                      </th>
+
+                      <th className="py-3 text-muted small text-uppercase">
+                        Territory
                       </th>
 
                       <th className="py-3 text-muted small text-uppercase">
@@ -413,6 +446,19 @@ const Medicals = () => {
                             <span className="text-muted">
                               N/A
                             </span>
+                          )}
+
+                        </td>
+
+                        {/* ================= TERRITORY ================= */}
+                        <td className="py-3">
+
+                          {medical?.territoryId ? (
+                            <span className="badge bg-primary bg-opacity-10 text-primary-emphasis rounded-pill px-3 py-2">
+                              {medical.territoryId.name}
+                            </span>
+                          ) : (
+                            <span className="text-muted small">Unassigned</span>
                           )}
 
                         </td>

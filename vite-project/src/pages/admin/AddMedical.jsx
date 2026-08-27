@@ -1,14 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { createMedical } from '../../redux/slices/medicalSlice'
 import { useNavigate } from 'react-router-dom'
+import territoryApi from '../../api/territoryApi'
 
 const AddMedical = ()=>{
-  const [form, setForm] = useState({ name: '', contactPerson: '', mobile: '', email: '', address: '', city: '', area: '', latitude: '', longitude: '' })
+  const [form, setForm] = useState({ name: '', contactPerson: '', mobile: '', email: '', address: '', city: '', area: '', latitude: '', longitude: '', territoryId: '' })
+  const [territories, setTerritories] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const dispatch = useDispatch()
   const nav = useNavigate()
+
+  useEffect(() => {
+    territoryApi.listTerritories()
+      .then((response) => setTerritories(response.territories || []))
+      .catch(() => setTerritories([]))
+  }, [])
 
   const handleChange = (e)=> setForm(f=> ({ ...f, [e.target.name]: e.target.value }))
 
@@ -149,6 +157,23 @@ const AddMedical = ()=>{
                       <i className="bi bi-geo-alt text-danger"></i>
                     </span>
                     <input name="address" value={form.address} onChange={handleChange} className="form-control border-start-0" placeholder="Street address" />
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label fw-semibold">Territory <span className="text-muted fw-normal">(optional)</span></label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-light border-end-0">
+                      <i className="bi bi-geo text-primary"></i>
+                    </span>
+                    <select name="territoryId" value={form.territoryId} onChange={handleChange} className="form-select border-start-0">
+                      <option value="">Unassigned</option>
+                      {territories.map((territory) => (
+                        <option value={territory._id} key={territory._id}>
+                          {territory.name}{territory.code ? ` (${territory.code})` : ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

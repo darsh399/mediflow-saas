@@ -14,10 +14,12 @@ const doctorSchema = new mongoose.Schema({
   email: { type: String },
   phone: { type: String },
   dateOfBirth: { type: Date },
+  territoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Territory', default: null },
   active: { type: Boolean, default: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
+doctorSchema.index({ companyId: 1, territoryId: 1 });
 doctorSchema.index({ companyId: 1, city: 1 });
 doctorSchema.index({ companyId: 1, state: 1 });
 doctorSchema.index({ companyId: 1, district: 1 });

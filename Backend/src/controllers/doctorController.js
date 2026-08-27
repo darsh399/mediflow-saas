@@ -10,7 +10,7 @@ function parseOptionalDate(value) {
 export const createDoctor = async (req, res) => {
   try {
     const companyId = req.user?.companyId;
-    const { name, clinicName, address, city, district, state, latitude, longitude, phone, specialty, email, dateOfBirth } = req.body;
+    const { name, clinicName, address, city, district, state, latitude, longitude, phone, specialty, email, dateOfBirth, territoryId } = req.body;
     if (!name || !clinicName) return res.status(400).json({ message: 'name and clinicName are required' });
     if (typeof latitude !== 'number' || typeof longitude !== 'number') return res.status(400).json({ message: 'latitude and longitude are required and must be numbers' });
 
@@ -21,6 +21,7 @@ export const createDoctor = async (req, res) => {
     const parsedDateOfBirth = parseOptionalDate(dateOfBirth);
     const data = { name: name.trim(), clinicName: clinicName.trim(), address: address?.trim(), city: city?.trim(), district: district?.trim(), state: state?.trim(), latitude, longitude, phone, specialty, email, companyId, createdBy: req.user?.id };
     if (parsedDateOfBirth) data.dateOfBirth = parsedDateOfBirth;
+    if (territoryId) data.territoryId = territoryId;
     const doc = new Doctor(data);
     await doc.save();
     return res.status(201).json({ message: 'Doctor created', doctor: doc });
@@ -39,7 +40,9 @@ export const listDoctors = async (req, res) => {
       const value = req.query?.[field];
       if (value) query[field] = new RegExp(`^${String(value).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
     }
-    const docs = await Doctor.find(query);
+    if (req.query?.unassigned === 'true') query.territoryId = null;
+    else if (req.query?.territoryId) query.territoryId = req.query.territoryId;
+    const docs = await Doctor.find(query).populate('territoryId', 'name code');
     return res.status(200).json({ doctors: docs });
   } catch (error) {
     console.error('List doctors error:', error);
@@ -51,7 +54,7 @@ export const getDoctor = async (req, res) => {
   try {
     const id = req.params.id;
     const companyId = req.user?.companyId;
-    const doc = await Doctor.findOne(companyId ? { _id: id, companyId } : { _id: id });
+    const doc = await Doctor.findOne(companyId ? { _id: id, companyId } : { _id: id }).populate('territoryId', 'name code');
     if (!doc) return res.status(404).json({ message: 'Doctor not found' });
     return res.status(200).json({ doctor: doc });
   } catch (error) {
@@ -67,6 +70,7 @@ export const updateDoctor = async (req, res) => {
     const allowedFields = ['name', 'clinicName', 'address', 'city', 'district', 'state', 'latitude', 'longitude', 'phone', 'specialty', 'email', 'active'];
     const update = Object.fromEntries(allowedFields.filter((field) => req.body?.[field] !== undefined).map((field) => [field, req.body[field]]));
     if (req.body?.dateOfBirth !== undefined) update.dateOfBirth = parseOptionalDate(req.body.dateOfBirth);
+    if (req.body?.territoryId !== undefined) update.territoryId = req.body.territoryId || null;
     const updated = await Doctor.findOneAndUpdate(companyId ? { _id: id, companyId } : { _id: id }, update, { new: true, runValidators: true });
     if (!updated) return res.status(404).json({ message: 'Doctor not found' });
     return res.status(200).json({ doctor: updated });
