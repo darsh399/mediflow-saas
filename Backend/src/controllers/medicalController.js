@@ -3,13 +3,14 @@ import Medical from '../models/Medical.js';
 export const createMedical = async (req, res) => {
   try {
     const companyId = req.user?.companyId;
-    const { name, contactPerson, mobile, email, licenseNumber, address, area, city, latitude, longitude } = req.body;
+    const { name, contactPerson, mobile, email, licenseNumber, address, area, city, latitude, longitude, territoryId } = req.body;
     if (!name) return res.status(400).json({ message: 'name is required' });
     if (typeof latitude !== 'number' || typeof longitude !== 'number') return res.status(400).json({ message: 'latitude and longitude are required and must be numbers' });
     // duplicate check
     const dup = await Medical.findOne({ companyId, name: name.trim(), address });
     if (dup) return res.status(409).json({ message: 'Medical/shop with same name/address already exists' });
     const med = new Medical({ name: name.trim(), contactPerson, mobile, email, licenseNumber, address, area, city, latitude, longitude, companyId, createdBy: req.user?.id });
+    if (territoryId) med.territoryId = territoryId;
     await med.save();
     return res.status(201).json({ message: 'Medical created', medical: med });
   } catch (error) {
@@ -22,7 +23,9 @@ export const listMedicals = async (req, res) => {
   try {
     const companyId = req.user?.companyId;
     const query = companyId ? { companyId } : {};
-    const meds = await Medical.find(query);
+    if (req.query?.unassigned === 'true') query.territoryId = null;
+    else if (req.query?.territoryId) query.territoryId = req.query.territoryId;
+    const meds = await Medical.find(query).populate('territoryId', 'name code');
     return res.status(200).json({ medicals: meds });
   } catch (error) {
     console.error('List medicals error:', error);
@@ -34,7 +37,7 @@ export const getMedical = async (req, res) => {
   try {
     const id = req.params.id;
     const companyId = req.user?.companyId;
-    const med = await Medical.findOne(companyId ? { _id: id, companyId } : { _id: id });
+    const med = await Medical.findOne(companyId ? { _id: id, companyId } : { _id: id }).populate('territoryId', 'name code');
     if (!med) return res.status(404).json({ message: 'Medical not found' });
     return res.status(200).json({ medical: med });
   } catch (error) {
@@ -50,6 +53,7 @@ export const updateMedical = async (req, res) => {
     const id = req.params.id;
     const companyId = req.user?.companyId;
     const update = Object.fromEntries(UPDATABLE_MEDICAL_FIELDS.filter((field) => req.body?.[field] !== undefined).map((field) => [field, req.body[field]]));
+    if (req.body?.territoryId !== undefined) update.territoryId = req.body.territoryId || null;
     const updated = await Medical.findOneAndUpdate(companyId ? { _id: id, companyId } : { _id: id }, update, { new: true, runValidators: true });
     if (!updated) return res.status(404).json({ message: 'Medical not found' });
     return res.status(200).json({ medical: updated });

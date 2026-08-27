@@ -8,6 +8,7 @@ import { clearAuth, setCredentials, validateSession } from './redux/slices/authS
 import './App.css';
 import GlobalLoader from './components/GlobalLoader';
 import ScrollToTop from './components/ScrollToTop';
+import ApprovalsProvider from './hooks/useApprovals';
 const App = () => {
   const dispatch = useDispatch()
   const token = useSelector(state => state.auth.token)
@@ -34,7 +35,9 @@ const App = () => {
     <div className="App">
       <ScrollToTop />
       <GlobalLoader />
-      <AppRoutes/>
+      <ApprovalsProvider>
+        <AppRoutes/>
+      </ApprovalsProvider>
     </div>
   )
 }

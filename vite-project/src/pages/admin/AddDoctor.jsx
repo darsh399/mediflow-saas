@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { createDoctor } from '../../redux/slices/doctorSlice'
 import { useNavigate } from 'react-router-dom'
+import territoryApi from '../../api/territoryApi'
 
 const AddDoctor = () => {
   const [form, setForm] = useState({
@@ -15,8 +16,16 @@ const AddDoctor = () => {
     longitude: '',
     phone: '',
     specialty: '',
-    dateOfBirth: ''
+    dateOfBirth: '',
+    territoryId: ''
   })
+  const [territories, setTerritories] = useState([])
+
+  useEffect(() => {
+    territoryApi.listTerritories()
+      .then((response) => setTerritories(response.territories || []))
+      .catch(() => setTerritories([]))
+  }, [])
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -403,6 +412,31 @@ const AddDoctor = () => {
 
                   </div>
 
+                </div>
+
+                <div className="mb-4 mt-4">
+                  <label className="form-label fw-semibold" htmlFor="doctor-territory">
+                    Territory <span className="text-muted fw-normal">(optional)</span>
+                  </label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-light border-end-0">
+                      <i className="bi bi-geo text-primary"></i>
+                    </span>
+                    <select
+                      id="doctor-territory"
+                      name="territoryId"
+                      value={form.territoryId}
+                      onChange={handleChange}
+                      className="form-select border-start-0"
+                    >
+                      <option value="">Unassigned</option>
+                      {territories.map((territory) => (
+                        <option value={territory._id} key={territory._id}>
+                          {territory.name}{territory.code ? ` (${territory.code})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="mb-4 mt-4">

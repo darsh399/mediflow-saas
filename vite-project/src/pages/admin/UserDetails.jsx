@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchUser, changeUserStatus, promoteEmployee } from '../../redux/slices/userSlice'
 import { fetchTopPerformers } from '../../redux/slices/visitSlice'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import userApi from '../../api/userApi'
 
 const PROMOTERS = ['admin', 'company_owner', 'hr_manager', 'hr']
 const TOP_PERFORMER_VIEWERS = ['admin', 'company_owner', 'hr_manager']
@@ -23,6 +24,10 @@ const UserDetails = () => {
   const [promoting, setPromoting] = useState(false)
   const [promoteError, setPromoteError] = useState('')
   const [performerRange, setPerformerRange] = useState('THIS_WEEK')
+  const [colleagues, setColleagues] = useState([])
+  const [managerId, setManagerId] = useState('')
+  const [savingManager, setSavingManager] = useState(false)
+  const [managerFeedback, setManagerFeedback] = useState('')
 
   useEffect(() => {
     if (id) {
@@ -37,6 +42,14 @@ const UserDetails = () => {
   }, [dispatch, id, canViewTopPerformer, performerRange])
 
   useEffect(() => {
+    if (canPromote) {
+      userApi.listUsers()
+        .then((response) => setColleagues((response.users || []).filter((user) => user.active !== false)))
+        .catch(() => setColleagues([]))
+    }
+  }, [canPromote])
+
+  useEffect(() => {
     if (current) {
       setPromoteForm({
         designation: current.profile?.jobDetails?.designation || '',
@@ -44,8 +57,33 @@ const UserDetails = () => {
         note: '',
         effectiveDate: '',
       })
+      setManagerId(current.reportingManagerId?._id || current.reportingManagerId || '')
+      setManagerFeedback('')
     }
   }, [current?._id])
+
+  const currentManagerName = current?.reportingManagerId?.name || null
+
+  const managerOptions = useMemo(
+    () => colleagues.filter((colleague) => String(colleague._id) !== String(current?._id)),
+    [colleagues, current?._id]
+  )
+
+  const savedManagerId = current?.reportingManagerId?._id || current?.reportingManagerId || ''
+
+  const handleSaveManager = async () => {
+    setSavingManager(true)
+    setManagerFeedback('')
+    try {
+      await userApi.updateUser(id, { reportingManagerId: managerId || '' })
+      setManagerFeedback('Reporting manager updated.')
+      dispatch(fetchUser(id))
+    } catch (saveError) {
+      setManagerFeedback(saveError?.response?.data?.message || 'Unable to update reporting manager.')
+    } finally {
+      setSavingManager(false)
+    }
+  }
 
   const handleStatus = (action) => {
     if (!window.confirm(`Perform ${action}?`)) return
@@ -558,6 +596,18 @@ const UserDetails = () => {
 
                 </div>
 
+                <div className="col-md-6">
+
+                  <label className="text-muted small">
+                    Reports To
+                  </label>
+
+                  <div className="fw-semibold mt-1">
+                    {currentManagerName || 'Not assigned'}
+                  </div>
+
+                </div>
+
               </div>
 
             </div>
@@ -716,6 +766,42 @@ const UserDetails = () => {
             </div>
 
           </div>
+
+          {/* Reporting Manager */}
+          {canPromote && (
+            <div className="card border-0 shadow-sm mb-4">
+              <div className="card-header bg-white border-0 pt-4 px-4">
+                <h5 className="fw-bold mb-1">Reporting Manager</h5>
+                <p className="text-muted small mb-0">Set who this employee reports to</p>
+              </div>
+              <div className="card-body px-4">
+                {managerFeedback && (
+                  <div className={`alert py-2 small ${managerFeedback.includes('updated') ? 'alert-success' : 'alert-danger'}`}>
+                    {managerFeedback}
+                  </div>
+                )}
+                <select
+                  className="form-select mb-3"
+                  value={managerId}
+                  onChange={(event) => setManagerId(event.target.value)}
+                >
+                  <option value="">No reporting manager</option>
+                  {managerOptions.map((option) => (
+                    <option value={option._id} key={option._id}>
+                      {option.name} — {String(option.role || '').replace(/_/g, ' ')}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className="btn btn-primary w-100"
+                  disabled={savingManager || String(managerId) === String(savedManagerId)}
+                  onClick={handleSaveManager}
+                >
+                  {savingManager ? 'Saving...' : 'Save Reporting Manager'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Promote Employee */}
           {canPromote && (
