@@ -189,6 +189,8 @@ const Header = () => {
         className="navbar navbar-expand-lg mf-navbar sticky-top"
         style={{
           zIndex: 1100,
+          borderBottom: "1px solid var(--mf-border)",
+          boxShadow: "var(--mf-shadow-sm)",
         }}
       >
         <div className="container py-1">
@@ -205,8 +207,7 @@ const Header = () => {
                 height: "42px",
                 borderRadius: "12px",
                 background:
-                  "linear-gradient(135deg, #3b82f6, #8b5cf6)",
-                boxShadow: "0 6px 16px rgba(59,130,246,.35)",
+                  "linear-gradient(135deg, var(--mf-color-primary), var(--mf-color-accent))",
                 fontSize: "20px",
               }}
             >
@@ -364,7 +365,7 @@ const Header = () => {
                             height: 42,
                             objectFit: "cover",
                             border:
-                              "2px solid #0d6efd",
+                              "2px solid var(--mf-color-primary)",
                           }}
                         />
                       ) : (
@@ -374,9 +375,9 @@ const Header = () => {
                             width: 42,
                             height: 42,
                             background:
-                              "linear-gradient(135deg, #0d6efd, #6610f2)",
+                              "linear-gradient(135deg, var(--mf-color-primary), var(--mf-color-accent))",
                             boxShadow:
-                              "0 4px 12px rgba(13,110,253,0.25)",
+                              "0 4px 12px rgba(37,99,235,0.25)",
                           }}
                         >
                           {initials}
@@ -400,7 +401,7 @@ const Header = () => {
                           className="rounded-4 p-3 mb-3 text-white"
                           style={{
                             background:
-                              "linear-gradient(135deg, #0d6efd, #6610f2)",
+                              "linear-gradient(135deg, var(--mf-color-primary), var(--mf-color-accent))",
                           }}
                         >
                           <div className="d-flex align-items-center gap-3">
@@ -590,14 +591,14 @@ const Header = () => {
           }
 
           .navbar .nav-link {
-            color: #495057;
+            color: var(--mf-text-muted);
             transition: all 0.2s ease;
-            border-radius: 8px;
+            border-radius: var(--mf-radius-sm);
           }
 
           .navbar .nav-link:hover {
-            color: #0d6efd;
-            background: #f3f7ff;
+            color: var(--mf-color-primary);
+            background: var(--mf-color-primary-subtle);
           }
 
           .navbar .btn {
@@ -611,17 +612,17 @@ const Header = () => {
           .dark-mode-toggle {
             width: 42px;
             height: 42px;
-            border: 1px solid #dee2e6;
-            background: #fff;
-            color: #495057;
+            border: 1px solid var(--mf-border);
+            background: var(--mf-surface);
+            color: var(--mf-text-muted);
             font-size: 18px;
             transition: all 0.2s ease;
           }
 
           .dark-mode-toggle:hover {
-            border-color: #0d6efd;
-            background: #f3f7ff;
-            color: #0d6efd;
+            border-color: var(--mf-color-primary);
+            background: var(--mf-color-primary-subtle);
+            color: var(--mf-color-primary);
           }
 
           body.dark-mode .dark-mode-toggle {

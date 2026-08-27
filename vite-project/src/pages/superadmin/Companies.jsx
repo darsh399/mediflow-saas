@@ -570,8 +570,8 @@ const Companies = () => {
           align-items: center;
           justify-content: center;
           border-radius: 16px;
-          background: rgba(13, 110, 253, 0.1);
-          color: #0d6efd;
+          background: rgba(37, 99, 235, 0.1);
+          color: var(--mf-color-primary);
           font-size: 24px;
         }
 
@@ -609,8 +609,8 @@ const Companies = () => {
         }
 
         .section-icon.primary {
-          color: #0d6efd;
-          background: rgba(13, 110, 253, 0.09);
+          color: var(--mf-color-primary);
+          background: rgba(37, 99, 235, 0.09);
         }
 
         .section-icon.success {
@@ -666,13 +666,13 @@ const Companies = () => {
         .modern-input .form-control:focus,
         .modern-input .form-select:focus {
           border-color: #86b7fe;
-          box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+          box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
         }
 
         .modern-input:focus-within .input-group-text {
           border-color: #86b7fe;
-          color: #0d6efd;
-          background: rgba(13, 110, 253, 0.04);
+          color: var(--mf-color-primary);
+          background: rgba(37, 99, 235, 0.04);
         }
 
         .summary-card {
@@ -686,8 +686,8 @@ const Companies = () => {
           align-items: center;
           justify-content: center;
           border-radius: 13px;
-          background: rgba(13, 110, 253, 0.09);
-          color: #0d6efd;
+          background: rgba(37, 99, 235, 0.09);
+          color: var(--mf-color-primary);
           font-size: 20px;
           margin-bottom: 18px;
         }
@@ -709,7 +709,7 @@ const Companies = () => {
           justify-content: center;
           border-radius: 10px;
           background: #f5f7fb;
-          color: #0d6efd;
+          color: var(--mf-color-primary);
         }
 
         .info-card {
@@ -723,8 +723,8 @@ const Companies = () => {
           align-items: center;
           justify-content: center;
           border-radius: 12px;
-          background: rgba(13, 110, 253, 0.08);
-          color: #0d6efd;
+          background: rgba(37, 99, 235, 0.08);
+          color: var(--mf-color-primary);
           margin-bottom: 14px;
           font-size: 19px;
         }

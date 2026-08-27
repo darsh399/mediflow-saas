@@ -27,7 +27,7 @@ const SendMessage = () => {
     finally { setSending(false); }
   };
   return <div className="container-fluid py-3"><div className="card border-0 shadow-sm rounded-4 overflow-hidden">
-    <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg,#0d6efd,#6610f2)" }}><h2 className="fw-bold mb-1">Send Company Message</h2><p className="mb-0 opacity-75">Reach employees in your company by email or in-app notification.</p></div>
+    <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg,var(--mf-color-primary),var(--mf-color-accent))" }}><h2 className="fw-bold mb-1">Send Company Message</h2><p className="mb-0 opacity-75">Reach employees in your company by email or in-app notification.</p></div>
     <form className="card-body p-4" onSubmit={send}>
       {status.error && <div className="alert alert-danger">{status.error}</div>}{status.success && <div className="alert alert-success">{status.success}</div>}
       <div className="mb-4"><label className="form-label fw-semibold">Send as</label><div className="d-flex gap-3"><label><input className="form-check-input me-2" type="radio" checked={channel === "notification"} onChange={() => setChannel("notification")} />Notification</label><label><input className="form-check-input me-2" type="radio" checked={channel === "email"} onChange={() => setChannel("email")} />Email</label></div></div>

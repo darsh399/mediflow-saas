@@ -86,7 +86,7 @@ export default function NotificationProvider({ children }) {
             border-radius: 14px;
             background: #fff;
             box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.08);
-            border-left: 4px solid var(--mf-toast-accent, #0d6efd);
+            border-left: 4px solid var(--mf-toast-accent, var(--mf-color-primary));
             overflow: hidden;
             pointer-events: auto;
             animation: mf-toast-in 0.28s cubic-bezier(0.21, 1.02, 0.73, 1) both;
@@ -94,7 +94,7 @@ export default function NotificationProvider({ children }) {
 
           .mf-toast-success { --mf-toast-accent: #198754; }
           .mf-toast-error { --mf-toast-accent: #dc3545; }
-          .mf-toast-info { --mf-toast-accent: #0d6efd; }
+          .mf-toast-info { --mf-toast-accent: var(--mf-color-primary); }
 
           .mf-toast-icon {
             flex-shrink: 0;
@@ -106,7 +106,7 @@ export default function NotificationProvider({ children }) {
             justify-content: center;
             font-size: 15px;
             color: #fff;
-            background: var(--mf-toast-accent, #0d6efd);
+            background: var(--mf-toast-accent, var(--mf-color-primary));
           }
 
           .mf-toast-body { min-width: 0; flex: 1; }
@@ -154,7 +154,7 @@ export default function NotificationProvider({ children }) {
             bottom: 0;
             height: 3px;
             width: 100%;
-            background: var(--mf-toast-accent, #0d6efd);
+            background: var(--mf-toast-accent, var(--mf-color-primary));
             opacity: 0.35;
             transform-origin: left;
             animation: mf-toast-shrink ${AUTO_DISMISS_MS}ms linear forwards;

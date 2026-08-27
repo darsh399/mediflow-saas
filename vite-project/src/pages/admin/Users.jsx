@@ -50,34 +50,34 @@ const Users = () => {
     switch (role) {
       case "company_owner":
         return {
-          background: "#e7f1ff",
-          color: "#0d6efd",
+          background: "var(--mf-color-primary-subtle)",
+          color: "var(--mf-color-primary)",
         };
       case "admin":
         return {
           background: "#f0e7ff",
-          color: "#6f42c1",
+          color: "var(--mf-color-accent)",
         };
       case "hr":
       case "hr_manager":
         return {
-          background: "#e7f8ef",
-          color: "#198754",
+          background: "var(--mf-color-success-subtle)",
+          color: "var(--mf-color-success)",
         };
       case "mr":
         return {
-          background: "#fff3e0",
-          color: "#fd7e14",
+          background: "var(--mf-color-warning-subtle)",
+          color: "var(--mf-color-warning)",
         };
       case "project_manager":
         return {
-          background: "#e8f7fa",
-          color: "#0dcaf0",
+          background: "var(--mf-color-info-subtle)",
+          color: "var(--mf-color-info)",
         };
       default:
         return {
-          background: "#f1f3f5",
-          color: "#6c757d",
+          background: "var(--mf-slate-100)",
+          color: "var(--mf-text-muted)",
         };
     }
   };
@@ -98,7 +98,7 @@ const Users = () => {
     <div
       className="container-fluid py-4"
       style={{
-        backgroundColor: "#f8f9fc",
+        backgroundColor: "var(--mf-bg)",
         minHeight: "100vh",
       }}
     >
@@ -109,7 +109,7 @@ const Users = () => {
             className="card-body p-4 p-lg-5 text-white"
             style={{
               background:
-                "linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)",
+                "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)",
             }}
           >
             <div className="row align-items-center">
@@ -320,7 +320,7 @@ const Users = () => {
                     width: "85px",
                     height: "85px",
                     background:
-                      "linear-gradient(135deg, #e7f1ff, #ede7ff)",
+                      "linear-gradient(135deg, var(--mf-color-primary-subtle), #ede7ff)",
                   }}
                 >
                   <i className="bi bi-people text-primary fs-1"></i>
@@ -363,8 +363,8 @@ const Users = () => {
                   <div
                     className="rounded-pill px-3 py-2"
                     style={{
-                      backgroundColor: "#f0f6ff",
-                      color: "#0d6efd",
+                      backgroundColor: "var(--mf-color-primary-subtle)",
+                      color: "var(--mf-color-primary)",
                     }}
                   >
                     <i className="bi bi-people me-2"></i>
@@ -384,7 +384,7 @@ const Users = () => {
 
                     <thead
                       style={{
-                        backgroundColor: "#f8f9fc",
+                        backgroundColor: "var(--mf-slate-50)",
                       }}
                     >
                       <tr>
@@ -427,8 +427,8 @@ const Users = () => {
                                     width: "45px",
                                     height: "45px",
                                     background:
-                                      "linear-gradient(135deg, #e7f1ff, #ede7ff)",
-                                    color: "#0d6efd",
+                                      "linear-gradient(135deg, var(--mf-color-primary-subtle), #ede7ff)",
+                                    color: "var(--mf-color-primary)",
                                   }}
                                 >
                                   {getInitials(u.name)}

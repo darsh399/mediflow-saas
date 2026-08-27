@@ -24,7 +24,7 @@ const CompanyList = ()=>{
   return (
     <div className="container-fluid py-4">
       <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div className="card-body p-4 p-lg-5 text-white" style={{ background: 'linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)' }}>
+        <div className="card-body p-4 p-lg-5 text-white" style={{ background: 'linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)' }}>
           <div className="d-flex flex-wrap align-items-center gap-3 mb-2">
             <BackButton />
             <span className="opacity-75 small">SUPER ADMIN</span>

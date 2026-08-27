@@ -1,37 +1,37 @@
 const About = () => {
   const features = [
     {
-      icon: '👥',
+      icon: 'bi-people',
       title: 'Employee Management',
       description:
         'Manage employee profiles, roles, account status, joining information, and organizational data from one centralized platform.'
     },
     {
-      icon: '🩺',
+      icon: 'bi-heart-pulse',
       title: 'Doctor & Medical Directory',
       description:
         'Maintain a structured directory of doctors and medical facilities with relevant contact and location information.'
     },
     {
-      icon: '📍',
+      icon: 'bi-geo-alt',
       title: 'Field Visit Tracking',
       description:
         'Record field visits with location verification to help teams maintain accurate and reliable visit records.'
     },
     {
-      icon: '📊',
+      icon: 'bi-bar-chart-line',
       title: 'Reports & Analytics',
       description:
         'Get better visibility into field activities, employee operations, visits, and organizational performance.'
     },
     {
-      icon: '🔐',
+      icon: 'bi-shield-lock',
       title: 'Role-Based Access',
       description:
         'Control access based on organizational roles and ensure users only access the information relevant to their responsibilities.'
     },
     {
-      icon: '📝',
+      icon: 'bi-clipboard-check',
       title: 'Audit & Activity Tracking',
       description:
         'Maintain visibility into important activities and operational changes for better accountability and transparency.'
@@ -203,14 +203,14 @@ const About = () => {
                 <div className="card h-100 border-0 shadow-sm">
                   <div className="card-body p-4">
                     <div
-                      className="bg-primary-subtle rounded d-flex align-items-center justify-content-center mb-3"
+                      className="bg-primary-subtle text-primary rounded d-flex align-items-center justify-content-center mb-3"
                       style={{
                         width: '52px',
                         height: '52px',
                         fontSize: '24px'
                       }}
                     >
-                      {feature.icon}
+                      <i className={`bi ${feature.icon}`}></i>
                     </div>
 
                     <h5 className="fw-bold">
@@ -248,7 +248,7 @@ const About = () => {
 
               <div className="mt-4">
                 <div className="d-flex gap-3 mb-3">
-                  <div className="text-primary fw-bold">✓</div>
+                  <div className="text-primary fw-bold"><i className="bi bi-check-circle-fill"></i></div>
 
                   <div>
                     <strong>Location verification</strong>
@@ -261,7 +261,7 @@ const About = () => {
                 </div>
 
                 <div className="d-flex gap-3 mb-3">
-                  <div className="text-primary fw-bold">✓</div>
+                  <div className="text-primary fw-bold"><i className="bi bi-check-circle-fill"></i></div>
 
                   <div>
                     <strong>Visit history</strong>
@@ -273,7 +273,7 @@ const About = () => {
                 </div>
 
                 <div className="d-flex gap-3">
-                  <div className="text-primary fw-bold">✓</div>
+                  <div className="text-primary fw-bold"><i className="bi bi-check-circle-fill"></i></div>
 
                   <div>
                     <strong>Company-level visibility</strong>
@@ -315,7 +315,7 @@ const About = () => {
                         fontSize: '30px'
                       }}
                     >
-                      📍
+                      <i className="bi bi-geo-alt text-primary"></i>
                     </div>
 
                     <h5 className="fw-bold">
@@ -357,7 +357,7 @@ const About = () => {
                 <div className="col-6">
                   <div className="card border-0 shadow-sm h-100">
                     <div className="card-body">
-                      <h5>🔐</h5>
+                      <h5 className="text-primary"><i className="bi bi-shield-lock"></i></h5>
 
                       <h6 className="fw-bold">
                         Role-Based Access
@@ -373,7 +373,7 @@ const About = () => {
                 <div className="col-6">
                   <div className="card border-0 shadow-sm h-100">
                     <div className="card-body">
-                      <h5>🏢</h5>
+                      <h5 className="text-primary"><i className="bi bi-building"></i></h5>
 
                       <h6 className="fw-bold">
                         Company Isolation
@@ -389,7 +389,7 @@ const About = () => {
                 <div className="col-6">
                   <div className="card border-0 shadow-sm h-100">
                     <div className="card-body">
-                      <h5>📋</h5>
+                      <h5 className="text-primary"><i className="bi bi-clipboard-check"></i></h5>
 
                       <h6 className="fw-bold">
                         Auditability
@@ -405,7 +405,7 @@ const About = () => {
                 <div className="col-6">
                   <div className="card border-0 shadow-sm h-100">
                     <div className="card-body">
-                      <h5>⚙️</h5>
+                      <h5 className="text-primary"><i className="bi bi-gear"></i></h5>
 
                       <h6 className="fw-bold">
                         Centralized Control
@@ -447,7 +447,7 @@ const About = () => {
                       className="d-flex gap-3 align-items-center border-bottom py-3"
                     >
                       <span className="text-primary fw-bold">
-                        ✓
+                        <i className="bi bi-check-circle-fill"></i>
                       </span>
 
                       <span>{audience}</span>

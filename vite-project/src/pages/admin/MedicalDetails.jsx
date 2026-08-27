@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import medicalApi from "../../api/medicalApi";
 import { useDispatch, useSelector } from "react-redux";
-import { doctorVisit } from "../../redux/slices/visitSlice";
+import { medicalVisit } from "../../redux/slices/visitSlice";
 
 const MedicalDetails = () => {
   const { id } = useParams();
@@ -102,7 +102,7 @@ const MedicalDetails = () => {
         notes,
       };
 
-      await dispatch(doctorVisit(payload)).unwrap();
+      await dispatch(medicalVisit(payload)).unwrap();
 
       alert("Visit recorded successfully");
       setNotes("");
@@ -218,7 +218,7 @@ const MedicalDetails = () => {
     <div
       className="container-fluid py-4"
       style={{
-        backgroundColor: "#f8f9fc",
+        backgroundColor: "var(--mf-slate-50)",
         minHeight: "100vh",
       }}
     >
@@ -287,8 +287,8 @@ const MedicalDetails = () => {
                     style={{
                       width: "38px",
                       height: "38px",
-                      backgroundColor: "#e7f1ff",
-                      color: "#0d6efd",
+                      backgroundColor: "var(--mf-color-primary-subtle)",
+                      color: "var(--mf-color-primary)",
                     }}
                   >
                     <i className="bi bi-person"></i>
@@ -312,8 +312,8 @@ const MedicalDetails = () => {
                       style={{
                         width: "38px",
                         height: "38px",
-                        backgroundColor: "#eafaf1",
-                        color: "#198754",
+                        backgroundColor: "var(--mf-color-success-subtle)",
+                        color: "var(--mf-color-success)",
                       }}
                     >
                       <i className="bi bi-telephone-fill"></i>
@@ -340,8 +340,8 @@ const MedicalDetails = () => {
                       style={{
                         width: "38px",
                         height: "38px",
-                        backgroundColor: "#fff4e5",
-                        color: "#fd7e14",
+                        backgroundColor: "var(--mf-color-warning-subtle)",
+                        color: "var(--mf-color-warning)",
                       }}
                     >
                       <i className="bi bi-envelope-fill"></i>
@@ -482,8 +482,8 @@ const MedicalDetails = () => {
                   <span
                     className="badge rounded-pill px-3 py-2"
                     style={{
-                      backgroundColor: "#eafaf1",
-                      color: "#198754",
+                      backgroundColor: "var(--mf-color-success-subtle)",
+                      color: "var(--mf-color-success)",
                     }}
                   >
                     <i className="bi bi-check-circle-fill me-1"></i>
@@ -648,7 +648,7 @@ const MedicalDetails = () => {
                       style={{
                         width: "45px",
                         height: "45px",
-                        backgroundColor: "#e7f1ff",
+                        backgroundColor: "var(--mf-color-primary-subtle)",
                       }}
                     >
                       <i className="bi bi-shop text-primary fs-5"></i>
@@ -677,7 +677,7 @@ const MedicalDetails = () => {
                       style={{
                         width: "45px",
                         height: "45px",
-                        backgroundColor: "#eafaf1",
+                        backgroundColor: "var(--mf-color-success-subtle)",
                       }}
                     >
                       <i className="bi bi-person-check text-success fs-5"></i>
@@ -707,7 +707,7 @@ const MedicalDetails = () => {
                       style={{
                         width: "45px",
                         height: "45px",
-                        backgroundColor: "#fff4e5",
+                        backgroundColor: "var(--mf-color-warning-subtle)",
                       }}
                     >
                       <i className="bi bi-geo-alt text-warning fs-5"></i>

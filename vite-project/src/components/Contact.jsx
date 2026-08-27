@@ -58,7 +58,7 @@ const Contact = () => {
         className="py-5 text-white"
         style={{
           background:
-            "linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)",
+            "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)",
         }}
       >
         <div className="container py-5">
@@ -255,7 +255,7 @@ const Contact = () => {
                     className="col-lg-5 p-4 p-md-5 text-white"
                     style={{
                       background:
-                        "linear-gradient(135deg, #0d6efd, #6610f2)",
+                        "linear-gradient(135deg, var(--mf-color-primary), var(--mf-color-accent))",
                     }}
                   >
                     <span className="badge bg-white text-primary rounded-pill px-3 py-2 mb-3">
@@ -488,8 +488,8 @@ const Contact = () => {
 
           .form-control:focus,
           .form-select:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+            border-color: var(--mf-color-primary);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
           }
 
           @media (max-width: 768px) {

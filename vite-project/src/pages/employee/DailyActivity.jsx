@@ -734,7 +734,7 @@ const DailyActivity = () => {
           height: 40px;
           border-radius: 10px;
           background: #eef4ff;
-          color: #0d6efd;
+          color: var(--mf-color-primary);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -867,7 +867,7 @@ const DailyActivity = () => {
           min-width: 38px;
           border-radius: 10px;
           background: #f1f4f9;
-          color: #0d6efd;
+          color: var(--mf-color-primary);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -879,7 +879,7 @@ const DailyActivity = () => {
           padding: 6px 10px;
           border-radius: 50px;
           background: #eef4ff;
-          color: #0d6efd;
+          color: var(--mf-color-primary);
           font-size: 12px;
           font-weight: 600;
           white-space: nowrap;
@@ -928,7 +928,7 @@ const DailyActivity = () => {
 
         .form-control:focus,
         .form-select:focus {
-          box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+          box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
         }
 
         @media (max-width: 767px) {

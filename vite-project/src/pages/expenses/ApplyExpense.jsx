@@ -120,7 +120,7 @@ const ApplyExpense = () => {
 
         {/* HEADER */}
         <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)" }}>
+          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}>
             <div className="row align-items-center">
               <div className="col-lg-8">
                 <div className="d-flex align-items-center gap-3 mb-3">
@@ -179,7 +179,7 @@ const ApplyExpense = () => {
         <div className="card border-0 shadow-sm rounded-4 mb-4">
           <div className="card-header bg-white border-0 p-4">
             <div className="d-flex align-items-center gap-3">
-              <div className="rounded-3 d-flex align-items-center justify-content-center" style={{ width: "45px", height: "45px", backgroundColor: "#e7f1ff", color: "#0d6efd" }}>
+              <div className="rounded-3 d-flex align-items-center justify-content-center" style={{ width: "45px", height: "45px", backgroundColor: "#e7f1ff", color: "var(--mf-color-primary)" }}>
                 <i className="bi bi-pencil-square fs-5"></i>
               </div>
               <div>

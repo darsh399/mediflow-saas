@@ -223,7 +223,7 @@ const PrivacyPolicy = () => {
         className="privacy-hero text-white"
         style={{
           background:
-            "linear-gradient(135deg, #0d6efd 0%, #6610f2 55%, #8e44ad 100%)",
+            "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 55%, #8e44ad 100%)",
         }}
       >
         <div className="container py-5">
@@ -606,10 +606,10 @@ const PrivacyPolicy = () => {
           .policy-intro {
             background: linear-gradient(
               135deg,
-              rgba(13,110,253,0.08),
-              rgba(102,16,242,0.06)
+              rgba(37,99,235,0.08),
+              rgba(99,102,241,0.06)
             );
-            border: 1px solid rgba(13,110,253,0.1);
+            border: 1px solid rgba(37,99,235,0.1);
           }
 
           .policy-card {
@@ -622,7 +622,7 @@ const PrivacyPolicy = () => {
 
           .policy-card:hover {
             transform: translateY(-5px);
-            border-color: rgba(13,110,253,0.25);
+            border-color: rgba(37,99,235,0.25);
             box-shadow: 0 15px 35px rgba(0,0,0,0.08);
           }
 
@@ -669,10 +669,10 @@ const PrivacyPolicy = () => {
             border-radius: 20px;
             background: linear-gradient(
               135deg,
-              rgba(13,110,253,0.07),
-              rgba(102,16,242,0.08)
+              rgba(37,99,235,0.07),
+              rgba(99,102,241,0.08)
             );
-            border: 1px solid rgba(13,110,253,0.12);
+            border: 1px solid rgba(37,99,235,0.12);
           }
 
           .contact-icon {
@@ -680,7 +680,7 @@ const PrivacyPolicy = () => {
             width: 55px;
             height: 55px;
             border-radius: 15px;
-            background: #0d6efd;
+            background: var(--mf-color-primary);
             color: white;
             display: flex;
             align-items: center;

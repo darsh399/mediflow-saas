@@ -38,8 +38,8 @@ const MODULE_OPTIONS = [
 const PLAN_COLORS = {
   TRIAL: '#0dcaf0',
   FREE: '#6c757d',
-  BASIC: '#0d6efd',
-  PROFESSIONAL: '#6610f2',
+  BASIC: 'var(--mf-color-primary)',
+  PROFESSIONAL: 'var(--mf-color-accent)',
   ENTERPRISE: '#d63384',
   '1_MONTH': '#fd7e14',
   '3_MONTHS': '#fd7e14',
@@ -320,7 +320,7 @@ const CompanyDetails = () => {
       <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
         <div
           className="card-body p-4 p-lg-5 text-white"
-          style={{ background: 'linear-gradient(135deg, #0d6efd 0%, #6610f2 100%)' }}
+          style={{ background: 'linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)' }}
         >
           <div className="d-flex flex-wrap align-items-center gap-3">
             <BackButton />
@@ -458,7 +458,7 @@ const CompanyDetails = () => {
 
         <div className="col-xl-4 col-md-6">
 
-          <div className="card border-0 shadow-sm h-100" style={{ borderLeft: '4px solid #0d6efd' }}>
+          <div className="card border-0 shadow-sm h-100" style={{ borderLeft: '4px solid var(--mf-color-primary)' }}>
 
             <div className="card-body p-4">
 
@@ -479,7 +479,7 @@ const CompanyDetails = () => {
                     height: '48px'
                   }}
                 >
-                  👥
+                  <i className="bi bi-people"></i>
                 </div>
 
               </div>
@@ -520,7 +520,7 @@ const CompanyDetails = () => {
 
         <div className="col-xl-4 col-md-12">
 
-          <div className="card border-0 shadow-sm h-100" style={{ borderLeft: `4px solid ${PLAN_COLORS[currentSubscription?.plan] || '#6610f2'}` }}>
+          <div className="card border-0 shadow-sm h-100" style={{ borderLeft: `4px solid ${PLAN_COLORS[currentSubscription?.plan] || 'var(--mf-color-accent)'}` }}>
 
             <div className="card-body p-4">
 
@@ -533,7 +533,7 @@ const CompanyDetails = () => {
                   {subscriptions.length}
                 </h2>
                 {currentSubscription && (
-                  <span className="badge rounded-pill px-3 py-2" style={{ backgroundColor: `${PLAN_COLORS[currentSubscription.plan] || '#6610f2'}22`, color: PLAN_COLORS[currentSubscription.plan] || '#6610f2' }}>
+                  <span className="badge rounded-pill px-3 py-2" style={{ backgroundColor: `${PLAN_COLORS[currentSubscription.plan] || 'var(--mf-color-accent)'}22`, color: PLAN_COLORS[currentSubscription.plan] || 'var(--mf-color-accent)' }}>
                     {currentSubscription.plan?.replace(/_/g, ' ')}
                   </span>
                 )}
@@ -727,7 +727,7 @@ const CompanyDetails = () => {
 
       <div className="card border-0 shadow-sm mt-4 overflow-hidden">
 
-        <div className="card-header border-0 p-4 text-white" style={{ background: 'linear-gradient(135deg, #6610f2 0%, #d63384 100%)' }}>
+        <div className="card-header border-0 p-4 text-white" style={{ background: 'linear-gradient(135deg, var(--mf-color-accent) 0%, #d63384 100%)' }}>
           <h5 className="fw-bold mb-1">
             <i className="bi bi-credit-card me-2"></i>
             Manage Subscription
@@ -884,7 +884,7 @@ const CompanyDetails = () => {
                   className="col-xl-4 col-md-6"
                 >
 
-                  <div className="border rounded-3 p-4 h-100" style={{ borderLeft: `4px solid ${PLAN_COLORS[subscription.plan] || '#6610f2'}` }}>
+                  <div className="border rounded-3 p-4 h-100" style={{ borderLeft: `4px solid ${PLAN_COLORS[subscription.plan] || 'var(--mf-color-accent)'}` }}>
 
                     <div className="d-flex justify-content-between align-items-start mb-3">
 
@@ -894,13 +894,13 @@ const CompanyDetails = () => {
                           PLAN
                         </div>
 
-                        <h5 className="fw-bold mb-0 mt-1" style={{ color: PLAN_COLORS[subscription.plan] || '#6610f2' }}>
+                        <h5 className="fw-bold mb-0 mt-1" style={{ color: PLAN_COLORS[subscription.plan] || 'var(--mf-color-accent)' }}>
                           {(subscription.plan || '-').replace(/_/g, ' ')}
                         </h5>
 
                       </div>
 
-                      <span className="badge" style={{ backgroundColor: `${PLAN_COLORS[subscription.plan] || '#6610f2'}22`, color: PLAN_COLORS[subscription.plan] || '#6610f2' }}>
+                      <span className="badge" style={{ backgroundColor: `${PLAN_COLORS[subscription.plan] || 'var(--mf-color-accent)'}22`, color: PLAN_COLORS[subscription.plan] || 'var(--mf-color-accent)' }}>
                         {subscription.status || '-'}
                       </span>
 

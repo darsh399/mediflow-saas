@@ -497,7 +497,7 @@ const Medicals = () => {
           }
 
           .table tbody tr:hover {
-            background-color: rgba(13, 110, 253, 0.035);
+            background-color: rgba(37, 99, 235, 0.035);
           }
 
           .btn {

@@ -20,38 +20,37 @@ const Orders = () => {
   const create = async event => { event.preventDefault(); try { await orderApi.createOrder({ doctorId, items: [{ productId, quantity: Number(quantity) }] }); setDoctorId(''); setProductId(''); setQuantity(1); load() } catch (err) { setError(err?.response?.data?.message || 'Unable to create order') } }
   const update = async (id, status) => { try { await orderApi.updateOrderStatus(id, status); load() } catch (err) { setError(err?.response?.data?.message || 'Unable to update order') } }
 
+  const statusColor = (status) => {
+    switch (status) {
+      case 'FULFILLED': return 'success'
+      case 'CONFIRMED': return 'primary'
+      case 'CANCELLED': return 'danger'
+      default: return 'warning'
+    }
+  }
+
   return (
     <div className="container-fluid py-4">
-
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div className="d-flex align-items-center gap-3">
-          <div
-            className="bg-primary text-white rounded-4 d-flex align-items-center justify-content-center shadow-sm"
-            style={{ width: '52px', height: '52px' }}
-          >
-            <i className="bi bi-bag-fill fs-4"></i>
-          </div>
-          <div>
-            <h2 className="fw-bold mb-0">Orders</h2>
-            <p className="text-muted mb-0">Place and track product orders for doctors.</p>
-          </div>
-        </div>
+      <div className="mb-4">
+        <span className="text-primary fw-semibold small">FIELD OPERATIONS</span>
+        <h2 className="fw-bold mb-1 mt-1">Orders</h2>
+        <p className="text-muted mb-0">Place and track product orders for doctors.</p>
       </div>
 
       {error && (
-        <div className="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center">
+        <div className="alert alert-danger border-0 rounded-4 shadow-sm d-flex align-items-center mb-4">
           <i className="bi bi-exclamation-triangle-fill me-2"></i>
           {error}
         </div>
       )}
 
       <div className="card border-0 shadow-sm rounded-4 mb-4">
-        <div className="card-header bg-white border-0 p-4 pb-2">
+        <div className="card-header bg-white border-0 p-4">
           <h5 className="fw-bold mb-1">Place New Order</h5>
-          <p className="text-muted small mb-0">Select a doctor and product to place an order.</p>
+          <p className="text-muted small mb-0">Order a product on behalf of a doctor.</p>
         </div>
         <div className="card-body p-4">
-          <form className="row g-3" onSubmit={create}>
+          <form className="row g-3 align-items-end" onSubmit={create}>
             <div className="col-md-4">
               <label className="form-label fw-semibold">Doctor</label>
               <select className="form-select" value={doctorId} onChange={event => setDoctorId(event.target.value)} required>
@@ -70,10 +69,10 @@ const Orders = () => {
               <label className="form-label fw-semibold">Quantity</label>
               <input className="form-control" type="number" min="1" value={quantity} onChange={event => setQuantity(event.target.value)} />
             </div>
-            <div className="col-md-2 d-flex align-items-end">
-              <button className="btn btn-primary w-100 rounded-3">
+            <div className="col-md-2">
+              <button className="btn btn-primary w-100 rounded-3 fw-semibold" type="submit">
                 <i className="bi bi-plus-lg me-1"></i>
-                Place Order
+                Place order
               </button>
             </div>
           </form>
@@ -82,33 +81,39 @@ const Orders = () => {
 
       <div className="card border-0 shadow-sm rounded-4">
         <div className="card-header bg-white border-0 p-4">
-          <h5 className="fw-bold mb-0">Order History</h5>
+          <h5 className="fw-bold mb-1">Order History</h5>
+          <p className="text-muted small mb-0">{orders.length} order{orders.length === 1 ? '' : 's'}</p>
         </div>
         {orders.length === 0 ? (
-          <div className="text-center py-5">
-            <i className="bi bi-bag-x text-muted fs-1"></i>
-            <h6 className="fw-bold mt-3">No orders yet</h6>
+          <div className="card-body text-center py-5">
+            <i className="bi bi-bag text-muted fs-1"></i>
+            <h6 className="fw-bold mt-3 mb-1">No orders yet</h6>
             <p className="text-muted mb-0">Orders placed for doctors will appear here.</p>
           </div>
         ) : (
           <div className="table-responsive">
             <table className="table align-middle mb-0">
-              <thead style={{ backgroundColor: '#f8f9fc' }}>
-                <tr>
-                  <th className="px-4 py-3 border-0">Doctor</th>
-                  <th className="py-3 border-0">Items</th>
-                  <th className="py-3 border-0">Created By</th>
-                  <th className="py-3 border-0">Status</th>
+              <thead>
+                <tr className="border-bottom">
+                  <th className="py-3 px-4 text-muted small text-uppercase">Doctor</th>
+                  <th className="py-3 text-muted small text-uppercase">Items</th>
+                  <th className="py-3 text-muted small text-uppercase">Created by</th>
+                  <th className="py-3 text-muted small text-uppercase">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map(order => (
                   <tr key={order._id}>
-                    <td className="px-4 py-3 fw-semibold">{order.doctorId?.name || '-'}</td>
+                    <td className="py-3 px-4 fw-semibold">{order.doctorId?.name || '-'}</td>
                     <td className="py-3">{order.items?.map(item => `${item.productId?.name || 'Product'} x ${item.quantity}`).join(', ')}</td>
-                    <td className="py-3">{order.createdBy?.name || '-'}</td>
+                    <td className="py-3 text-muted">{order.createdBy?.name || '-'}</td>
                     <td className="py-3">
-                      <select className="form-select form-select-sm" style={{ maxWidth: '160px' }} value={order.status} onChange={event => update(order._id, event.target.value)}>
+                      <select
+                        className={`form-select form-select-sm border-0 bg-${statusColor(order.status)}-subtle text-${statusColor(order.status)}-emphasis fw-semibold`}
+                        style={{ maxWidth: '160px' }}
+                        value={order.status}
+                        onChange={event => update(order._id, event.target.value)}
+                      >
                         <option>PLACED</option>
                         <option>CONFIRMED</option>
                         <option>FULFILLED</option>
@@ -122,7 +127,6 @@ const Orders = () => {
           </div>
         )}
       </div>
-
     </div>
   )
 }

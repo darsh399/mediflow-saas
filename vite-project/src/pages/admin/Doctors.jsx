@@ -4,6 +4,7 @@ import { fetchDoctors, deleteDoctor } from '../../redux/slices/doctorSlice'
 import { Link } from 'react-router-dom'
 import SearchBar from '../../components/SearchBar'
 import AssignVisitModal from '../../components/AssignVisitModal'
+import { PageHeader, StatCard, EmptyState } from '../../components/ui'
 
 const ASSIGN_ROLES = ['admin', 'company_owner', 'hr_manager', 'manager', 'superadmin', 'super_admin']
 
@@ -56,92 +57,41 @@ const Doctors = () => {
   return (
     <div className="container-fluid py-4">
 
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-          <div className="d-flex align-items-center gap-2 mb-1">
-            <div
-              className="d-flex align-items-center justify-content-center rounded-3 bg-primary text-white"
-              style={{
-                width: '46px',
-                height: '46px'
-              }}
-            >
-              <i className="bi bi-person-badge fs-4"></i>
-            </div>
-
-            <h2 className="fw-bold mb-0">Doctors</h2>
-          </div>
-
-          <p className="text-muted mb-0 ms-md-5">
-            Manage doctors and their clinic information.
-          </p>
-        </div>
-
-        <Link
-          className="btn btn-primary px-4 py-2 rounded-3 fw-semibold"
-          to="/doctors/add"
-        >
-          <i className="bi bi-plus-lg me-2"></i>
-          Add Doctor
-        </Link>
-      </div>
+      <PageHeader
+        eyebrow="Field Operations"
+        title="Doctors"
+        description="Manage doctors and their clinic information."
+        actions={
+          <Link
+            className="btn btn-primary px-4 py-2 rounded-3 fw-semibold"
+            to="/doctors/add"
+          >
+            <i className="bi bi-plus-lg me-2"></i>
+            Add Doctor
+          </Link>
+        }
+      />
 
       <div className="row g-3 mb-4">
 
         <div className="col-sm-6 col-xl-3">
-          <div className="card border-0 shadow-sm rounded-4 h-100">
-            <div className="card-body p-4">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <p className="text-muted mb-1 small fw-semibold">
-                    Total Doctors
-                  </p>
-
-                  <h3 className="fw-bold mb-0">
-                    {items.length}
-                  </h3>
-                </div>
-
-                <div
-                  className="rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center"
-                  style={{
-                    width: '45px',
-                    height: '45px'
-                  }}
-                >
-                  <i className="bi bi-people fs-5"></i>
-                </div>
-              </div>
-            </div>
-          </div>
+          <StatCard
+            label="Total Doctors"
+            value={items.length}
+            icon="bi-people"
+            iconBg="var(--mf-color-primary-subtle)"
+            iconColor="var(--mf-color-primary)"
+          />
         </div>
 
         <div className="col-sm-6 col-xl-3">
-          <div className="card border-0 shadow-sm rounded-4 h-100">
-            <div className="card-body p-4">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <p className="text-muted mb-1 small fw-semibold">
-                    Showing
-                  </p>
-
-                  <h3 className="fw-bold mb-0">
-                    {filteredDoctors.length}
-                  </h3>
-                </div>
-
-                <div
-                  className="rounded-3 bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center"
-                  style={{
-                    width: '45px',
-                    height: '45px'
-                  }}
-                >
-                  <i className="bi bi-search fs-5"></i>
-                </div>
-              </div>
-            </div>
-          </div>
+          <StatCard
+            label="Showing"
+            value={filteredDoctors.length}
+            icon="bi-search"
+            iconBg="var(--mf-color-success-subtle)"
+            iconColor="var(--mf-color-success)"
+          />
         </div>
 
       </div>
@@ -231,39 +181,26 @@ const Doctors = () => {
           )}
 
           {!loading && !error && filteredDoctors.length === 0 && (
-            <div className="text-center py-5">
-
-              <div
-                className="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
-                style={{
-                  width: '75px',
-                  height: '75px'
-                }}
-              >
-                <i className="bi bi-person-x fs-2 text-muted"></i>
-              </div>
-
-              <h5 className="fw-bold">
-                No doctors found
-              </h5>
-
-              <p className="text-muted mb-3">
-                {q
+            <EmptyState
+              icon="bi-person-x"
+              title="No doctors found"
+              description={
+                q
                   ? 'Try searching with a different doctor name.'
-                  : 'No doctors have been added yet.'}
-              </p>
-
-              {!q && (
-                <Link
-                  to="/admin/doctors/add"
-                  className="btn btn-primary rounded-3"
-                >
-                  <i className="bi bi-plus-lg me-2"></i>
-                  Add Your First Doctor
-                </Link>
-              )}
-
-            </div>
+                  : 'No doctors have been added yet.'
+              }
+              action={
+                !q && (
+                  <Link
+                    to="/admin/doctors/add"
+                    className="btn btn-primary rounded-3"
+                  >
+                    <i className="bi bi-plus-lg me-2"></i>
+                    Add Your First Doctor
+                  </Link>
+                )
+              }
+            />
           )}
 
           {!loading && filteredDoctors.length > 0 && (
@@ -468,7 +405,7 @@ const Doctors = () => {
           }
 
           .table tbody tr:hover {
-            background-color: rgba(13, 110, 253, 0.035);
+            background-color: rgba(37, 99, 235, 0.035);
           }
 
           .btn {

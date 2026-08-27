@@ -13,6 +13,43 @@ body {
 body.dark-mode {
     background-color: #111827;
     color: #e5e7eb;
+    --mf-bg: #111827;
+    --mf-surface: #1f2937;
+    --mf-border: #374151;
+    --mf-text: #e5e7eb;
+    --mf-text-muted: #9ca3af;
+    --bs-body-bg: var(--mf-bg);
+    --bs-body-color: var(--mf-text);
+    --bs-border-color: var(--mf-border);
+    --bs-tertiary-bg: #111827;
+
+    /* Dark-mode counterparts for the *-subtle/*-emphasis tokens set in
+       ui-system.css — without these, badges/alerts/icon-chips built from
+       bg-{color}-subtle + text-{color}-emphasis stay light-mode-bright and
+       become low-contrast against the dark background. */
+    --bs-primary-bg-subtle: rgba(37, 99, 235, .18);
+    --bs-primary-border-subtle: rgba(37, 99, 235, .35);
+    --bs-primary-text-emphasis: #93c5fd;
+
+    --bs-secondary-bg-subtle: rgba(100, 116, 139, .2);
+    --bs-secondary-border-subtle: rgba(100, 116, 139, .35);
+    --bs-secondary-text-emphasis: #cbd5e1;
+
+    --bs-success-bg-subtle: rgba(22, 163, 74, .18);
+    --bs-success-border-subtle: rgba(22, 163, 74, .35);
+    --bs-success-text-emphasis: #86efac;
+
+    --bs-warning-bg-subtle: rgba(217, 119, 6, .18);
+    --bs-warning-border-subtle: rgba(217, 119, 6, .35);
+    --bs-warning-text-emphasis: #fcd34d;
+
+    --bs-danger-bg-subtle: rgba(220, 38, 38, .18);
+    --bs-danger-border-subtle: rgba(220, 38, 38, .35);
+    --bs-danger-text-emphasis: #fca5a5;
+
+    --bs-info-bg-subtle: rgba(8, 145, 178, .18);
+    --bs-info-border-subtle: rgba(8, 145, 178, .35);
+    --bs-info-text-emphasis: #67e8f9;
 }
 
 body.dark-mode .navbar,

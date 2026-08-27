@@ -45,7 +45,8 @@ const Footer = () => {
 
               <a
                 href="#"
-                className="mf-footer-social"
+                className="btn btn-outline-light btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                style={{ width: "36px", height: "36px" }}
                 aria-label="Facebook"
               >
                 <i className="bi bi-facebook"></i>
@@ -53,7 +54,8 @@ const Footer = () => {
 
               <a
                 href="#"
-                className="mf-footer-social"
+                className="btn btn-outline-light btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                style={{ width: "36px", height: "36px" }}
                 aria-label="LinkedIn"
               >
                 <i className="bi bi-linkedin"></i>
@@ -61,7 +63,8 @@ const Footer = () => {
 
               <a
                 href="#"
-                className="mf-footer-social"
+                className="btn btn-outline-light btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                style={{ width: "36px", height: "36px" }}
                 aria-label="Twitter"
               >
                 <i className="bi bi-twitter-x"></i>

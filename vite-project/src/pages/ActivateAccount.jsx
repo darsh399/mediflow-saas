@@ -27,21 +27,20 @@ const ActivateAccount = ()=>{
   return (
     <div
       className="min-vh-100 d-flex align-items-center justify-content-center py-5"
-      style={{ background: 'linear-gradient(135deg, #f5f8ff 0%, #eef3f8 100%)' }}
+      style={{ background: "linear-gradient(135deg, var(--mf-bg) 0%, var(--mf-color-primary-subtle) 100%)" }}
     >
       <div className="container px-3">
-        <div className="card border-0 shadow-lg rounded-4 mx-auto overflow-hidden" style={{ maxWidth: '480px' }}>
+        <div className="card border-0 shadow-lg rounded-4 mx-auto overflow-hidden" style={{ maxWidth: "460px" }}>
           <div className="card-body p-4 p-md-5">
-
             <div className="text-center mb-4">
               <div
                 className="mx-auto mb-3 rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center"
-                style={{ width: '70px', height: '70px', fontSize: '28px' }}
+                style={{ width: "70px", height: "70px", fontSize: "28px" }}
               >
                 <i className="bi bi-person-check-fill"></i>
               </div>
               <h3 className="fw-bold mb-2">Activate Account</h3>
-              <p className="text-muted mb-0">Set a password to activate your account and get started.</p>
+              <p className="text-muted mb-0">Set a password to activate your account.</p>
             </div>
 
             <form onSubmit={submit}>
@@ -51,43 +50,23 @@ const ActivateAccount = ()=>{
                   <span className="input-group-text bg-light border-end-0">
                     <i className="bi bi-lock text-muted"></i>
                   </span>
-                  <input
-                    type="password"
-                    className="form-control border-start-0"
-                    placeholder="Enter a password"
-                    value={password}
-                    onChange={e=>setPassword(e.target.value)}
-                    required
-                    minLength={8}
-                  />
+                  <input type="password" className="form-control border-start-0" value={password} onChange={e=>setPassword(e.target.value)} required/>
                 </div>
-                <small className="text-muted">Use at least 8 characters.</small>
               </div>
-
               <div className="mb-4">
                 <label className="form-label fw-semibold">Confirm Password</label>
                 <div className="input-group">
                   <span className="input-group-text bg-light border-end-0">
                     <i className="bi bi-shield-check text-muted"></i>
                   </span>
-                  <input
-                    type="password"
-                    className="form-control border-start-0"
-                    placeholder="Confirm your password"
-                    value={confirm}
-                    onChange={e=>setConfirm(e.target.value)}
-                    required
-                    minLength={8}
-                  />
+                  <input type="password" className="form-control border-start-0" value={confirm} onChange={e=>setConfirm(e.target.value)} required/>
                 </div>
               </div>
-
-              <button type="submit" className="btn btn-primary w-100 py-2 rounded-3 fw-semibold">
-                <i className="bi bi-check2-circle me-2"></i>
-                Activate Account
+              <button className="btn btn-primary w-100 py-2 rounded-3 fw-semibold" type="submit">
+                <i className="bi bi-check-lg me-2"></i>
+                Activate
               </button>
             </form>
-
           </div>
         </div>
       </div>

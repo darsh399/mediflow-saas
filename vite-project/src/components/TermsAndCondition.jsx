@@ -171,7 +171,7 @@ const TermsAndConditions = () => {
         className="py-5 text-white"
         style={{
           background:
-            "linear-gradient(135deg, #0d6efd 0%, #6610f2 55%, #6f42c1 100%)",
+            "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 55%, #6f42c1 100%)",
         }}
       >
         <div className="container py-5">
@@ -344,7 +344,7 @@ const TermsAndConditions = () => {
                               }}
                             >
                               <i
-                                className={`${section.icon} fs-4`}
+                                className={`bi ${section.icon} fs-4`}
                               ></i>
                             </div>
 
@@ -425,7 +425,7 @@ const TermsAndConditions = () => {
           .terms-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-            border-color: rgba(13,110,253,0.2) !important;
+            border-color: rgba(37,99,235,0.2) !important;
           }
 
           .terms-page .card {
