@@ -30,7 +30,8 @@ async function fetchAndSendUser(req, res, successMessage = 'User retrieved succe
         // employee's organisation name on the employee detail page.
         const user = await User.findOne(findQuery)
             .select('-password')
-            .populate('companyId', 'name companyName');
+            .populate('companyId', 'name companyName')
+            .populate('reportingManagerId', 'name email role');
         if (!user) return res.status(404).json({ message: 'User not found' });
         // A colleague's full record (profile, employment fields, attendance) is
         // only visible to the account itself or someone privileged enough to act
@@ -98,6 +99,10 @@ export const createUser = async (req, res) => {
         if (!canActOn(req.user, role || 'employee')) {
             return res.status(403).json({ message: 'Insufficient permissions to create this role' });
         }
+        if (reportingManagerId) {
+            const manager = await User.findOne({ _id: reportingManagerId, companyId }).select('_id');
+            if (!manager) return res.status(400).json({ message: 'Reporting manager must belong to your company' });
+        }
 
         const finalName = name || [firstName, lastName].filter(Boolean).join(' ').trim();
         if (!finalName) return res.status(400).json({ message: 'name is required' });
@@ -130,7 +135,7 @@ export const createUser = async (req, res) => {
         }
 
         const hashedPw = await hashPassword(finalPassword);
-        const employeeFields = { employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId, branchId, employmentType, probationStatus, employeeStatus, personalEmail };
+        const employeeFields = { employeeId, firstName, lastName, joiningDate, departmentId, designationId, reportingManagerId: reportingManagerId || undefined, branchId, employmentType, probationStatus, employeeStatus, personalEmail };
         const newUser = new User({ name: finalName, email: finalEmail, password: hashedPw, mobile, companyId, role: role || 'employee', passwordChangeRequired: autoProvisioned, createdBy: req.user.id, ...employeeFields });
 
         const savedUser = await newUser.save();
@@ -250,6 +255,28 @@ export const updateUser = async (req, res) => {
             await recordAudit(req, 'role_change', { targetUserId: existingUser._id, targetUserRole: oldRole, companyId: existingUser.companyId, entityId: existingUser._id, module: 'employees', oldValue: { role: oldRole }, newValue: { role: newRole } });
             // remove role from updateData to avoid double-assign
             delete updateData.role;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(updateData, 'reportingManagerId') && updateData.reportingManagerId) {
+            const managerId = updateData.reportingManagerId;
+            if (String(managerId) === String(userId)) return res.status(400).json({ message: 'An employee cannot report to themselves' });
+            const manager = await User.findOne({ _id: managerId, ...(companyId ? { companyId } : {}) }).select('reportingManagerId');
+            if (!manager) return res.status(400).json({ message: 'Reporting manager must belong to your company' });
+            // Walk up the proposed manager's chain so we never create a loop.
+            const seen = new Set([String(userId)]);
+            let cursor = manager;
+            while (cursor?.reportingManagerId) {
+                const cursorManagerId = String(cursor.reportingManagerId);
+                if (seen.has(cursorManagerId)) return res.status(400).json({ message: 'That change would create a reporting loop' });
+                seen.add(cursorManagerId);
+                cursor = await User.findById(cursorManagerId).select('reportingManagerId');
+            }
+        }
+
+        // An empty reportingManagerId means "clear the manager" — store null so
+        // Mongoose doesn't try to cast "" to an ObjectId.
+        if (Object.prototype.hasOwnProperty.call(updateData, 'reportingManagerId') && !updateData.reportingManagerId) {
+            updateData.reportingManagerId = null;
         }
 
         const editableFields = ['name', 'email', 'personalEmail', 'mobile', 'employeeId', 'firstName', 'lastName', 'joiningDate', 'departmentId', 'designationId', 'reportingManagerId', 'branchId', 'employmentType', 'probationStatus', 'employeeStatus', 'active', 'blocked'];

@@ -1,5 +1,6 @@
 import OrganizationUnit from '../models/OrganizationUnit.js'
 import User from '../models/User.js'
+import Company from '../models/Company.js'
 import recordAudit from '../utils/audit.js'
 
 const types = ['DEPARTMENT', 'DESIGNATION', 'BRANCH', 'TEAM']
@@ -83,4 +84,37 @@ export async function deleteUnit(req, res) {
   return res.status(200).json({ message: 'Organization unit deactivated', unit })
 }
 
-export default { listUnits, createUnit, updateUnit, deleteUnit }
+// Flat list of everyone in the company with just the fields the reporting-chart
+// UI needs. The tree itself (parent -> reports) is built on the client from
+// reportingManagerId.
+export async function getOrgChart(req, res) {
+  try {
+    const [employees, company] = await Promise.all([
+      User.find({ companyId: req.user.companyId })
+        .select('name email role reportingManagerId employeeStatus active profile.jobDetails.designation profile.jobDetails.department')
+        .sort({ name: 1 })
+        .lean(),
+      Company.findById(req.user.companyId).select('ownerId companyName').lean(),
+    ])
+    const people = employees.map((employee) => ({
+      _id: employee._id,
+      name: employee.name,
+      email: employee.email,
+      role: employee.role,
+      active: employee.active !== false,
+      employeeStatus: employee.employeeStatus || null,
+      designation: employee.profile?.jobDetails?.designation || null,
+      department: employee.profile?.jobDetails?.department || null,
+      reportingManagerId: employee.reportingManagerId || null,
+    }))
+    return res.status(200).json({
+      employees: people,
+      companyOwnerId: company?.ownerId || null,
+      companyName: company?.companyName || null,
+    })
+  } catch (error) {
+    return res.status(500).json({ message: 'Error building organization chart', error: error.message })
+  }
+}
+
+export default { listUnits, createUnit, updateUnit, deleteUnit, getOrgChart }

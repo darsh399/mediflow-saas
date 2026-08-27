@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import userApi from '../../api/userApi'
 
@@ -13,11 +13,18 @@ const ROLES = [
 const errorMessage = (error) => error?.response?.data?.message || error?.message || 'Unable to create employee'
 
 const AddEmployee = () => {
-  const [form, setForm] = useState({ firstName: '', lastName: '', personalEmail: '', mobile: '', role: 'employee' })
+  const [form, setForm] = useState({ firstName: '', lastName: '', personalEmail: '', mobile: '', role: 'employee', reportingManagerId: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
+  const [colleagues, setColleagues] = useState([])
   const nav = useNavigate()
+
+  useEffect(() => {
+    userApi.listUsers()
+      .then((response) => setColleagues((response.users || []).filter((user) => user.active !== false)))
+      .catch(() => setColleagues([]))
+  }, [])
 
   const handleChange = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
 
@@ -27,7 +34,15 @@ const AddEmployee = () => {
     setError('')
     try {
       const name = `${form.firstName.trim()} ${form.lastName.trim()}`.trim()
-      const response = await userApi.createUser({ name, firstName: form.firstName.trim(), lastName: form.lastName.trim(), personalEmail: form.personalEmail.trim(), mobile: form.mobile.trim(), role: form.role })
+      const response = await userApi.createUser({
+        name,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        personalEmail: form.personalEmail.trim(),
+        mobile: form.mobile.trim(),
+        role: form.role,
+        ...(form.reportingManagerId ? { reportingManagerId: form.reportingManagerId } : {}),
+      })
       setResult(response)
     } catch (err) {
       setError(errorMessage(err))
@@ -60,7 +75,7 @@ const AddEmployee = () => {
             )}
 
             <div className="d-flex gap-2 justify-content-center mt-4">
-              <button type="button" className="btn btn-outline-secondary" onClick={() => { setResult(null); setForm({ firstName: '', lastName: '', personalEmail: '', mobile: '', role: 'employee' }) }}>
+              <button type="button" className="btn btn-outline-secondary" onClick={() => { setResult(null); setForm({ firstName: '', lastName: '', personalEmail: '', mobile: '', role: 'employee', reportingManagerId: '' }) }}>
                 Add Another Employee
               </button>
               <button type="button" className="btn btn-primary" onClick={() => nav('/users')}>
@@ -108,6 +123,18 @@ const AddEmployee = () => {
               <select name="role" value={form.role} onChange={handleChange} className="form-select">
                 {ROLES.map((role) => <option value={role.value} key={role.value}>{role.label}</option>)}
               </select>
+            </div>
+            <div className="col-12">
+              <label className="form-label fw-semibold">Reporting Manager <span className="text-muted fw-normal">(optional)</span></label>
+              <select name="reportingManagerId" value={form.reportingManagerId} onChange={handleChange} className="form-select">
+                <option value="">No reporting manager</option>
+                {colleagues.map((colleague) => (
+                  <option value={colleague._id} key={colleague._id}>
+                    {colleague.name} — {String(colleague.role || '').replace(/_/g, ' ')}
+                  </option>
+                ))}
+              </select>
+              <small className="text-muted">Who this employee reports to. You can change this later from the employee's profile.</small>
             </div>
           </div>
 

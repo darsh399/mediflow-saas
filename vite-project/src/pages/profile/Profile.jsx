@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import userApi from "../../api/userApi";
+import organizationApi from "../../api/organizationApi";
 import { Link, useNavigate } from "react-router-dom";
 
 const Profile = () => {
@@ -9,8 +10,30 @@ const Profile = () => {
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [reportingLine, setReportingLine] = useState(null);
 
   const nav = useNavigate();
+
+  const myId = user?.id || user?._id;
+
+  useEffect(() => {
+    if (!myId) return;
+    organizationApi
+      .getOrgChart()
+      .then((response) => {
+        const people = response.employees || [];
+        const me = people.find((person) => String(person._id) === String(myId));
+        if (!me) return setReportingLine(null);
+        const manager = me.reportingManagerId
+          ? people.find((person) => String(person._id) === String(me.reportingManagerId))
+          : null;
+        const reports = people
+          .filter((person) => String(person.reportingManagerId || "") === String(myId))
+          .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        setReportingLine({ manager, reports });
+      })
+      .catch(() => setReportingLine(null));
+  }, [myId]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -514,6 +537,64 @@ const Profile = () => {
 
               </div>
             </div>
+
+            {reportingLine && (
+            <div className="card border-0 shadow-sm rounded-4 mt-4">
+              <div className="card-body p-4">
+
+                <div className="d-flex align-items-center justify-content-between gap-3 mb-4">
+                  <div className="d-flex align-items-center gap-3">
+                    <div
+                      className="rounded-3 d-flex align-items-center justify-content-center"
+                      style={{ width: 45, height: 45, background: "rgba(37, 99, 235, 0.1)", color: "var(--mf-color-primary)" }}
+                    >
+                      <i className="bi bi-diagram-3 fs-5"></i>
+                    </div>
+
+                    <div>
+                      <h5 className="fw-bold mb-0">My Reporting Line</h5>
+                      <small className="text-muted">Where you sit in the organization</small>
+                    </div>
+                  </div>
+
+                  <Link to={`/organization?focus=${profile._id}`} className="btn btn-sm btn-outline-primary rounded-3">
+                    Org Chart
+                  </Link>
+                </div>
+
+                <div className="p-3 rounded-3 bg-light mb-3">
+                  <small className="text-muted d-block">Reports to</small>
+                  <div className="fw-semibold mt-1">
+                    {reportingLine?.manager
+                      ? `${reportingLine.manager.name} — ${formatRole(reportingLine.manager.role)}`
+                      : "Not assigned"}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-3 bg-light">
+                  <small className="text-muted d-block mb-1">
+                    Direct reports {reportingLine?.reports?.length ? `(${reportingLine.reports.length})` : ""}
+                  </small>
+                  {reportingLine?.reports?.length ? (
+                    <div className="d-flex flex-wrap gap-2 mt-1">
+                      {reportingLine.reports.map((report) => (
+                        <Link
+                          key={report._id}
+                          to={`/organization?focus=${report._id}`}
+                          className="badge bg-white text-dark border rounded-pill px-3 py-2 text-decoration-none"
+                        >
+                          {report.name}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="fw-semibold mt-1">None</div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+            )}
 
           </div>
 
