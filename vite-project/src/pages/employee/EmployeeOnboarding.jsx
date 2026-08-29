@@ -96,6 +96,7 @@ const EmployeeOnboarding = () => {
   })
 
   const [experienceType, setExperienceType] = useState('fresher')
+  const [experienceInfo, setExperienceInfo] = useState({ previousCompany: '', totalExperienceYears: '' })
 
   const [files, setFiles] = useState({})
   const [experienceFiles, setExperienceFiles] = useState({})
@@ -125,10 +126,14 @@ const EmployeeOnboarding = () => {
 
         setProfile(currentProfile)
 
-        setProfileData(data => ({
-          ...data,
-          ...(currentProfile.profileData || {})
-        }))
+        {
+          const { previousCompany, totalExperienceYears, ...restProfileData } = currentProfile.profileData || {}
+          setProfileData(data => ({ ...data, ...restProfileData }))
+          setExperienceInfo({
+            previousCompany: previousCompany || '',
+            totalExperienceYears: totalExperienceYears || '',
+          })
+        }
 
         setExperienceType(
           currentProfile.experienceType || 'fresher'
@@ -164,6 +169,14 @@ const EmployeeOnboarding = () => {
     }))
   }
 
+  // Experience company / years are folded into profileData only when the
+  // employee is "experienced" — cleared otherwise so they never linger.
+  const profileDataPayload = () => ({
+    ...profileData,
+    previousCompany: experienceType === 'experienced' ? experienceInfo.previousCompany.trim() : '',
+    totalExperienceYears: experienceType === 'experienced' ? experienceInfo.totalExperienceYears : '',
+  })
+
   const saveDraft = async () => {
     try {
       setSaving(true)
@@ -172,7 +185,7 @@ const EmployeeOnboarding = () => {
 
       const response =
         await employeeProfileApi.saveProfile({
-          profileData,
+          profileData: profileDataPayload(),
           experienceType
         })
 
@@ -274,7 +287,7 @@ const EmployeeOnboarding = () => {
       setMessage('')
 
       await employeeProfileApi.saveProfile({
-        profileData,
+        profileData: profileDataPayload(),
         experienceType
       })
 
@@ -650,6 +663,34 @@ const EmployeeOnboarding = () => {
             </option>
 
           </select>
+
+          {experienceType === 'experienced' && (
+            <div className="row g-3 mt-2">
+              <div className="col-md-7">
+                <label className="form-label fw-semibold text-secondary">Previous company</label>
+                <input
+                  className="form-control"
+                  value={experienceInfo.previousCompany}
+                  disabled={locked}
+                  placeholder="e.g. Acme Pharma Pvt Ltd"
+                  onChange={event => setExperienceInfo(info => ({ ...info, previousCompany: event.target.value }))}
+                />
+              </div>
+              <div className="col-md-5">
+                <label className="form-label fw-semibold text-secondary">Total experience (years)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  className="form-control"
+                  value={experienceInfo.totalExperienceYears}
+                  disabled={locked}
+                  placeholder="e.g. 3"
+                  onChange={event => setExperienceInfo(info => ({ ...info, totalExperienceYears: event.target.value }))}
+                />
+              </div>
+            </div>
+          )}
 
         </div>
 

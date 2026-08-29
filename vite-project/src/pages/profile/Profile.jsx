@@ -162,6 +162,42 @@ const Profile = () => {
 
   const p = profile.profile || {};
 
+  // Joining date comes from the offer letter (synced onto the account); the
+  // onboarding profile carries prior-experience details.
+  const joiningDate =
+    profile.joiningDate ||
+    p.jobDetails?.startDate ||
+    profile.onboardingProfile?.jobDetails?.startDate ||
+    null;
+
+  const tenureText = (() => {
+    if (!joiningDate) return null;
+    const start = new Date(joiningDate);
+    if (Number.isNaN(start.getTime())) return null;
+    const totalMonths = Math.max(
+      0,
+      (new Date().getFullYear() - start.getFullYear()) * 12 +
+        (new Date().getMonth() - start.getMonth())
+    );
+    const years = Math.floor(totalMonths / 12);
+    const months = totalMonths % 12;
+    if (years === 0 && months === 0) return "Joined this month";
+    return [years ? `${years} yr${years > 1 ? "s" : ""}` : null, months ? `${months} mo` : null]
+      .filter(Boolean)
+      .join(" ");
+  })();
+
+  const priorExperience = (() => {
+    if (profile.experienceType === "fresher") return "Fresher";
+    const ob = profile.onboardingProfile || {};
+    const parts = [];
+    if (ob.totalExperienceYears) parts.push(`${ob.totalExperienceYears} year(s)`);
+    if (ob.previousCompany) parts.push(`at ${ob.previousCompany}`);
+    if (parts.length) return `Experienced · ${parts.join(" ")}`;
+    if (profile.experienceType === "experienced") return "Experienced";
+    return null;
+  })();
+
   const initials = (
     profile.name ||
     profile.email ||
@@ -529,6 +565,33 @@ const Profile = () => {
 
                       <div className="fw-semibold mt-1">
                         {p.jobDetails?.department || "-"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="p-3 rounded-3 bg-light">
+                      <small className="text-muted d-block">
+                        Joining Date
+                      </small>
+
+                      <div className="fw-semibold mt-1">
+                        {joiningDate
+                          ? new Date(joiningDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                          : "Not set"}
+                        {tenureText && <span className="text-muted fw-normal"> · {tenureText}</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="p-3 rounded-3 bg-light">
+                      <small className="text-muted d-block">
+                        Prior Experience
+                      </small>
+
+                      <div className="fw-semibold mt-1">
+                        {priorExperience || "Not provided"}
                       </div>
                     </div>
                   </div>
