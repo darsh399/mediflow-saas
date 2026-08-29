@@ -25,6 +25,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import GuestRoute from "../components/GuestRoute";
 
 import Doctors from "../pages/admin/Doctors";
+import DoctorEngagement from "../pages/doctors/DoctorEngagement";
 import AddDoctor from "../pages/admin/AddDoctor";
 import DoctorDetails from "../pages/admin/DoctorDetails";
 
@@ -82,12 +83,16 @@ import TourPlanDetail from "../pages/tours/TourPlanDetail";
 import CoverageReport from "../pages/tours/CoverageReport";
 import SalesTargets from "../pages/sales/SalesTargets";
 import VisitReport from "../pages/reports/VisitReport";
+import ReportsHub from "../pages/reports/ReportsHub";
+import ReportView from "../pages/reports/ReportView";
 import Billing from "../pages/billing/Billing";
 import NotFound from "../pages/NotFound";
 import Attendance from "../pages/attendance/Attendance";
 import EmployeeAttendanceHistory from "../pages/attendance/EmployeeAttendanceHistory";
 import Calendar from "../pages/calendar/Calendar";
 import SalaryPortal from "../pages/salary/SalaryPortal";
+import PayrollRuns from "../pages/salary/PayrollRuns";
+import PayrollRunDetail from "../pages/salary/PayrollRunDetail";
 
 
 const AppRoutes = () => {
@@ -193,6 +198,11 @@ const AppRoutes = () => {
                         <Route
                             path="add"
                             element={<AddDoctor />}
+                        />
+
+                        <Route
+                            path="engagement"
+                            element={<DoctorEngagement />}
                         />
 
                         <Route
@@ -506,6 +516,26 @@ const AppRoutes = () => {
                     </Route>
                     <Route path="reports" element={<AdminLayout />}>
                         <Route path="visits" element={<VisitReport />} />
+                    </Route>
+                </Route>
+
+                <Route
+                    element={
+                        <ProtectedRoute
+                            rolesAllowed={[
+                                "admin",
+                                "company_owner",
+                                "hr_manager",
+                                "hr",
+                                "manager",
+                                "project_manager"
+                            ]}
+                        />
+                    }
+                >
+                    <Route path="reports" element={<AdminLayout />}>
+                        <Route index element={<ReportsHub />} />
+                        <Route path=":type" element={<ReportView />} />
                     </Route>
                 </Route>
 
@@ -1044,6 +1074,8 @@ const AppRoutes = () => {
                     <Route path="salary" element={<AdminLayout />}>
                         <Route path="slips" element={<SalaryPortal mode="slips" />} />
                         <Route path="structures" element={<SalaryPortal mode="structures" />} />
+                        <Route path="runs" element={<PayrollRuns />} />
+                        <Route path="runs/:id" element={<PayrollRunDetail />} />
                     </Route>
                     <Route path="offers" element={<AdminLayout />}>
                         <Route index element={<SalaryPortal mode="offers" />} />
