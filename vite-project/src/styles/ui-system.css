@@ -6,63 +6,71 @@
    whole app without touching a single page's markup or className.
    ========================================================================== */
 :root {
-  /* --- Brand & semantic colors --- */
-  --mf-color-primary: #2563eb;
-  --mf-color-primary-hover: #1d4ed8;
-  --mf-color-primary-subtle: #dbeafe;
-  --mf-color-primary-emphasis: #1e40af;
-  --mf-color-accent: #6366f1; /* indigo — pairs with primary for gradients, matches sidebar */
-  --mf-color-accent-hover: #4f46e5;
+  /* ======================================================================
+     BRAND PALETTE — "Deep Teal"
+     Teal primary + analogous deep-cyan accent, warm-slate neutrals with a
+     faint green bias, semantic colours kept conventional (blue is now free
+     to mean "info" since it is no longer the brand colour).
+     ====================================================================== */
+  --mf-color-primary: #0d9488;          /* teal-600 */
+  --mf-color-primary-hover: #0f766e;    /* teal-700 */
+  --mf-color-primary-subtle: #d3f2ec;
+  --mf-color-primary-emphasis: #115e59; /* teal-800 */
+  --mf-color-accent: #0e7490;           /* cyan-700 — gradient partner */
+  --mf-color-accent-hover: #155e75;
 
-  --mf-color-success: #16a34a;
+  --mf-color-success: #15803d;
   --mf-color-success-subtle: #dcfce7;
-  --mf-color-success-emphasis: #14532d;
+  --mf-color-success-emphasis: #166534;
 
-  --mf-color-warning: #d97706;
+  --mf-color-warning: #b45309;
   --mf-color-warning-subtle: #fef3c7;
   --mf-color-warning-emphasis: #78350f;
 
-  --mf-color-danger: #dc2626;
-  --mf-color-danger-subtle: #fee2e2;
-  --mf-color-danger-emphasis: #7f1d1d;
+  --mf-color-danger: #e11d48;           /* rose-600 — distinct against the teal */
+  --mf-color-danger-subtle: #ffe4e6;
+  --mf-color-danger-emphasis: #9f1239;
 
-  --mf-color-info: #0891b2;
-  --mf-color-info-subtle: #cffafe;
-  --mf-color-info-emphasis: #164e63;
+  --mf-color-info: #2563eb;             /* blue-600 */
+  --mf-color-info-subtle: #dbeafe;
+  --mf-color-info-emphasis: #1e40af;
 
-  /* --- Neutrals (slate) --- */
-  --mf-slate-50: #f8fafc;
-  --mf-slate-100: #f1f5f9;
-  --mf-slate-200: #e2e8f0;
-  --mf-slate-300: #cbd5e1;
-  --mf-slate-400: #94a3b8;
-  --mf-slate-500: #64748b;
-  --mf-slate-600: #475569;
-  --mf-slate-700: #334155;
-  --mf-slate-800: #1e293b;
-  --mf-slate-900: #0f172a;
+  /* --- Neutrals (warm slate, faint teal bias) --- */
+  --mf-slate-50: #f7f8f8;
+  --mf-slate-100: #eef1f0;
+  --mf-slate-200: #e1e5e4;
+  --mf-slate-300: #c9cfce;
+  --mf-slate-400: #98a1a0;
+  --mf-slate-500: #69726f;
+  --mf-slate-600: #4d5654;
+  --mf-slate-700: #3a4241;
+  --mf-slate-800: #232928;
+  --mf-slate-900: #141817;
 
   --mf-bg: var(--mf-slate-50);
   --mf-surface: #ffffff;
+  --mf-surface-2: var(--mf-slate-100);
   --mf-border: var(--mf-slate-200);
+  --mf-border-strong: var(--mf-slate-300);
   --mf-text: var(--mf-slate-800);
   --mf-text-muted: var(--mf-slate-500);
 
-  /* --- Dedicated dark-sidebar palette (separate from the light-surface tokens above) --- */
-  --mf-sidebar-bg-start: #172554;
-  --mf-sidebar-bg-end: #111827;
-  --mf-sidebar-text: #cbd5e1;
-  --mf-sidebar-text-muted: #94a3b8;
+  /* --- Dedicated dark-sidebar palette (warm charcoal, not navy) --- */
+  --mf-sidebar-bg-start: #12201e;
+  --mf-sidebar-bg-end: #0b1211;
+  --mf-sidebar-text: #c9d4d2;
+  --mf-sidebar-text-muted: #8b9997;
   --mf-sidebar-active-start: var(--mf-color-primary);
   --mf-sidebar-active-end: var(--mf-color-accent);
-  --mf-sidebar-hover-bg: rgba(255,255,255,.09);
+  --mf-sidebar-hover-bg: rgba(255,255,255,.07);
 
-  /* --- Typography scale (sizes/weights only — no new font family/webfont) --- */
-  --mf-text-page-title: 700 clamp(1.3rem, 2vw, 1.5rem) / 1.25 inherit;
-  --mf-text-section-title: 700 1.0625rem / 1.3 inherit;
-  --mf-text-card-title: 600 0.9375rem / 1.35 inherit;
-  --mf-text-label: 600 0.8125rem / 1.3 inherit;
-  --mf-text-helper: 400 0.8125rem / 1.4 inherit;
+  /* --- Typography --- */
+  --mf-font-sans: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mf-text-page-title: 700 clamp(1.3rem, 2vw, 1.5rem) / 1.25 var(--mf-font-sans);
+  --mf-text-section-title: 700 1.0625rem / 1.3 var(--mf-font-sans);
+  --mf-text-card-title: 600 0.9375rem / 1.35 var(--mf-font-sans);
+  --mf-text-label: 600 0.8125rem / 1.3 var(--mf-font-sans);
+  --mf-text-helper: 400 0.8125rem / 1.4 var(--mf-font-sans);
 
   /* --- Spacing scale --- */
   --mf-space-xs: 0.5rem;
@@ -92,49 +100,49 @@
   --bs-secondary-color: var(--mf-text-muted);
 
   --bs-primary: var(--mf-color-primary);
-  --bs-primary-rgb: 37, 99, 235;
+  --bs-primary-rgb: 13, 148, 136;
   --bs-primary-text-emphasis: var(--mf-color-primary-emphasis);
   --bs-primary-bg-subtle: var(--mf-color-primary-subtle);
-  --bs-primary-border-subtle: #bfdbfe;
+  --bs-primary-border-subtle: #99e0d5;
   --bs-link-color: var(--mf-color-primary);
-  --bs-link-color-rgb: 37, 99, 235;
+  --bs-link-color-rgb: 13, 148, 136;
   --bs-link-hover-color: var(--mf-color-primary-hover);
-  --bs-link-hover-color-rgb: 29, 78, 216;
+  --bs-link-hover-color-rgb: 15, 118, 110;
 
   --bs-secondary: var(--mf-slate-500);
-  --bs-secondary-rgb: 100, 116, 139;
+  --bs-secondary-rgb: 105, 114, 111;
   --bs-secondary-text-emphasis: var(--mf-slate-700);
   --bs-secondary-bg-subtle: var(--mf-slate-100);
   --bs-secondary-border-subtle: var(--mf-slate-200);
 
   --bs-success: var(--mf-color-success);
-  --bs-success-rgb: 22, 163, 74;
+  --bs-success-rgb: 21, 128, 61;
   --bs-success-text-emphasis: var(--mf-color-success-emphasis);
   --bs-success-bg-subtle: var(--mf-color-success-subtle);
   --bs-success-border-subtle: #bbf7d0;
 
   --bs-warning: var(--mf-color-warning);
-  --bs-warning-rgb: 217, 119, 6;
+  --bs-warning-rgb: 180, 83, 9;
   --bs-warning-text-emphasis: var(--mf-color-warning-emphasis);
   --bs-warning-bg-subtle: var(--mf-color-warning-subtle);
   --bs-warning-border-subtle: #fde68a;
 
   --bs-danger: var(--mf-color-danger);
-  --bs-danger-rgb: 220, 38, 38;
+  --bs-danger-rgb: 225, 29, 72;
   --bs-danger-text-emphasis: var(--mf-color-danger-emphasis);
   --bs-danger-bg-subtle: var(--mf-color-danger-subtle);
-  --bs-danger-border-subtle: #fecaca;
+  --bs-danger-border-subtle: #fecdd3;
 
   --bs-info: var(--mf-color-info);
-  --bs-info-rgb: 8, 145, 178;
+  --bs-info-rgb: 37, 99, 235;
   --bs-info-text-emphasis: var(--mf-color-info-emphasis);
   --bs-info-bg-subtle: var(--mf-color-info-subtle);
-  --bs-info-border-subtle: #a5f3fc;
+  --bs-info-border-subtle: #bfdbfe;
 
   --bs-light: var(--mf-slate-50);
-  --bs-light-rgb: 248, 250, 252;
+  --bs-light-rgb: 247, 248, 248;
   --bs-dark: var(--mf-slate-800);
-  --bs-dark-rgb: 30, 41, 59;
+  --bs-dark-rgb: 35, 41, 40;
 
   --bs-border-radius: var(--mf-radius-sm);
   --bs-border-radius-sm: 6px;
@@ -150,8 +158,16 @@
 
 * { min-width: 0; }
 html, body, #root, .App { min-height: 100%; }
-body { overflow-x: hidden; }
+body {
+  overflow-x: hidden;
+  font-family: var(--mf-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+:root { --bs-body-font-family: var(--mf-font-sans); --bs-font-sans-serif: var(--mf-font-sans); }
 body.mf-drawer-open { overflow: hidden; }
+/* Line up digits in tables, money and metrics. */
+.table, .mf-stat-card__value, .mf-data-table td, .font-tabular { font-variant-numeric: tabular-nums; }
 
 .container, .container-fluid { max-width: 100%; }
 .container-fluid { padding-left: var(--mf-page-gap); padding-right: var(--mf-page-gap); }
@@ -256,3 +272,107 @@ body.dark-mode .mf-empty-state__icon { background: rgba(37,99,235,.18); }
   .navbar-brand small { display:none; }
   .navbar-brand > div:last-child { font-size:1rem !important; }
 }
+
+/* ==========================================================================
+   PHASE 1 — Shared primitives (PageContainer, Breadcrumbs, FilterBar,
+   FormSection, DataTable, Skeleton, StatusBadge). Presentational only.
+   ========================================================================== */
+
+/* --- Button system: add the "ghost" variant Bootstrap lacks --- */
+.btn-ghost { --bs-btn-color: var(--mf-text-muted); --bs-btn-bg: transparent; --bs-btn-border-color: transparent;
+  --bs-btn-hover-color: var(--mf-text); --bs-btn-hover-bg: var(--mf-slate-100); --bs-btn-hover-border-color: transparent;
+  --bs-btn-active-bg: var(--mf-slate-200); --bs-btn-active-border-color: transparent;
+  --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb); }
+body.dark-mode .btn-ghost { --bs-btn-hover-bg: rgba(255,255,255,.06); --bs-btn-active-bg: rgba(255,255,255,.1); --bs-btn-hover-color: #e5e7eb; }
+
+/* --- PageContainer: consistent page rhythm --- */
+.mf-page { max-width: 1360px; margin-inline: auto; display: flex; flex-direction: column; gap: var(--mf-space-lg); }
+.mf-page--narrow { max-width: 820px; }
+.mf-page--wide { max-width: none; }
+
+/* --- Breadcrumbs --- */
+.mf-breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; font-size: .8125rem; color: var(--mf-text-muted); margin: 0; padding: 0; list-style: none; }
+.mf-breadcrumbs a { color: var(--mf-text-muted); text-decoration: none; }
+.mf-breadcrumbs a:hover { color: var(--mf-color-primary); }
+.mf-breadcrumbs li { display: flex; align-items: center; gap: .4rem; }
+.mf-breadcrumbs li:not(:last-child)::after { content: "/"; color: var(--mf-border-strong); }
+.mf-breadcrumbs li:last-child { color: var(--mf-text); font-weight: 600; }
+
+/* --- Page header (refined; keeps the old class names) --- */
+.mf-page-header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap: var(--mf-space-md); margin-bottom: 0; }
+.mf-page-header__eyebrow { color: var(--mf-color-primary); font-weight:700; font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; }
+.mf-page-header__title { font-weight:700; margin:.15rem 0 .3rem; font-size: clamp(1.35rem, 2vw, 1.6rem); color: var(--mf-text); letter-spacing:-.01em; text-wrap: balance; }
+.mf-page-header__description { color: var(--mf-text-muted); margin:0; max-width: 60ch; }
+
+/* --- FilterBar / toolbar --- */
+.mf-filter-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--mf-space-sm) var(--mf-space-md);
+  background: var(--mf-surface); border: 1px solid var(--mf-border); border-radius: var(--mf-radius); padding: var(--mf-space-md); box-shadow: var(--mf-shadow-sm); }
+.mf-filter-bar__field { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+.mf-filter-bar__field > label { font: var(--mf-text-label); color: var(--mf-text-muted); }
+.mf-filter-bar__field--grow { flex: 1 1 220px; }
+.mf-filter-bar__actions { display: flex; gap: .5rem; margin-left: auto; }
+@media (max-width: 575.98px) { .mf-filter-bar__actions { margin-left: 0; width: 100%; } .mf-filter-bar__field { flex: 1 1 100%; } }
+
+/* --- FormSection --- */
+.mf-form-section { border: 0; padding: 0; margin: 0 0 var(--mf-space-xl); }
+.mf-form-section + .mf-form-section { padding-top: var(--mf-space-lg); border-top: 1px solid var(--mf-border); }
+.mf-form-section__title { font: var(--mf-text-section-title); color: var(--mf-text); margin: 0 0 .2rem; }
+.mf-form-section__hint { font: var(--mf-text-helper); color: var(--mf-text-muted); margin: 0 0 var(--mf-space-md); }
+.mf-form-section__grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--mf-space-md); }
+.mf-form-section__grid > .mf-col-full { grid-column: 1 / -1; }
+@media (max-width: 640px) { .mf-form-section__grid { grid-template-columns: 1fr; } }
+
+/* --- DataTable --- */
+.mf-data-table__wrap { background: var(--mf-surface); border: 1px solid var(--mf-border); border-radius: var(--mf-radius); box-shadow: var(--mf-shadow-sm); overflow: hidden; }
+.mf-data-table__scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.mf-data-table { width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; min-width: 640px; }
+.mf-data-table thead th { position: sticky; top: 0; z-index: 1; background: var(--mf-surface-2); color: var(--mf-text-muted);
+  font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; text-align: left;
+  padding: .75rem 1rem; border-bottom: 1px solid var(--mf-border); white-space: nowrap; }
+.mf-data-table tbody td { padding: .85rem 1rem; border-bottom: 1px solid var(--mf-border); vertical-align: middle; color: var(--mf-text); }
+.mf-data-table tbody tr:last-child td { border-bottom: 0; }
+.mf-data-table tbody tr { transition: background-color .12s ease; }
+.mf-data-table tbody tr:hover { background: var(--mf-slate-50); }
+.mf-data-table__num { text-align: right; font-variant-numeric: tabular-nums; }
+.mf-data-table__actions { text-align: right; white-space: nowrap; }
+body.dark-mode .mf-data-table__wrap { background:#1f2937; border-color:#374151; }
+body.dark-mode .mf-data-table thead th { background:#111827; border-color:#374151; }
+body.dark-mode .mf-data-table tbody td { border-color:#374151; }
+body.dark-mode .mf-data-table tbody tr:hover { background: rgba(255,255,255,.03); }
+
+/* Mobile: let a DataTable fall back to stacked cards when it opts in */
+@media (max-width: 640px) {
+  .mf-data-table--cards, .mf-data-table--cards thead, .mf-data-table--cards tbody,
+  .mf-data-table--cards th, .mf-data-table--cards td, .mf-data-table--cards tr { display: block; }
+  .mf-data-table--cards { min-width: 0; }
+  .mf-data-table--cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .mf-data-table--cards tbody tr { border: 1px solid var(--mf-border); border-radius: var(--mf-radius-sm); margin: .6rem; padding: .3rem 0; }
+  .mf-data-table--cards tbody td { border: 0; display: flex; justify-content: space-between; gap: 1rem; padding: .45rem 1rem; }
+  .mf-data-table--cards tbody td::before { content: attr(data-label); color: var(--mf-text-muted); font-weight: 600; font-size: .8125rem; }
+}
+
+/* --- Skeleton loader --- */
+.mf-skeleton { display:block; background: linear-gradient(90deg, var(--mf-slate-100) 25%, var(--mf-slate-200) 37%, var(--mf-slate-100) 63%);
+  background-size: 400% 100%; border-radius: var(--mf-radius-sm); animation: mf-skeleton 1.4s ease infinite; }
+@keyframes mf-skeleton { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+@media (prefers-reduced-motion: reduce) { .mf-skeleton { animation: none; } }
+body.dark-mode .mf-skeleton { background: linear-gradient(90deg,#273244 25%,#334155 37%,#273244 63%); background-size:400% 100%; }
+
+/* --- StatusBadge variants (build on .mf-badge) --- */
+.mf-badge--neutral  { background: var(--mf-slate-100); color: var(--mf-slate-600); }
+.mf-badge--success  { background: var(--mf-color-success-subtle); color: var(--mf-color-success-emphasis); }
+.mf-badge--warning  { background: var(--mf-color-warning-subtle); color: var(--mf-color-warning-emphasis); }
+.mf-badge--danger   { background: var(--mf-color-danger-subtle);  color: var(--mf-color-danger-emphasis); }
+.mf-badge--info     { background: var(--mf-color-info-subtle);    color: var(--mf-color-info-emphasis); }
+.mf-badge--primary  { background: var(--mf-color-primary-subtle); color: var(--mf-color-primary-emphasis); }
+.mf-badge__dot { width:.5rem; height:.5rem; border-radius:50%; background: currentColor; flex-shrink:0; }
+body.dark-mode .mf-badge--neutral { background: rgba(255,255,255,.08); color:#cbd5e1; }
+
+/* --- AppModal: mobile bottom-sheet option --- */
+@media (max-width: 575.98px) {
+  .modal-dialog.mf-modal--sheet { margin: 0; position: fixed; left: 0; right: 0; bottom: 0; max-width: none; }
+  .modal-dialog.mf-modal--sheet .modal-content { border-bottom-left-radius: 0; border-bottom-right-radius: 0; max-height: 92vh; }
+}
+
+/* --- Section heading helper reused across redesigned pages --- */
+.mf-section-title { font: var(--mf-text-section-title); color: var(--mf-text); margin: 0 0 var(--mf-space-md); }

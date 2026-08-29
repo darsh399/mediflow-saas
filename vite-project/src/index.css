@@ -6,8 +6,8 @@ html, body, #root {
 	height: 100%;
 }
 body {
-    background-color: #F9FAFB; /* equivalent to tailwind's gray-50 */
-    color: #1F2937; /* equivalent to tailwind's gray-800 */
+    background-color: var(--mf-bg, #f7f8f8);
+    color: var(--mf-text, #232928);
 }
 
 body.dark-mode {
@@ -27,29 +27,29 @@ body.dark-mode {
        ui-system.css — without these, badges/alerts/icon-chips built from
        bg-{color}-subtle + text-{color}-emphasis stay light-mode-bright and
        become low-contrast against the dark background. */
-    --bs-primary-bg-subtle: rgba(37, 99, 235, .18);
-    --bs-primary-border-subtle: rgba(37, 99, 235, .35);
-    --bs-primary-text-emphasis: #93c5fd;
+    --bs-primary-bg-subtle: rgba(13, 148, 136, .20);
+    --bs-primary-border-subtle: rgba(13, 148, 136, .38);
+    --bs-primary-text-emphasis: #5eead4;
 
-    --bs-secondary-bg-subtle: rgba(100, 116, 139, .2);
-    --bs-secondary-border-subtle: rgba(100, 116, 139, .35);
+    --bs-secondary-bg-subtle: rgba(105, 114, 111, .2);
+    --bs-secondary-border-subtle: rgba(105, 114, 111, .35);
     --bs-secondary-text-emphasis: #cbd5e1;
 
-    --bs-success-bg-subtle: rgba(22, 163, 74, .18);
-    --bs-success-border-subtle: rgba(22, 163, 74, .35);
+    --bs-success-bg-subtle: rgba(21, 128, 61, .18);
+    --bs-success-border-subtle: rgba(21, 128, 61, .35);
     --bs-success-text-emphasis: #86efac;
 
-    --bs-warning-bg-subtle: rgba(217, 119, 6, .18);
-    --bs-warning-border-subtle: rgba(217, 119, 6, .35);
+    --bs-warning-bg-subtle: rgba(180, 83, 9, .18);
+    --bs-warning-border-subtle: rgba(180, 83, 9, .35);
     --bs-warning-text-emphasis: #fcd34d;
 
-    --bs-danger-bg-subtle: rgba(220, 38, 38, .18);
-    --bs-danger-border-subtle: rgba(220, 38, 38, .35);
-    --bs-danger-text-emphasis: #fca5a5;
+    --bs-danger-bg-subtle: rgba(225, 29, 72, .18);
+    --bs-danger-border-subtle: rgba(225, 29, 72, .35);
+    --bs-danger-text-emphasis: #fda4af;
 
-    --bs-info-bg-subtle: rgba(8, 145, 178, .18);
-    --bs-info-border-subtle: rgba(8, 145, 178, .35);
-    --bs-info-text-emphasis: #67e8f9;
+    --bs-info-bg-subtle: rgba(37, 99, 235, .18);
+    --bs-info-border-subtle: rgba(37, 99, 235, .35);
+    --bs-info-text-emphasis: #93c5fd;
 }
 
 body.dark-mode .navbar,

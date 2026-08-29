@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchDoctors, deleteDoctor } from '../../redux/slices/doctorSlice'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import SearchBar from '../../components/SearchBar'
 import AssignVisitModal from '../../components/AssignVisitModal'
 import DoctorImportModal from '../../components/DoctorImportModal'
@@ -32,10 +32,22 @@ const Doctors = () => {
   const [incompleteOnly, setIncompleteOnly] = useState(false)
   const [assignTarget, setAssignTarget] = useState(null)
   const [showImport, setShowImport] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
     dispatch(fetchDoctors())
   }, [dispatch, refreshKey])
+
+  // The sidebar "Import Excel" link points here with ?import=1 — open the modal
+  // and strip the param so it doesn't reopen on refresh.
+  useEffect(() => {
+    if (searchParams.get('import') === '1' && canImport) {
+      setShowImport(true)
+      searchParams.delete('import')
+      setSearchParams(searchParams, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, canImport])
 
   const handleDelete = (id) => {
     if (!confirm('Delete this doctor?')) return
