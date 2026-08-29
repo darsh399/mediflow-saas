@@ -6,6 +6,7 @@ import { doctorVisit } from "../../redux/slices/visitSlice";
 import AssignVisitModal from "../../components/AssignVisitModal";
 import DoctorCrmPanel from "../../components/DoctorCrmPanel";
 import DoctorCompletePanel from "../../components/DoctorCompletePanel";
+import { PageContainer, Breadcrumbs, Skeleton } from "../../components/ui";
 
 const TIER_STYLE = { A: "text-bg-success", B: "text-bg-primary", C: "text-bg-warning", UNGRADED: "text-bg-secondary" };
 
@@ -145,89 +146,75 @@ const DoctorDetails = () => {
 
   if (loading) {
     return (
-      <div className="container-fluid py-5">
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+      <PageContainer>
+        <Skeleton width="220px" height="1.6rem" />
+        <div className="d-flex align-items-center gap-3">
+          <Skeleton width="55px" height="55px" radius="14px" />
+          <div className="flex-grow-1">
+            <Skeleton width="40%" height="1.4rem" />
+            <div className="mt-2"><Skeleton width="60%" /></div>
           </div>
-
-          <p className="text-muted mt-3 mb-0">
-            Loading doctor details...
-          </p>
         </div>
-      </div>
+        <div className="row g-4">
+          {[0, 1].map((i) => (
+            <div className="col-lg-6" key={i}>
+              <div className="card border-0 shadow-sm rounded-4"><div className="card-body p-4">
+                <Skeleton width="45%" height="1.1rem" />
+                <div className="mt-3"><Skeleton height="4rem" /></div>
+              </div></div>
+            </div>
+          ))}
+        </div>
+      </PageContainer>
     );
   }
 
   if (error) {
     return (
-      <div className="container-fluid py-4">
-        <div className="alert alert-danger rounded-4 border-0 shadow-sm">
-          <div className="fw-semibold mb-1">
-            Unable to load doctor
-          </div>
-
+      <PageContainer width="narrow">
+        <div className="alert alert-danger rounded-4 border-0 shadow-sm mb-0">
+          <div className="fw-semibold mb-1">Unable to load doctor</div>
           <div>{error}</div>
-
-          <button
-            className="btn btn-outline-danger btn-sm mt-3"
-            onClick={() => navigate(-1)}
-          >
-            Go Back
-          </button>
+          <button className="btn btn-outline-danger btn-sm mt-3" onClick={() => navigate(-1)}>Go back</button>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (!doctor) {
     return (
-      <div className="container-fluid py-4">
-        <div className="alert alert-warning rounded-4 border-0 shadow-sm">
-          Doctor not found.
-        </div>
-      </div>
+      <PageContainer width="narrow">
+        <div className="alert alert-warning rounded-4 border-0 shadow-sm mb-0">Doctor not found.</div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-          <div className="d-flex align-items-center gap-3">
-            <div
-              className="rounded-4 bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
-              style={{
-                width: "55px",
-                height: "55px",
-                fontSize: "22px",
-              }}
-            >
-              {doctor.name?.charAt(0)?.toUpperCase() || "D"}
-            </div>
+    <PageContainer>
+      <Breadcrumbs items={[{ label: "Doctors", to: "/doctors" }, { label: doctor.name || "Doctor" }]} />
 
-            <div>
-              <div className="d-flex align-items-center gap-2 flex-wrap">
-                <h2 className="fw-bold mb-1">
-                  {doctor.name || "Doctor"}
-                </h2>
-                <span className={`badge ${TIER_STYLE[doctor.tier] || TIER_STYLE.UNGRADED}`}>Tier {doctor.tier || "UNGRADED"}</span>
-                {doctor.marketingConsent && <span className="badge text-bg-light border">consent given</span>}
-              </div>
-
-              <p className="text-muted mb-0">
-                {(doctor.tags || []).length ? doctor.tags.join(" · ") : "Doctor profile, clinic and engagement"}
-              </p>
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div className="d-flex align-items-center gap-3">
+          <span
+            className="rounded-4 text-white d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+            style={{ width: 55, height: 55, fontSize: 22, background: "linear-gradient(135deg, var(--mf-color-primary), var(--mf-color-accent))" }}
+          >
+            {doctor.name?.charAt(0)?.toUpperCase() || "D"}
+          </span>
+          <div>
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <h2 className="mf-page-header__title mb-0">{doctor.name || "Doctor"}</h2>
+              <span className={`badge ${TIER_STYLE[doctor.tier] || TIER_STYLE.UNGRADED}`}>Tier {doctor.tier || "UNGRADED"}</span>
+              {doctor.marketingConsent && <span className="mf-badge mf-badge--neutral">consent given</span>}
             </div>
+            <p className="text-muted mb-0">
+              {(doctor.tags || []).length ? doctor.tags.join(" · ") : "Doctor profile, clinic and engagement"}
+            </p>
           </div>
         </div>
 
-        <Link
-          to="/doctors"
-          className="btn btn-outline-secondary rounded-3 px-4"
-        >
-          <i className="bi bi-arrow-left me-2"></i>
-          Back to Doctors
+        <Link to="/doctors" className="btn btn-ghost rounded-3">
+          <i className="bi bi-arrow-left me-2"></i> Back to Doctors
         </Link>
       </div>
 
@@ -591,7 +578,7 @@ const DoctorDetails = () => {
           onAssigned={() => setAssignSuccess("Visit assigned successfully.")}
         />
       )}
-    </div>
+    </PageContainer>
   );
 };
 

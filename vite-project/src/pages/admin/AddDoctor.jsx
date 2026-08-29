@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { createDoctor } from '../../redux/slices/doctorSlice'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import territoryApi from '../../api/territoryApi'
+import { PageContainer, PageHeader, Breadcrumbs } from '../../components/ui'
 
 const AddDoctor = () => {
   const [form, setForm] = useState({
@@ -165,64 +166,27 @@ const AddDoctor = () => {
   }
 
   return (
-    <div className="container-fluid py-4">
+    <PageContainer>
+      <Breadcrumbs items={[{ label: 'Doctors', to: '/doctors' }, { label: 'Add Doctor' }]} />
 
-      {/* Header */}
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <PageHeader
+        eyebrow="Field"
+        title="Add Doctor"
+        description="Register a doctor with their clinic and territory information."
+        actions={
+          <Link to="/doctors" className="btn btn-ghost rounded-3">
+            <i className="bi bi-arrow-left me-2"></i> Back to Doctors
+          </Link>
+        }
+      />
 
-        <div>
-          <div className="d-flex align-items-center gap-3 mb-2">
-
-            <div
-              className="bg-primary text-white rounded-4 d-flex align-items-center justify-content-center shadow-sm"
-              style={{
-                width: '52px',
-                height: '52px'
-              }}
-            >
-              <i className="bi bi-person-plus-fill fs-4"></i>
-            </div>
-
-            <div>
-              <h2 className="fw-bold mb-0">
-                Add Doctor
-              </h2>
-
-              <p className="text-muted mb-0">
-                Add a doctor and clinic information
-              </p>
-            </div>
-
-          </div>
-        </div>
-
-        <button
-          type="button"
-          className="btn btn-outline-secondary rounded-3 px-4"
-          onClick={() => nav('/doctors')}
-        >
-          <i className="bi bi-arrow-left me-2"></i>
-          Back to Doctors
-        </button>
-
-      </div>
-
-      {/* Error */}
       {error && (
-        <div className="alert alert-danger border-0 rounded-4 shadow-sm d-flex align-items-start mb-4">
-
-          <i className="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
-
+        <div className="alert alert-danger border-0 shadow-sm d-flex align-items-start gap-3 mb-0">
+          <i className="bi bi-exclamation-triangle-fill fs-5"></i>
           <div>
-            <div className="fw-semibold">
-              Unable to add doctor
-            </div>
-
-            <div className="small mt-1">
-              {error}
-            </div>
+            <div className="fw-semibold">Unable to add doctor</div>
+            <div className="small mt-1">{error}</div>
           </div>
-
         </div>
       )}
 
@@ -781,36 +745,7 @@ const AddDoctor = () => {
 
       </div>
 
-      <style>
-        {`
-          .card {
-            transition: all 0.2s ease;
-          }
-
-          .card:hover {
-            transform: translateY(-2px);
-          }
-
-          .form-control,
-          .input-group-text {
-            min-height: 45px;
-          }
-
-          .form-control:focus {
-            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
-          }
-
-          .btn {
-            transition: all 0.2s ease;
-          }
-
-          .btn:hover {
-            transform: translateY(-1px);
-          }
-        `}
-      </style>
-
-    </div>
+    </PageContainer>
   )
 }
 
