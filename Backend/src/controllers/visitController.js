@@ -81,6 +81,7 @@ export const doctorVisit = async (req, res) => {
     const visitedAt = new Date();
     const visit = new Visit({ companyId, employeeId, doctorId, purpose, notes, discussion, doctorResponse: doctorResponse || undefined, doctorResponseNotes, visitLatitude: latitude, visitLongitude: longitude, registeredLatitude: doctor.latitude, registeredLongitude: doctor.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt, status: 'completed', completedAt: visitedAt, createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
     await visit.save();
+    await Doctor.updateOne({ _id: doctorId, companyId }, { $set: { lastInteractionAt: visitedAt } });
     await recordAudit(req, 'visit_created', { companyId, entityId: visit._id, module: 'visits', newValue: { status: visit.status, employeeId } });
     return res.status(201).json({ success: true, message: 'Visit successfully recorded', distanceInMeters: distanceMeters, visit });
   } catch (error) {

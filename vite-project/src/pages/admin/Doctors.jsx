@@ -4,9 +4,11 @@ import { fetchDoctors, deleteDoctor } from '../../redux/slices/doctorSlice'
 import { Link } from 'react-router-dom'
 import SearchBar from '../../components/SearchBar'
 import AssignVisitModal from '../../components/AssignVisitModal'
+import DoctorImportModal from '../../components/DoctorImportModal'
 import { PageHeader, StatCard, EmptyState } from '../../components/ui'
 
 const ASSIGN_ROLES = ['admin', 'company_owner', 'hr_manager', 'manager', 'superadmin', 'super_admin']
+const IMPORT_ROLES = ['admin', 'company_owner', 'hr_manager', 'superadmin', 'super_admin']
 
 function formatDateOfBirth(value) {
   if (!value) return '-'
@@ -20,13 +22,16 @@ const Doctors = () => {
   const { items, loading, error } = useSelector(s => s.doctors)
   const role = useSelector((s) => s.auth.user?.role)
   const canAssign = ASSIGN_ROLES.includes(role)
+  const canImport = IMPORT_ROLES.includes(role)
   const [refreshKey, setRefreshKey] = useState(0)
   const [q, setQ] = useState('')
   const [cityFilter, setCityFilter] = useState('')
   const [stateFilter, setStateFilter] = useState('')
   const [districtFilter, setDistrictFilter] = useState('')
   const [territoryFilter, setTerritoryFilter] = useState('')
+  const [incompleteOnly, setIncompleteOnly] = useState(false)
   const [assignTarget, setAssignTarget] = useState(null)
+  const [showImport, setShowImport] = useState(false)
 
   useEffect(() => {
     dispatch(fetchDoctors())
@@ -46,13 +51,17 @@ const Doctors = () => {
     [items]
   )
 
+  const isIncomplete = (d) => d.completeness ? !d.completeness.complete : false
+  const incompleteCount = items.filter(isIncomplete).length
+
   const filteredDoctors = items.filter(d =>
     (d.name?.toLowerCase().includes(q.toLowerCase())) &&
     (!cityFilter || d.city === cityFilter) &&
     (!stateFilter || d.state === stateFilter) &&
     (!districtFilter || d.district === districtFilter) &&
     (!territoryFilter
-      || (territoryFilter === '__none__' ? !d.territoryId : d.territoryId?._id === territoryFilter))
+      || (territoryFilter === '__none__' ? !d.territoryId : d.territoryId?._id === territoryFilter)) &&
+    (!incompleteOnly || isIncomplete(d))
   )
 
   const clearLocationFilters = () => {
@@ -70,13 +79,25 @@ const Doctors = () => {
         title="Doctors"
         description="Manage doctors and their clinic information."
         actions={
-          <Link
-            className="btn btn-primary px-4 py-2 rounded-3 fw-semibold"
-            to="/doctors/add"
-          >
-            <i className="bi bi-plus-lg me-2"></i>
-            Add Doctor
-          </Link>
+          <div className="d-flex flex-wrap gap-2">
+            {canImport && (
+              <button
+                type="button"
+                className="btn btn-outline-primary px-4 py-2 rounded-3 fw-semibold"
+                onClick={() => setShowImport(true)}
+              >
+                <i className="bi bi-file-earmark-excel me-2"></i>
+                Import Excel
+              </button>
+            )}
+            <Link
+              className="btn btn-primary px-4 py-2 rounded-3 fw-semibold"
+              to="/doctors/add"
+            >
+              <i className="bi bi-plus-lg me-2"></i>
+              Add Doctor
+            </Link>
+          </div>
         }
       />
 
@@ -101,6 +122,24 @@ const Doctors = () => {
             iconColor="var(--mf-color-success)"
           />
         </div>
+
+        {incompleteCount > 0 && (
+          <div className="col-sm-6 col-xl-3">
+            <button
+              type="button"
+              className="btn p-0 border-0 bg-transparent w-100 text-start"
+              onClick={() => setIncompleteOnly((value) => !value)}
+            >
+              <StatCard
+                label={incompleteOnly ? 'Incomplete (filtered)' : 'Incomplete details'}
+                value={incompleteCount}
+                icon="bi-exclamation-triangle"
+                iconBg="var(--mf-color-warning-subtle)"
+                iconColor="var(--mf-color-warning)"
+              />
+            </button>
+          </div>
+        )}
 
       </div>
 
@@ -283,8 +322,16 @@ const Doctors = () => {
                           </div>
 
                           <div>
-                            <div className="fw-semibold">
+                            <div className="fw-semibold d-flex align-items-center gap-2">
                               {doctor.name}
+                              {isIncomplete(doctor) && (
+                                <span
+                                  className="badge bg-warning bg-opacity-25 text-warning-emphasis rounded-pill"
+                                  title={`Missing: ${doctor.completeness.missing.join(', ')}`}
+                                >
+                                  <i className="bi bi-exclamation-triangle me-1"></i>Incomplete
+                                </span>
+                              )}
                             </div>
 
                             <small className="text-muted">
@@ -417,6 +464,13 @@ const Doctors = () => {
           targetName={assignTarget.name}
           onClose={() => setAssignTarget(null)}
           onAssigned={() => alert(`Visit to ${assignTarget.name} assigned successfully.`)}
+        />
+      )}
+
+      {showImport && (
+        <DoctorImportModal
+          onClose={() => setShowImport(false)}
+          onImported={() => setRefreshKey((k) => k + 1)}
         />
       )}
 

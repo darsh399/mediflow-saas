@@ -4,6 +4,10 @@ import doctorApi from "../../api/doctorApi";
 import { useDispatch, useSelector } from "react-redux";
 import { doctorVisit } from "../../redux/slices/visitSlice";
 import AssignVisitModal from "../../components/AssignVisitModal";
+import DoctorCrmPanel from "../../components/DoctorCrmPanel";
+import DoctorCompletePanel from "../../components/DoctorCompletePanel";
+
+const TIER_STYLE = { A: "text-bg-success", B: "text-bg-primary", C: "text-bg-warning", UNGRADED: "text-bg-secondary" };
 
 const ASSIGN_ROLES = ['admin', 'company_owner', 'hr_manager', 'manager', 'superadmin', 'super_admin'];
 
@@ -203,12 +207,16 @@ const DoctorDetails = () => {
             </div>
 
             <div>
-              <h2 className="fw-bold mb-1">
-                {doctor.name || "Doctor"}
-              </h2>
+              <div className="d-flex align-items-center gap-2 flex-wrap">
+                <h2 className="fw-bold mb-1">
+                  {doctor.name || "Doctor"}
+                </h2>
+                <span className={`badge ${TIER_STYLE[doctor.tier] || TIER_STYLE.UNGRADED}`}>Tier {doctor.tier || "UNGRADED"}</span>
+                {doctor.marketingConsent && <span className="badge text-bg-light border">consent given</span>}
+              </div>
 
               <p className="text-muted mb-0">
-                Doctor profile and clinic information
+                {(doctor.tags || []).length ? doctor.tags.join(" · ") : "Doctor profile, clinic and engagement"}
               </p>
             </div>
           </div>
@@ -224,6 +232,17 @@ const DoctorDetails = () => {
       </div>
 
       <div className="row g-4">
+        <DoctorCompletePanel
+          doctor={doctor}
+          onDoctorUpdate={(updated) => updated && setDoctor((current) => ({ ...current, ...updated }))}
+        />
+
+        <DoctorCrmPanel
+          doctorId={doctor._id}
+          doctor={doctor}
+          onDoctorUpdate={(updated) => setDoctor((current) => ({ ...current, ...updated }))}
+        />
+
         <div className="col-lg-6">
           <div className="card border-0 shadow-sm rounded-4 h-100">
             <div className="card-body p-4">
@@ -344,6 +363,16 @@ const DoctorDetails = () => {
                   {doctor.longitude ??
                     doctor.location?.longitude ??
                     "-"}
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <small className="text-muted d-block">
+                  Altitude
+                </small>
+
+                <div>
+                  {typeof doctor.altitude === "number" ? `${doctor.altitude} m` : "-"}
                 </div>
               </div>
             </div>
