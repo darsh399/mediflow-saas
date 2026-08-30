@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { createMedical } from '../../redux/slices/medicalSlice'
 import { useNavigate } from 'react-router-dom'
+import { PageContainer, PageHeader, Breadcrumbs } from '../../components/ui'
 import territoryApi from '../../api/territoryApi'
 
 const AddMedical = ()=>{
@@ -41,29 +42,18 @@ const AddMedical = ()=>{
   const hasLocation = form.latitude !== '' && form.longitude !== ''
 
   return (
-    <div className="container-fluid py-4">
-
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-          <div className="d-flex align-items-center gap-3 mb-2">
-            <div
-              className="bg-primary text-white rounded-4 d-flex align-items-center justify-content-center shadow-sm"
-              style={{ width: '52px', height: '52px' }}
-            >
-              <i className="bi bi-shop fs-4"></i>
-            </div>
-            <div>
-              <h2 className="fw-bold mb-0">Add Medical / Shop</h2>
-              <p className="text-muted mb-0">Register a new medical shop and its contact details</p>
-            </div>
-          </div>
-        </div>
-
-        <button type="button" className="btn btn-outline-secondary rounded-3 px-4" onClick={() => nav('/medicals')}>
-          <i className="bi bi-arrow-left me-2"></i>
-          Back to Medicals
-        </button>
-      </div>
+    <PageContainer>
+      <Breadcrumbs items={[{ label: 'Medicals', to: '/medicals' }, { label: 'Add Medical' }]} />
+      <PageHeader
+        eyebrow="Field"
+        title="Add Medical / Shop"
+        description="Register a new medical shop and its contact details."
+        actions={
+          <button type="button" className="btn btn-ghost rounded-3" onClick={() => nav('/medicals')}>
+            <i className="bi bi-arrow-left me-2"></i> Back to Medicals
+          </button>
+        }
+      />
 
       {error && (
         <div className="alert alert-danger border-0 rounded-4 shadow-sm d-flex align-items-start mb-4">
@@ -273,12 +263,11 @@ const AddMedical = ()=>{
           .card { transition: all 0.2s ease; }
           .card:hover { transform: translateY(-2px); }
           .form-control, .input-group-text { min-height: 45px; }
-          .form-control:focus { box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1); }
           .btn { transition: all 0.2s ease; }
           .btn:hover { transform: translateY(-1px); }
         `}
       </style>
-    </div>
+    </PageContainer>
   )
 }
 

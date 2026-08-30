@@ -253,6 +253,7 @@ const Doctors = () => {
       <DataTable
         columns={columns}
         rows={filteredDoctors}
+        pageSize={25}
         rowKey={(d) => d._id}
         loading={loading}
         mobileCards

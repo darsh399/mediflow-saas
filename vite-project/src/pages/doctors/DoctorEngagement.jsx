@@ -160,6 +160,7 @@ const DoctorEngagement = () => {
       <DataTable
         columns={columns}
         rows={rows}
+        pageSize={25}
         rowKey={(r) => r._id}
         loading={loading}
         mobileCards

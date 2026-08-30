@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import superAdminApi from '../../api/superAdminApi'
-import BackButton from '../../components/BackButton'
+import { PageContainer, PageHeader } from '../../components/ui'
 
 const STATUS_OPTIONS = ['NEW', 'CONTACTED', 'CONVERTED', 'DISMISSED']
 
@@ -51,24 +51,8 @@ const DemoRequests = () => {
   }
 
   return (
-    <div className="container-fluid py-4">
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div className="card-body p-4 p-lg-5 text-white" style={{ background: 'linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)' }}>
-          <div className="d-flex flex-wrap align-items-center gap-3 mb-2">
-            <BackButton />
-            <span className="opacity-75 small">SUPER ADMIN</span>
-          </div>
-          <div className="d-flex align-items-center gap-3">
-            <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: '55px', height: '55px' }}>
-              <i className="bi bi-megaphone fs-3"></i>
-            </div>
-            <div>
-              <h2 className="fw-bold mb-0">Demo Requests</h2>
-              <p className="mb-0 opacity-75">Leads submitted through the public Contact page.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader eyebrow="Super admin" title="Demo Requests" description="Leads submitted through the public Contact page." />
 
       <div className="card border-0 shadow-sm mb-4">
         <div className="card-body d-flex flex-wrap gap-2 align-items-center">
@@ -88,7 +72,7 @@ const DemoRequests = () => {
         ) : (
           <div className="table-responsive">
             <table className="table align-middle mb-0">
-              <thead style={{ backgroundColor: '#f8f9fc' }}>
+              <thead style={{ backgroundColor: 'var(--mf-surface-2)' }}>
                 <tr>
                   <th className="px-4 py-3 border-0">Name / Company</th>
                   <th className="py-3 border-0">Contact</th>
@@ -146,7 +130,7 @@ const DemoRequests = () => {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }
 

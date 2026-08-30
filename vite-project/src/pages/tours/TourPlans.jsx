@@ -198,6 +198,7 @@ const TourPlans = () => {
       <DataTable
         columns={columns}
         rows={plans}
+        pageSize={25}
         rowKey={(p) => p._id}
         loading={loading}
         mobileCards

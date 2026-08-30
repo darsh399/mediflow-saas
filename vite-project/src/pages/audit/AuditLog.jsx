@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import auditLogApi from "../../api/auditLogApi";
+import { PageContainer, PageHeader } from "../../components/ui";
 
 const formatAction = (action) => {
   if (!action) return "-";
@@ -72,23 +73,13 @@ const AuditLog = () => {
   };
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
+    <PageContainer>
+      <PageHeader
+        eyebrow="Security & compliance"
+        title="Audit Log"
+        description="A record of who did what and when across your company."
+      />
       <div className="container-fluid px-0">
-
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}>
-            <div className="d-flex align-items-center gap-3">
-              <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: "55px", height: "55px" }}>
-                <i className="bi bi-clock-history fs-3"></i>
-              </div>
-              <div>
-                <span className="small opacity-75">SECURITY & COMPLIANCE</span>
-                <h2 className="fw-bold mb-0">Audit Log</h2>
-              </div>
-            </div>
-            <p className="mb-0 opacity-75 mt-3">A record of who did what and when across your company.</p>
-          </div>
-        </div>
 
         {error && (
           <div className="alert alert-danger border-0 shadow-sm rounded-4">
@@ -148,7 +139,7 @@ const AuditLog = () => {
           ) : (
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     <th className="px-4 py-3 border-0">When</th>
                     <th className="py-3 border-0">Actor</th>
@@ -229,7 +220,7 @@ const AuditLog = () => {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

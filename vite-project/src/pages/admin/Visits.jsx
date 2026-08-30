@@ -251,6 +251,7 @@ const Visits = () => {
       <DataTable
         columns={columns}
         rows={filteredVisits}
+        pageSize={25}
         rowKey={(v) => v._id}
         loading={loading}
         mobileCards

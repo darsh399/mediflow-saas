@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import tourPlanApi from "../../api/tourPlanApi";
 import territoryApi from "../../api/territoryApi";
 import { useNotify } from "../../components/NotificationProvider";
+import { PageContainer, PageHeader, Breadcrumbs } from "../../components/ui";
 
 const errorMessage = (err, fallback) => err?.response?.data?.message || err?.message || fallback;
 
@@ -55,30 +56,15 @@ const CoverageReport = () => {
   const visible = statusFilter === "all" ? rows : rows.filter((row) => row.status === statusFilter);
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
+    <PageContainer>
+      <Breadcrumbs items={[{ label: "Tour Plans", to: "/tours" }, { label: "Doctor Coverage" }]} />
+      <PageHeader
+        eyebrow="Field planning"
+        title="Doctor Coverage"
+        description="How long since each doctor was last visited. Overdue doctors are listed first."
+      />
+
       <div className="container-fluid px-0">
-
-        <Link to="/tours" className="btn btn-sm btn-light border mb-3">
-          <i className="bi bi-arrow-left me-1"></i>Tour plans
-        </Link>
-
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div
-            className="card-body p-4 p-lg-5 text-white"
-            style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}
-          >
-            <div className="d-flex align-items-center gap-3 mb-2">
-              <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: "55px", height: "55px" }}>
-                <i className="bi bi-radar fs-3"></i>
-              </div>
-              <div>
-                <span className="small opacity-75">FIELD PLANNING</span>
-                <h2 className="fw-bold mb-0">Doctor Coverage</h2>
-              </div>
-            </div>
-            <p className="mb-0 opacity-75">How long since each doctor was last visited. Overdue doctors are listed first.</p>
-          </div>
-        </div>
 
         {summary && (
           <div className="row g-3 mb-4">
@@ -137,7 +123,7 @@ const CoverageReport = () => {
           ) : (
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     <th className="px-4 py-3 border-0">Doctor</th>
                     <th className="py-3 border-0">Territory</th>
@@ -169,7 +155,7 @@ const CoverageReport = () => {
           )}
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

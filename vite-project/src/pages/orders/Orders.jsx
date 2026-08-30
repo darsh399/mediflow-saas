@@ -104,6 +104,7 @@ const Orders = () => {
         <DataTable
           columns={columns}
           rows={orders}
+        pageSize={25}
           rowKey={(o) => o._id}
           mobileCards
           empty={<EmptyState icon="bi-bag" title="No orders yet" description="Orders placed for doctors will appear here." />}

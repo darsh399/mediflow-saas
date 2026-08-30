@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
+import { PageContainer, Breadcrumbs, SkeletonTable } from "../../components/ui";
 import tourPlanApi from "../../api/tourPlanApi";
 import doctorApi from "../../api/doctorApi";
 import medicalApi from "../../api/medicalApi";
@@ -180,35 +181,29 @@ const TourPlanDetail = () => {
 
   if (loading) {
     return (
-      <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-        <div className="card border-0 shadow-sm rounded-4">
-          <div className="card-body text-center py-5">
-            <div className="spinner-border text-primary mb-3" style={{ width: "3rem", height: "3rem" }}></div>
-            <p className="text-muted mb-0">Loading tour plan…</p>
-          </div>
-        </div>
-      </div>
+      <PageContainer>
+        <Breadcrumbs items={[{ label: "Tour Plans", to: "/tours" }, { label: "Plan" }]} />
+        <SkeletonTable rows={6} columns={4} />
+      </PageContainer>
     );
   }
 
   if (error || !plan) {
     return (
-      <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-        <div className="alert alert-danger border-0 shadow-sm rounded-4">
+      <PageContainer width="narrow">
+        <div className="alert alert-danger border-0 shadow-sm mb-0">
           <i className="bi bi-exclamation-triangle-fill me-2"></i>{error || "Tour plan not found"}
         </div>
-        <button type="button" className="btn btn-outline-secondary" onClick={() => navigate("/tours")}>Back to tour plans</button>
-      </div>
+        <button type="button" className="btn btn-ghost rounded-3" onClick={() => navigate("/tours")}>Back to tour plans</button>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-      <div className="container-fluid px-0">
+    <PageContainer>
+      <Breadcrumbs items={[{ label: "Tour Plans", to: "/tours" }, { label: plan.title || "Plan" }]} />
 
-        <button type="button" className="btn btn-sm btn-light border mb-3" onClick={() => navigate("/tours")}>
-          <i className="bi bi-arrow-left me-1"></i>Tour plans
-        </button>
+      <div className="container-fluid px-0">
 
         <div className="card border-0 shadow-sm rounded-4 mb-4">
           <div className="card-body p-4">
@@ -323,7 +318,7 @@ const TourPlanDetail = () => {
           ) : (
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     <th className="px-4 py-3 border-0">Date</th>
                     <th className="py-3 border-0">Place</th>
@@ -368,7 +363,7 @@ const TourPlanDetail = () => {
           )}
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

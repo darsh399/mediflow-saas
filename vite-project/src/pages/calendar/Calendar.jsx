@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import calendarApi from '../../api/calendarApi'
 import leaveApi from '../../api/leaveApi'
 import { addDays, eachDay, formatDateInput, formatDay, monthLabel, rangeForView, startOfMonth, toDateKey } from '../../utils/calendarDates'
-import { PageHeader, Badge } from '../../components/ui'
+import { PageContainer, PageHeader, Badge } from '../../components/ui'
 
 const days = [
   ['MONDAY', 'Monday'],
@@ -195,7 +195,7 @@ export default function Calendar() {
   }
 
   return (
-    <div className="container-fluid py-4">
+    <PageContainer>
       <PageHeader eyebrow="WORKSPACE" title="Calendar" description="Company holidays and upcoming days off." />
 
       {error && (
@@ -393,6 +393,6 @@ export default function Calendar() {
           </div>
         </>
       )}
-    </div>
+    </PageContainer>
   )
 }

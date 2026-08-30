@@ -142,6 +142,7 @@ const Users = () => {
       <DataTable
         columns={columns}
         rows={items || []}
+        pageSize={25}
         rowKey={(u) => u._id}
         loading={loading}
         mobileCards

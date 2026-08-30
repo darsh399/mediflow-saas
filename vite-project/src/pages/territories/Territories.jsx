@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import territoryApi from "../../api/territoryApi";
 import userApi from "../../api/userApi";
 import { useNotify } from "../../components/NotificationProvider";
+import { PageContainer, PageHeader, StatCard, SkeletonTable } from "../../components/ui";
 
 const MANAGE_ROLES = ["admin", "company_owner", "hr_manager", "manager", "project_manager"];
 
@@ -132,57 +133,25 @@ const Territories = () => {
   );
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-      <div className="container-fluid px-0">
+    <PageContainer>
+      <PageHeader
+        eyebrow="Field"
+        title="Territories"
+        description="Group doctors and chemists by area, and assign the reps who cover them."
+        actions={canManage && (
+          <button type="button" className="btn btn-primary rounded-3 fw-semibold" onClick={openCreate}>
+            <i className="bi bi-plus-lg me-2"></i> New Territory
+          </button>
+        )}
+      />
 
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div
-            className="card-body p-4 p-lg-5 text-white"
-            style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}
-          >
-            <div className="row align-items-center">
-              <div className="col-lg-8">
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div
-                    className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center"
-                    style={{ width: "55px", height: "55px" }}
-                  >
-                    <i className="bi bi-geo fs-3"></i>
-                  </div>
-                  <div>
-                    <span className="small opacity-75">FIELD OPERATIONS</span>
-                    <h2 className="fw-bold mb-0">Territories</h2>
-                  </div>
-                </div>
-                <p className="mb-0 opacity-75">
-                  Group doctors and chemists by area, and assign the reps who cover them.
-                </p>
-              </div>
-              <div className="col-lg-4 mt-4 mt-lg-0">
-                <div className="row g-2 text-center">
-                  <div className="col-4">
-                    <div className="bg-white bg-opacity-10 rounded-4 p-3">
-                      <div className="fs-4 fw-bold">{totals.territories}</div>
-                      <small className="opacity-75">Territories</small>
-                    </div>
-                  </div>
-                  <div className="col-4">
-                    <div className="bg-white bg-opacity-10 rounded-4 p-3">
-                      <div className="fs-4 fw-bold">{totals.doctors}</div>
-                      <small className="opacity-75">Doctors</small>
-                    </div>
-                  </div>
-                  <div className="col-4">
-                    <div className="bg-white bg-opacity-10 rounded-4 p-3">
-                      <div className="fs-4 fw-bold">{totals.medicals}</div>
-                      <small className="opacity-75">Chemists</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="row g-3">
+        <div className="col-4"><StatCard label="Territories" value={totals.territories} icon="bi-geo" /></div>
+        <div className="col-4"><StatCard label="Doctors" value={totals.doctors} icon="bi-heart-pulse" iconBg="var(--mf-color-info-subtle)" iconColor="var(--mf-color-info)" /></div>
+        <div className="col-4"><StatCard label="Chemists" value={totals.medicals} icon="bi-shop" iconBg="var(--mf-color-success-subtle)" iconColor="var(--mf-color-success)" /></div>
+      </div>
+
+      <div className="container-fluid px-0">
 
         {error && (
           <div className="alert alert-danger border-0 shadow-sm rounded-4">
@@ -191,21 +160,8 @@ const Territories = () => {
           </div>
         )}
 
-        {canManage && (
-          <div className="mb-3">
-            <button type="button" className="btn btn-primary rounded-3 fw-semibold" onClick={openCreate}>
-              <i className="bi bi-plus-lg me-2"></i>New Territory
-            </button>
-          </div>
-        )}
-
         {loading ? (
-          <div className="card border-0 shadow-sm rounded-4">
-            <div className="card-body text-center py-5">
-              <div className="spinner-border text-primary mb-3" style={{ width: "3rem", height: "3rem" }}></div>
-              <p className="text-muted mb-0">Loading territories…</p>
-            </div>
-          </div>
+          <SkeletonTable rows={6} columns={4} />
         ) : territories.length === 0 ? (
           <div className="card border-0 shadow-sm rounded-4">
             <div className="card-body text-center py-5">
@@ -393,7 +349,7 @@ const Territories = () => {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

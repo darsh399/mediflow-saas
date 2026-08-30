@@ -16,7 +16,7 @@ import doctorApi from '../../api/doctorApi'
 import medicalApi from '../../api/medicalApi'
 import visitApi from '../../api/visitApi'
 import leaveApi from '../../api/leaveApi'
-import { PageHeader, StatCard } from '../../components/ui'
+import { PageContainer, PageHeader, StatCard } from '../../components/ui'
 
 ChartJS.register(
   CategoryScale,
@@ -165,7 +165,7 @@ const AdminDashboard = () => {
   ]
 
   return (
-    <div className="container-fluid py-4">
+    <PageContainer>
 
       <PageHeader
         eyebrow="Administration"
@@ -322,7 +322,7 @@ const AdminDashboard = () => {
 
       </div>
 
-    </div>
+    </PageContainer>
   )
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import projectApi from '../../api/projectApi'
 import userApi from '../../api/userApi'
+import { PageContainer, PageHeader } from '../../components/ui'
 
 const Projects = () => {
   const [projects, setProjects] = useState([])
@@ -49,12 +50,8 @@ const Projects = () => {
   }
 
   return (
-    <div className="container-fluid py-4">
-      <div className="mb-4">
-        <span className="text-primary fw-semibold small">WORK</span>
-        <h2 className="fw-bold mb-1 mt-1">Projects</h2>
-        <p className="text-muted mb-0">Create and track projects assigned to your team.</p>
-      </div>
+    <PageContainer>
+      <PageHeader eyebrow="People" title="Projects" description="Create and track projects assigned to your team." />
 
       {error && (
         <div className="alert alert-danger border-0 rounded-4 shadow-sm d-flex align-items-center mb-4">
@@ -145,7 +142,7 @@ const Projects = () => {
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   )
 }
 

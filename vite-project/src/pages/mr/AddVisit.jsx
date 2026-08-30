@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { doctorVisit, medicalVisit } from '../../redux/slices/visitSlice'
+import { PageContainer, PageHeader } from '../../components/ui'
 import doctorApi from '../../api/doctorApi'
 import medicalApi from '../../api/medicalApi'
 import { Link } from 'react-router-dom'
@@ -102,8 +103,8 @@ const AddVisit = ()=>{
     : ''
 
   return (
-    <div>
-      <h2>Add Visit</h2>
+    <PageContainer width="narrow">
+      <PageHeader eyebrow="Field" title="Add Visit" description="Log a doctor or chemist visit at your current location." />
       <div className="mb-3">
         <label className="form-label">Type</label>
         <select className="form-select" value={type} onChange={e=>setType(e.target.value)}>
@@ -177,7 +178,7 @@ const AddVisit = ()=>{
       <button className="btn btn-primary" onClick={handleUseLocationAndSubmit} disabled={loading || !selected}>{loading? 'Submitting...':'Use my location & Submit'}</button>
       {error && <div className="mt-3 alert alert-danger">{error.message||JSON.stringify(error)}</div>}
       {lastResult && lastResult.message && <div className="mt-3 alert alert-success">{lastResult.message}</div>}
-    </div>
+    </PageContainer>
   )
 }
 

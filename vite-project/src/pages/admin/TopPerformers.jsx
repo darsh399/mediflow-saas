@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { fetchTopPerformers } from '../../redux/slices/visitSlice'
+import { PageContainer, PageHeader } from '../../components/ui'
 
 const RANGE_OPTIONS = [
   ['TODAY', 'Today'],
@@ -32,14 +33,8 @@ export default function TopPerformers() {
   const rest = items.slice(3)
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <div>
-          <span className="text-primary fw-semibold small">FIELD OPERATIONS</span>
-          <h2 className="fw-bold mb-1 mt-1">Top Performers</h2>
-          <p className="text-muted mb-0">Employees with the most completed work visits.</p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader eyebrow="Field" title="Top Performers" description="Employees with the most completed work visits." />
 
       <div className="card border-0 shadow-sm mb-4">
         <div className="card-body">
@@ -139,6 +134,6 @@ export default function TopPerformers() {
           )}
         </>
       )}
-    </div>
+    </PageContainer>
   )
 }

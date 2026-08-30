@@ -130,6 +130,7 @@ const Medicals = () => {
       <DataTable
         columns={columns}
         rows={filteredMedicals}
+        pageSize={25}
         rowKey={(m) => m._id}
         loading={loading}
         mobileCards

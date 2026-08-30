@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import BackButton from '../../components/BackButton'
+import { PageContainer, PageHeader, SkeletonTable } from '../../components/ui'
 import { useDispatch } from 'react-redux'
 import axios from '../../api/axiosInstance'
 import superAdminApi from '../../api/superAdminApi'
@@ -30,40 +30,27 @@ const SuperAdminDashboard = ()=>{
   })()},[])
 
   if(!data) return (
-    <div className="container-fluid py-4 text-center">
-      <div className="spinner-border text-primary mb-3" role="status"></div>
-      <p className="text-muted mb-0">Loading dashboard...</p>
-    </div>
+    <PageContainer>
+      <PageHeader eyebrow="Super admin" title="Super Admin Dashboard" />
+      <SkeletonTable rows={4} columns={3} />
+    </PageContainer>
   )
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-        <div className="d-flex align-items-center gap-2">
-          <BackButton />
-          <div>
-            <span className="text-primary fw-semibold small">SUPER ADMIN</span>
-            <h3 className="fw-bold mb-0">Super Admin Dashboard</h3>
-          </div>
-        </div>
-        <div className="d-flex flex-wrap gap-2">
-          <Link to="/superadmin/companies" className="btn btn-sm btn-outline-primary rounded-3">
-            <i className="bi bi-building-add me-1"></i>
-            Create Company
-          </Link>
-          <Link to="/superadmin/companies/list" className="btn btn-sm btn-outline-secondary rounded-3">
-            <i className="bi bi-list-ul me-1"></i>
-            View Companies
-          </Link>
-          <Link to="/superadmin/demo-requests" className="btn btn-sm btn-outline-secondary rounded-3">
-            <i className="bi bi-megaphone me-1"></i>
-            Demo Requests{data.newDemoRequests > 0 ? ` (${data.newDemoRequests})` : ''}
-          </Link>
-          <button className="btn btn-sm btn-danger rounded-3" onClick={async ()=>{ try{ await axios.post('/api/superadmin/logout'); dispatch(clearAuth()); navigate('/superadmin/login') }catch(e){ console.error(e); dispatch(clearAuth()); navigate('/superadmin/login') } }}>
-            <i className="bi bi-box-arrow-right me-1"></i>
-            Logout
-          </button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        eyebrow="Super admin"
+        title="Super Admin Dashboard"
+        actions={
+          <>
+            <Link to="/superadmin/companies" className="btn btn-sm btn-outline-primary rounded-3"><i className="bi bi-building-add me-1"></i> Create Company</Link>
+            <Link to="/superadmin/companies/list" className="btn btn-sm btn-ghost rounded-3"><i className="bi bi-list-ul me-1"></i> View Companies</Link>
+            <Link to="/superadmin/demo-requests" className="btn btn-sm btn-ghost rounded-3"><i className="bi bi-megaphone me-1"></i> Demo Requests{data.newDemoRequests > 0 ? ` (${data.newDemoRequests})` : ''}</Link>
+            <button className="btn btn-sm btn-danger rounded-3" onClick={async ()=>{ try{ await axios.post('/api/superadmin/logout'); dispatch(clearAuth()); navigate('/superadmin/login') }catch(e){ console.error(e); dispatch(clearAuth()); navigate('/superadmin/login') } }}>
+              <i className="bi bi-box-arrow-right me-1"></i> Logout
+            </button>
+          </>
+        }
+      />
       <div className="row g-3">
         {[
           { label: 'Total Companies', value: data.totalCompanies, color: 'var(--mf-color-primary)', icon: 'bi-building' },
@@ -78,7 +65,7 @@ const SuperAdminDashboard = ()=>{
           { label: 'New Demo Requests', value: data.newDemoRequests ?? 0, color: '#d63384', icon: 'bi-megaphone' },
           { label: 'Monthly Revenue', value: Number(data.monthlyRevenue ?? 0).toLocaleString(), color: '#20c997', icon: 'bi-currency-rupee' },
           { label: 'Total Users', value: data.totalUsers, color: 'var(--mf-color-primary)', icon: 'bi-people' },
-          { label: 'Employees', value: data.totalEmployees, color: '#6f42c1', icon: 'bi-person-badge' },
+          { label: 'Employees', value: data.totalEmployees, color: 'var(--mf-color-accent)', icon: 'bi-person-badge' },
           { label: 'HR', value: data.totalHR, color: '#d63384', icon: 'bi-person-workspace' },
           { label: 'MRs', value: data.totalMR, color: '#fd7e14', icon: 'bi-briefcase' },
         ].map((stat) => (
@@ -117,7 +104,7 @@ const SuperAdminDashboard = ()=>{
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   )
 }
 
