@@ -22,8 +22,8 @@ const Footer = () => {
                   width: "42px",
                   height: "42px",
                   fontSize: "18px",
-                  background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
-                  boxShadow: "0 6px 16px rgba(59,130,246,.35)",
+                  background: "linear-gradient(135deg, var(--mf-color-primary), var(--mf-color-accent))",
+                  boxShadow: "var(--mf-shadow-sm)",
                 }}
               >
                 M
@@ -273,7 +273,7 @@ const Footer = () => {
       <style>
         {`
           .mf-footer {
-            background: linear-gradient(160deg, #172554 0%, #1e2a5e 32%, #14183a 68%, #0b0f24 100%);
+            background: linear-gradient(160deg, var(--mf-sidebar-bg-start) 0%, #123b36 45%, var(--mf-sidebar-bg-end) 100%);
           }
           .mf-footer h6 {
             letter-spacing: .02em;

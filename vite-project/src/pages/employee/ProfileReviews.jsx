@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import employeeProfileApi from '../../api/employeeProfileApi'
+import { PageContainer, PageHeader, SkeletonTable } from '../../components/ui'
 
 const ProfileReviews = () => {
   const navigate = useNavigate()
@@ -139,51 +140,26 @@ const ProfileReviews = () => {
 
   if (loading) {
     return (
-      <div className="container-fluid py-4">
-        <div className="card border-0 shadow-sm">
-          <div className="card-body text-center py-5">
-            <div
-              className="spinner-border text-primary mb-3"
-              role="status"
-            />
-
-            <h6 className="text-muted mb-0">
-              Loading employee profiles...
-            </h6>
-          </div>
-        </div>
-      </div>
+      <PageContainer>
+        <PageHeader eyebrow="People" title="Profile Reviews" description="Review employee profiles and submitted documents." />
+        <SkeletonTable rows={6} columns={4} />
+      </PageContainer>
     )
   }
 
   return (
-    <div className="container-fluid py-4">
+    <PageContainer>
 
-      <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-
-        <div>
-          <span className="text-primary fw-semibold small">
-            EMPLOYEE MANAGEMENT
-          </span>
-
-          <h2 className="fw-bold mb-1 mt-1">
-            Profile Reviews
-          </h2>
-
-          <p className="text-muted mb-0">
-            Review employee profiles and submitted documents.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="btn btn-outline-secondary"
-          onClick={load}
-        >
-          ↻ Refresh
-        </button>
-
-      </div>
+      <PageHeader
+        eyebrow="People"
+        title="Profile Reviews"
+        description="Review employee profiles and submitted documents."
+        actions={
+          <button type="button" className="btn btn-ghost rounded-3" onClick={load}>
+            <i className="bi bi-arrow-clockwise me-1"></i> Refresh
+          </button>
+        }
+      />
 
       {error && (
         <div className="alert alert-danger border-0 shadow-sm">
@@ -534,7 +510,7 @@ const ProfileReviews = () => {
 
       </div>
 
-    </div>
+    </PageContainer>
   )
 }
 

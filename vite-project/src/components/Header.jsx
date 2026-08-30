@@ -379,8 +379,7 @@ const Header = () => {
                             height: 42,
                             background:
                               "linear-gradient(135deg, var(--mf-color-primary), var(--mf-color-accent))",
-                            boxShadow:
-                              "0 4px 12px rgba(37,99,235,0.25)",
+                            boxShadow: "var(--mf-shadow-sm)",
                           }}
                         >
                           {initials}
@@ -588,8 +587,8 @@ const Header = () => {
             font-weight: 700;
             letter-spacing: 0.02em;
             color: #fff;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            background: linear-gradient(135deg, var(--mf-color-primary), var(--mf-color-accent));
+            box-shadow: var(--mf-shadow-sm);
             text-transform: capitalize;
           }
 

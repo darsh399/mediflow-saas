@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { PageContainer, Breadcrumbs, SkeletonTable } from "../../components/ui";
 import companyProductApi from "../../api/companyProductApi";
 import { useNotify } from "../../components/NotificationProvider";
 import { resolveAssetUrl } from "../../utils/resolveAssetUrl";
@@ -89,30 +90,28 @@ const ProductDetails = () => {
 
   if (loading) {
     return (
-      <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-        <div className="card border-0 shadow-sm rounded-4">
-          <div className="card-body text-center py-5">
-            <div className="spinner-border text-primary mb-3"></div>
-            <h6 className="text-muted mb-0">Loading product...</h6>
-          </div>
-        </div>
-      </div>
+      <PageContainer>
+        <Breadcrumbs items={[{ label: "Products", to: "/products" }, { label: "Product" }]} />
+        <SkeletonTable rows={5} columns={2} />
+      </PageContainer>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="container-fluid py-4">
-        <button className="btn btn-outline-secondary mb-4" onClick={() => navigate(-1)}>← Back</button>
-        <div className="alert alert-danger border-0 shadow-sm rounded-4">{error || "Product not found"}</div>
-      </div>
+      <PageContainer width="narrow">
+        <button className="btn btn-ghost rounded-3" onClick={() => navigate(-1)}><i className="bi bi-arrow-left me-2"></i>Back</button>
+        <div className="alert alert-danger border-0 shadow-sm mb-0">{error || "Product not found"}</div>
+      </PageContainer>
     );
   }
 
   const gallery = [product.mainImage, ...(product.images || [])].filter(Boolean);
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
+    <PageContainer>
+      <Breadcrumbs items={[{ label: "Products", to: "/products" }, { label: product.name || "Product" }]} />
+
       <div className="container-fluid px-0">
 
         <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
@@ -262,7 +261,7 @@ const ProductDetails = () => {
           <img src={activeImageUrl} alt={product.name} style={{ maxWidth: "92vw", maxHeight: "88vh", objectFit: "contain" }} onClick={(event) => event.stopPropagation()} />
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

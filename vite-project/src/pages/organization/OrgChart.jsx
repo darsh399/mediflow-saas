@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import organizationApi from "../../api/organizationApi";
+import { PageContainer, PageHeader, StatCard } from "../../components/ui";
 
 const PRIVILEGED_VIEWERS = ["admin", "company_owner", "hr_manager", "manager", "project_manager"];
 
@@ -187,57 +188,20 @@ const OrgChart = () => {
   const selectedReports = selected ? sortByName(childrenOf.get(String(selected._id)) || []) : [];
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-      <div className="container-fluid px-0">
+    <PageContainer>
+      <PageHeader
+        eyebrow="Company"
+        title="Organization Chart"
+        description={data.companyName ? `${data.companyName} — reporting structure` : "Reporting structure across the company."}
+      />
 
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div
-            className="card-body p-4 p-lg-5 text-white"
-            style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}
-          >
-            <div className="row align-items-center">
-              <div className="col-lg-8">
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div
-                    className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center"
-                    style={{ width: "55px", height: "55px" }}
-                  >
-                    <i className="bi bi-diagram-3 fs-3"></i>
-                  </div>
-                  <div>
-                    <span className="small opacity-75">COMPANY</span>
-                    <h2 className="fw-bold mb-0">Organization Chart</h2>
-                  </div>
-                </div>
-                <p className="mb-0 opacity-75">
-                  {data.companyName ? `${data.companyName} — reporting structure` : "Reporting structure across the company."}
-                </p>
-              </div>
-              <div className="col-lg-4 mt-4 mt-lg-0">
-                <div className="row g-2 text-center">
-                  <div className="col-4">
-                    <div className="bg-white bg-opacity-10 rounded-4 p-3">
-                      <div className="fs-4 fw-bold">{data.employees.length}</div>
-                      <small className="opacity-75">People</small>
-                    </div>
-                  </div>
-                  <div className="col-4">
-                    <div className="bg-white bg-opacity-10 rounded-4 p-3">
-                      <div className="fs-4 fw-bold">{managerCount}</div>
-                      <small className="opacity-75">Managers</small>
-                    </div>
-                  </div>
-                  <div className="col-4">
-                    <div className="bg-white bg-opacity-10 rounded-4 p-3">
-                      <div className="fs-4 fw-bold">{unassignedCount}</div>
-                      <small className="opacity-75">No manager</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="row g-3">
+        <div className="col-4"><StatCard label="People" value={data.employees.length} icon="bi-people" /></div>
+        <div className="col-4"><StatCard label="Managers" value={managerCount} icon="bi-person-badge" iconBg="var(--mf-color-info-subtle)" iconColor="var(--mf-color-info)" /></div>
+        <div className="col-4"><StatCard label="No manager" value={unassignedCount} icon="bi-person-dash" iconBg="var(--mf-color-warning-subtle)" iconColor="var(--mf-color-warning)" /></div>
+      </div>
+
+      <div className="container-fluid px-0">
 
         {error && (
           <div className="alert alert-danger border-0 shadow-sm rounded-4">
@@ -409,7 +373,7 @@ const OrgChart = () => {
           body.dark-mode .org-children { border-left-color: #374151; }
         `}
       </style>
-    </div>
+    </PageContainer>
   );
 };
 

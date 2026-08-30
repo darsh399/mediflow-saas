@@ -144,15 +144,15 @@ const SuperAdminLogin = () => {
           background:
             radial-gradient(
               circle at top left,
-              rgba(37, 99, 235, 0.08),
+              rgba(13, 148, 136, 0.06),
               transparent 35%
             ),
             radial-gradient(
               circle at bottom right,
-              rgba(111, 66, 193, 0.08),
+              rgba(14, 116, 144, 0.08),
               transparent 35%
             ),
-            #f5f7fb;
+            var(--mf-bg);
         }
 
         .login-card {
@@ -176,7 +176,7 @@ const SuperAdminLogin = () => {
           align-items: center;
           justify-content: center;
           border-radius: 18px;
-          background: rgba(37, 99, 235, 0.1);
+          background: rgba(13, 148, 136, 0.15);
           color: var(--mf-color-primary);
           font-size: 29px;
         }
@@ -219,26 +219,26 @@ const SuperAdminLogin = () => {
 
         .login-input .form-control:focus {
           border-color: var(--mf-color-primary-hover);
-          box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
+          box-shadow: 0 0 0 0.2rem rgba(13, 148, 136, 0.15);
         }
 
         .login-input:focus-within .input-group-text {
           border-color: var(--mf-color-primary-hover);
           color: var(--mf-color-primary);
-          background: rgba(37, 99, 235, 0.04);
+          background: rgba(13, 148, 136, 0.06);
         }
 
         .login-button {
           min-height: 48px;
           border-radius: 11px;
           font-weight: 600;
-          box-shadow: 0 5px 15px rgba(37, 99, 235, 0.2);
+          box-shadow: 0 5px 15px rgba(13, 148, 136, 0.25);
           transition: all 0.2s ease;
         }
 
         .login-button:hover {
           transform: translateY(-1px);
-          box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+          box-shadow: 0 8px 20px rgba(13, 148, 136, 0.25);
         }
 
         .login-footer {

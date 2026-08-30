@@ -25,4 +25,24 @@ export async function deleteDoctor(id){
   return resp.data
 }
 
-export default { createDoctor, listDoctors, getDoctor, updateDoctor, deleteDoctor }
+// Fill in blanks on an existing doctor (Excel-imported records). Only writes
+// fields that are currently empty; never overwrites.
+export async function completeDoctor(id, payload){
+  const resp = await axios.patch(`/api/doctors/${id}/complete`, payload)
+  return resp.data
+}
+
+// Company Owner / HR Manager only (enforced on the backend too).
+export async function importDoctors(file){
+  const formData = new FormData()
+  formData.append('file', file)
+  const resp = await axios.post('/api/doctors/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+  return resp.data
+}
+
+export async function downloadDoctorTemplate(){
+  const resp = await axios.get('/api/doctors/import/template', { responseType: 'blob' })
+  return resp.data
+}
+
+export default { createDoctor, listDoctors, getDoctor, updateDoctor, completeDoctor, deleteDoctor, importDoctors, downloadDoctorTemplate }

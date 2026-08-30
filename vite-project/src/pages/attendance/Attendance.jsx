@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import attendanceApi from '../../api/attendanceApi'
-import { PageHeader, StatCard, Badge, EmptyState } from '../../components/ui'
+import { PageContainer, PageHeader, StatCard, Badge, EmptyState } from '../../components/ui'
 
 const REVIEWER_ROLES = ['admin', 'company_owner', 'hr_manager', 'hr']
 
@@ -134,7 +134,8 @@ export default function Attendance() {
 
   if (isReviewer) {
     return (
-      <div className="container-fluid py-4">
+
+      <PageContainer>
         <PageHeader
           eyebrow="WORKFORCE"
           title="Attendance Management"
@@ -203,7 +204,7 @@ export default function Attendance() {
                             <div className="d-flex align-items-center gap-3">
                               <div
                                 className="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
-                                style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, var(--mf-color-primary-subtle), #ede7ff)', color: 'var(--mf-color-primary)' }}
+                                style={{ width: '40px', height: '40px', background: 'var(--mf-color-primary-subtle)', color: 'var(--mf-color-primary)' }}
                               >
                                 {getInitials(employee.name)}
                               </div>
@@ -243,12 +244,12 @@ export default function Attendance() {
             )}
           </div>
         )}
-      </div>
+      </PageContainer>
     )
   }
 
   return (
-    <div className="container-fluid py-4">
+    <PageContainer>
       <PageHeader
         eyebrow="WORKFORCE"
         title="Attendance"
@@ -337,6 +338,6 @@ export default function Attendance() {
           </div>
         </>
       )}
-    </div>
+    </PageContainer>
   )
 }

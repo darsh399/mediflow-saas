@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import attendanceApi from '../../api/attendanceApi'
-import { PageHeader, StatCard, Badge, EmptyState } from '../../components/ui'
+import { PageContainer, PageHeader, StatCard, Badge, EmptyState } from '../../components/ui'
 
 const REVIEWER_ROLES = ['admin', 'company_owner', 'hr_manager', 'hr']
 
@@ -94,16 +94,16 @@ export default function EmployeeAttendanceHistory() {
 
   if (!isReviewer) {
     return (
-      <div className="container-fluid py-4">
-        <div className="alert alert-danger border-0 rounded-4 shadow-sm d-flex align-items-center">
+      <PageContainer>
+        <div className="alert alert-danger border-0 shadow-sm d-flex align-items-center mb-0">
           <i className="bi bi-exclamation-triangle-fill me-2"></i>You do not have permission to view this page.
         </div>
-      </div>
+      </PageContainer>
     )
   }
 
   return (
-    <div className="container-fluid py-4">
+    <PageContainer>
       <PageHeader
         eyebrow="WORKFORCE"
         title="Employee Attendance History"
@@ -126,7 +126,7 @@ export default function EmployeeAttendanceHistory() {
           <div className="card-body p-4 d-flex align-items-center gap-3">
             <div
               className="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
-              style={{ width: '52px', height: '52px', fontSize: '1.1rem', background: 'linear-gradient(135deg, var(--mf-color-primary-subtle), #ede7ff)', color: 'var(--mf-color-primary)' }}
+              style={{ width: '52px', height: '52px', fontSize: '1.1rem', background: 'var(--mf-color-primary-subtle)', color: 'var(--mf-color-primary)' }}
             >
               {getInitials(employee.name)}
             </div>
@@ -258,6 +258,6 @@ export default function EmployeeAttendanceHistory() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }

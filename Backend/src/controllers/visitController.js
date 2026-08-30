@@ -1,6 +1,7 @@
 import Visit from '../models/Visit.js';
 import Doctor from '../models/Doctor.js';
 import Medical from '../models/Medical.js';
+import Territory from '../models/Territory.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import mongoose from 'mongoose';
@@ -11,6 +12,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { canActOn } from '../utils/authorize.js';
 import { resolveDateRange as getVisitDateRange } from '../utils/dateRange.js';
+import { scopedEmployeeIds } from '../utils/teamScope.js';
 
 const privateUploadDirectory = path.resolve(process.cwd(), 'private_uploads');
 const allowedPhotoTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -61,7 +63,7 @@ export const doctorVisit = async (req, res) => {
   try {
     const companyId = req.user?.companyId;
     const employeeId = req.user?.id;
-    const { doctorId, currentLatitude, currentLongitude, purpose, notes } = req.body;
+    const { doctorId, currentLatitude, currentLongitude, purpose, notes, discussion, doctorResponse, doctorResponseNotes } = req.body;
     if (!doctorId) return res.status(400).json({ message: 'doctorId is required' });
     const latitude = parseCoordinate(currentLatitude, 'currentLatitude', -90, 90);
     const longitude = parseCoordinate(currentLongitude, 'currentLongitude', -180, 180);
@@ -77,8 +79,9 @@ export const doctorVisit = async (req, res) => {
     }
 
     const visitedAt = new Date();
-    const visit = new Visit({ companyId, employeeId, doctorId, purpose, notes, visitLatitude: latitude, visitLongitude: longitude, registeredLatitude: doctor.latitude, registeredLongitude: doctor.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt, status: 'completed', completedAt: visitedAt, createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
+    const visit = new Visit({ companyId, employeeId, doctorId, purpose, notes, discussion, doctorResponse: doctorResponse || undefined, doctorResponseNotes, visitLatitude: latitude, visitLongitude: longitude, registeredLatitude: doctor.latitude, registeredLongitude: doctor.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt, status: 'completed', completedAt: visitedAt, createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
     await visit.save();
+    await Doctor.updateOne({ _id: doctorId, companyId }, { $set: { lastInteractionAt: visitedAt } });
     await recordAudit(req, 'visit_created', { companyId, entityId: visit._id, module: 'visits', newValue: { status: visit.status, employeeId } });
     return res.status(201).json({ success: true, message: 'Visit successfully recorded', distanceInMeters: distanceMeters, visit });
   } catch (error) {
@@ -92,7 +95,7 @@ export const medicalVisit = async (req, res) => {
   try {
     const companyId = req.user?.companyId;
     const employeeId = req.user?.id;
-    const { medicalId, currentLatitude, currentLongitude, purpose, notes } = req.body;
+    const { medicalId, currentLatitude, currentLongitude, purpose, notes, discussion, doctorResponse, doctorResponseNotes } = req.body;
     if (!medicalId) return res.status(400).json({ message: 'medicalId is required' });
     const latitude = parseCoordinate(currentLatitude, 'currentLatitude', -90, 90);
     const longitude = parseCoordinate(currentLongitude, 'currentLongitude', -180, 180);
@@ -108,7 +111,7 @@ export const medicalVisit = async (req, res) => {
     }
 
     const visitedAt = new Date();
-    const visit = new Visit({ companyId, employeeId, medicalId, purpose, notes, visitLatitude: latitude, visitLongitude: longitude, registeredLatitude: med.latitude, registeredLongitude: med.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt, status: 'completed', completedAt: visitedAt, createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
+    const visit = new Visit({ companyId, employeeId, medicalId, purpose, notes, discussion, doctorResponse: doctorResponse || undefined, doctorResponseNotes, visitLatitude: latitude, visitLongitude: longitude, registeredLatitude: med.latitude, registeredLongitude: med.longitude, distanceInMeters: distanceMeters, locationVerified: true, visitedAt, status: 'completed', completedAt: visitedAt, createdBy: employeeId, visitPhoto: await saveVisitPhoto(req.file) });
     await visit.save();
     await recordAudit(req, 'visit_created', { companyId, entityId: visit._id, module: 'visits', newValue: { status: visit.status, employeeId } });
     return res.status(201).json({ success: true, message: 'Visit successfully recorded', distanceInMeters: distanceMeters, visit });
@@ -290,9 +293,33 @@ export const listVisits = async (req, res) => {
     const companyId = req.user?.companyId;
     const query = companyId ? { companyId } : {};
 
+    // Company-wide roles see everything; team leads see their team; everyone
+    // else sees only their own visits.
+    const allowedIds = await scopedEmployeeIds(req.user);
+    if (allowedIds) query.employeeId = { $in: allowedIds.map((id) => new mongoose.Types.ObjectId(id)) };
+
+    // Optional filters for the report views.
+    if (req.query.employeeId) query.employeeId = new mongoose.Types.ObjectId(req.query.employeeId);
+    if (req.query.doctorId) query.doctorId = new mongoose.Types.ObjectId(req.query.doctorId);
+    if (req.query.status) query.status = req.query.status;
+    if (req.query.doctorResponse) query.doctorResponse = String(req.query.doctorResponse).toUpperCase();
+    if (req.query.month && req.query.year) {
+      const month = Number(req.query.month);
+      const year = Number(req.query.year);
+      query.visitedAt = { $gte: new Date(year, month - 1, 1), $lt: new Date(year, month, 1) };
+    } else if (req.query.from || req.query.to) {
+      query.visitedAt = {};
+      if (req.query.from) query.visitedAt.$gte = new Date(req.query.from);
+      if (req.query.to) {
+        const to = new Date(req.query.to);
+        to.setDate(to.getDate() + 1);
+        query.visitedAt.$lt = to;
+      }
+    }
+
     const visits = await Visit.find(query)
       .populate('employeeId', 'name email role')
-      .populate('doctorId', 'name specialty phone')
+      .populate('doctorId', 'name specialty phone clinicName')
       .populate('medicalId', 'name address phone')
       .populate('assignedBy', 'name email role')
       .sort({ visitedAt: -1 });
@@ -311,8 +338,14 @@ export const getVisit = async (req, res) => {
   try {
     const id = req.params.id;
     const companyId = req.user?.companyId;
-    const visit = await Visit.findOne(companyId ? { _id: id, companyId } : { _id: id });
+    const visit = await Visit.findOne(companyId ? { _id: id, companyId } : { _id: id })
+      .populate('employeeId', 'name email role')
+      .populate('doctorId', 'name specialty phone clinicName')
+      .populate('medicalId', 'name address phone');
     if (!visit) return res.status(404).json({ message: 'Visit not found' });
+    const allowedIds = await scopedEmployeeIds(req.user);
+    const visitOwner = String(visit.employeeId?._id || visit.employeeId);
+    if (allowedIds && !allowedIds.includes(visitOwner)) return res.status(403).json({ message: 'Not allowed to view this visit' });
     return res.status(200).json({ visit });
   } catch (error) {
     console.error('Get visit error:', error);
@@ -358,6 +391,9 @@ export const updateVisit = async (req, res) => {
     const oldValue = { status: existing.status, rejectionReason: existing.rejectionReason };
     const allowed = ['status', 'rejectionReason', 'purpose', 'notes'];
     for (const field of allowed) if (Object.prototype.hasOwnProperty.call(req.body || {}, field)) existing[field] = req.body[field];
+    for (const field of ['discussion', 'doctorResponse', 'doctorResponseNotes']) {
+      if (Object.prototype.hasOwnProperty.call(req.body || {}, field)) existing[field] = req.body[field] || undefined;
+    }
     if (existing.status === 'approved') { existing.approvedBy = req.user.id; existing.approvedAt = new Date(); }
     const updated = await existing.save();
     await recordAudit(req, 'visit_updated', { companyId, entityId: updated._id, module: 'visits', oldValue, newValue: { status: updated.status, rejectionReason: updated.rejectionReason } });
@@ -500,4 +536,70 @@ export const deleteVisit = async (req, res) => {
   }
 };
 
-export default { createVisit, assignVisit, listVisits, getVisit, updateVisit, deleteVisit, downloadVisitPhoto, rescheduleVisit, cancelVisit, completeVisit };
+// Doctor coverage: how long since each doctor was last visited, so managers can
+// see who is being neglected. Scope with ?territoryId=, or ?repId= to limit to
+// the doctors in the territories that rep covers. ?days= sets the "overdue"
+// threshold (default 21).
+export const getDoctorCoverage = async (req, res) => {
+  try {
+    const companyId = req.user?.companyId;
+    const threshold = Math.max(1, Number(req.query.days) || 21);
+
+    const doctorFilter = { companyId };
+    if (req.query.territoryId) {
+      doctorFilter.territoryId = req.query.territoryId;
+    } else if (req.query.repId) {
+      const territories = await Territory.find({ companyId, memberIds: req.query.repId }).select('_id').lean();
+      doctorFilter.territoryId = { $in: territories.map((territory) => territory._id) };
+    }
+
+    const doctors = await Doctor.find(doctorFilter)
+      .select('name clinicName city district specialty territoryId')
+      .populate('territoryId', 'name')
+      .sort({ name: 1 })
+      .lean();
+    if (!doctors.length) return res.status(200).json({ coverage: [], summary: { total: 0, overdue: 0, due: 0, ok: 0, never: 0 }, thresholdDays: threshold });
+
+    const doctorIds = doctors.map((doctor) => doctor._id);
+    const lastVisits = await Visit.aggregate([
+      { $match: { companyId: new mongoose.Types.ObjectId(companyId), doctorId: { $in: doctorIds }, status: { $in: ['completed', 'approved'] } } },
+      { $group: { _id: '$doctorId', lastVisitAt: { $max: '$visitedAt' }, visitCount: { $sum: 1 } } },
+    ]);
+    const lastMap = new Map(lastVisits.map((row) => [String(row._id), row]));
+
+    const now = Date.now();
+    const summary = { total: doctors.length, overdue: 0, due: 0, ok: 0, never: 0 };
+    const coverage = doctors.map((doctor) => {
+      const row = lastMap.get(String(doctor._id));
+      const lastVisitAt = row?.lastVisitAt || null;
+      const daysSince = lastVisitAt ? Math.floor((now - new Date(lastVisitAt).getTime()) / 86400000) : null;
+      let status;
+      if (daysSince === null) { status = 'never'; summary.never += 1; }
+      else if (daysSince > threshold) { status = 'overdue'; summary.overdue += 1; }
+      else if (daysSince > threshold * 0.7) { status = 'due'; summary.due += 1; }
+      else { status = 'ok'; summary.ok += 1; }
+      return {
+        doctorId: doctor._id,
+        name: doctor.name,
+        clinicName: doctor.clinicName || null,
+        city: doctor.city || null,
+        specialty: doctor.specialty || null,
+        territory: doctor.territoryId?.name || null,
+        lastVisitAt,
+        daysSince,
+        visitCount: row?.visitCount || 0,
+        status,
+      };
+    });
+
+    const rank = { overdue: 0, never: 1, due: 2, ok: 3 };
+    coverage.sort((a, b) => (rank[a.status] - rank[b.status]) || ((b.daysSince ?? 0) - (a.daysSince ?? 0)));
+
+    return res.status(200).json({ coverage, summary, thresholdDays: threshold });
+  } catch (error) {
+    console.error('Doctor coverage error:', error);
+    return res.status(500).json({ message: 'Error building coverage report', error: error.message });
+  }
+};
+
+export default { createVisit, assignVisit, listVisits, getVisit, updateVisit, deleteVisit, downloadVisitPhoto, rescheduleVisit, cancelVisit, completeVisit, getDoctorCoverage };

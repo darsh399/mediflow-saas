@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import billingApi from "../../api/billingApi";
+import { PageContainer, PageHeader, SkeletonTable } from "../../components/ui";
 
 const PLAN_LABELS = {
   FREE: "Free",
@@ -55,35 +56,18 @@ const Billing = () => {
 
   if (loading) {
     return (
-      <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-        <div className="card border-0 shadow-sm rounded-4">
-          <div className="card-body text-center py-5">
-            <div className="spinner-border text-primary mb-3"></div>
-            <h6 className="text-muted mb-0">Loading billing information...</h6>
-          </div>
-        </div>
-      </div>
+      <PageContainer>
+        <PageHeader eyebrow="Account" title="Billing & Subscription" description="View your company's current plan and subscription status." />
+        <SkeletonTable rows={4} columns={3} />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-      <div className="container-fluid px-0">
+    <PageContainer>
+      <PageHeader eyebrow="Account" title="Billing & Subscription" description="View your company's current plan and subscription status." />
 
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}>
-            <div className="d-flex align-items-center gap-3">
-              <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: "55px", height: "55px" }}>
-                <i className="bi bi-credit-card fs-3"></i>
-              </div>
-              <div>
-                <span className="small opacity-75">ACCOUNT</span>
-                <h2 className="fw-bold mb-0">Billing &amp; Subscription</h2>
-              </div>
-            </div>
-            <p className="mb-0 opacity-75 mt-3">View your company's current plan and subscription status.</p>
-          </div>
-        </div>
+      <div className="container-fluid px-0">
 
         {error && (
           <div className="alert alert-danger border-0 shadow-sm rounded-4">
@@ -174,7 +158,7 @@ const Billing = () => {
         </div>
 
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

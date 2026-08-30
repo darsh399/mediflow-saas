@@ -2,15 +2,19 @@ import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import employeeProfileApi from '../../api/employeeProfileApi'
+import { useNotify } from '../../components/NotificationProvider'
 
 const ProfileReviewDetails = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { notify } = useNotify()
 
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [reviewing, setReviewing] = useState(false)
+  const [verifyingId, setVerifyingId] = useState(null)
+  const [requestingReupload, setRequestingReupload] = useState(false)
 
   const [selectedDocument, setSelectedDocument] = useState(null)
   const [documentUrl, setDocumentUrl] = useState('')
@@ -18,13 +22,9 @@ const ProfileReviewDetails = () => {
   const role = useSelector(state => state.auth.user?.role)
   const canVerify = ['admin', 'company_owner', 'hr_manager', 'hr'].includes(role)
 
-  useEffect(() => {
-    loadProfile()
-  }, [id])
-
-  const loadProfile = async () => {
+  const loadProfile = async ({ silent = false } = {}) => {
     try {
-      setLoading(true)
+      if (!silent) setLoading(true)
       setError('')
 
       const response =
@@ -51,6 +51,11 @@ const ProfileReviewDetails = () => {
     }
   }
 
+  useEffect(() => {
+    loadProfile()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
   const review = async status => {
     let rejectionReason
 
@@ -71,7 +76,8 @@ const ProfileReviewDetails = () => {
         rejectionReason
       })
 
-      await loadProfile()
+      notify(`Profile ${status === 'APPROVED' ? 'approved' : 'rejected'}`)
+      await loadProfile({ silent: true })
     } catch (err) {
       setError(
         err?.response?.data?.message ||
@@ -147,12 +153,50 @@ const ProfileReviewDetails = () => {
   }
 
   const verify = async documentItem => {
-    if (!documentItem._id) return
+    if (!documentItem._id || verifyingId) return
+    setVerifyingId(documentItem._id)
+    setError('')
     try {
-      await employeeProfileApi.verifyDocument(profile.userId._id, documentItem._id, !documentItem.verified)
-      await loadProfile()
+      // Update only this document in place — no full-page reload / redirect.
+      const response = await employeeProfileApi.verifyDocument(
+        profile.userId._id,
+        documentItem._id,
+        !documentItem.verified
+      )
+      setProfile(current => ({
+        ...current,
+        documents: (current.documents || []).map(item =>
+          item._id === documentItem._id ? { ...item, ...(response.document || {}) } : item
+        ),
+      }))
     } catch (err) {
-      setError(err?.response?.data?.message || 'Unable to update document verification')
+      const status = err?.response?.status
+      setError(
+        err?.response?.data?.message ||
+        `Could not update verification${status ? ` (HTTP ${status})` : ''}. Please try again.`
+      )
+    } finally {
+      setVerifyingId(null)
+    }
+  }
+
+  const requestReupload = async () => {
+    const unverified = (profile?.documents || []).filter(item => !item.verified)
+    if (unverified.length === 0) return
+    const note = window.prompt(
+      `Ask ${profile.userId?.name || 'the employee'} to re-upload ${unverified.length} unverified document(s)?\n\nOptional note for the employee:`,
+      ''
+    )
+    if (note === null) return
+    setRequestingReupload(true)
+    setError('')
+    try {
+      const response = await employeeProfileApi.requestDocumentReupload(profile.userId._id, note.trim())
+      notify(response.message || 'Employee notified to re-upload documents')
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Unable to notify the employee')
+    } finally {
+      setRequestingReupload(false)
     }
   }
 
@@ -343,6 +387,12 @@ const ProfileReviewDetails = () => {
   const employee = profile?.userId
   const joiningDate = getJoiningDate(employee)
   const experience = calculateExperience(joiningDate)
+
+  const documents = profile?.documents || []
+  const verifiedCount = documents.filter(document => document.verified).length
+  const unverifiedCount = documents.length - verifiedCount
+  const isSubmitted = profile?.status === 'SUBMITTED'
+  const canReview = Boolean(profile?.reviewEligibility?.canReview)
 
   return (
     <div className="container-fluid py-4">
@@ -567,11 +617,29 @@ const ProfileReviewDetails = () => {
               <div className="mb-4">
 
                 <small className="text-muted">
-                  Experience
+                  Tenure at Company
                 </small>
 
                 <div className="fw-bold mt-1">
                   {experience.years}
+                </div>
+
+              </div>
+
+              <div className="mb-4">
+
+                <small className="text-muted">
+                  Prior Experience
+                </small>
+
+                <div className="fw-bold mt-1">
+                  {profile?.experienceType === 'fresher'
+                    ? 'Fresher'
+                    : [
+                        profile?.profileData?.totalExperienceYears ? `${profile.profileData.totalExperienceYears} year(s)` : null,
+                        profile?.profileData?.previousCompany ? `at ${profile.profileData.previousCompany}` : null,
+                      ].filter(Boolean).join(' ')
+                      || (profile?.experienceType === 'experienced' ? 'Experienced' : 'Not provided')}
                 </div>
 
               </div>
@@ -737,9 +805,24 @@ const ProfileReviewDetails = () => {
               </p>
             </div>
 
-            <span className="badge bg-primary-subtle text-primary px-3 py-2">
-              {profile?.documents?.length || 0} Documents
-            </span>
+            <div className="d-flex align-items-center gap-2">
+              {documents.length > 0 && (
+                <span className={`badge px-3 py-2 ${unverifiedCount === 0 ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning-emphasis'}`}>
+                  {verifiedCount} / {documents.length} verified
+                </span>
+              )}
+              {canVerify && unverifiedCount > 0 && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-primary"
+                  disabled={requestingReupload}
+                  onClick={requestReupload}
+                >
+                  <i className="bi bi-send me-1"></i>
+                  {requestingReupload ? 'Sending…' : 'Request re-upload'}
+                </button>
+              )}
+            </div>
 
           </div>
 
@@ -797,7 +880,25 @@ const ProfileReviewDetails = () => {
                         View
                       </button>
 
-                      {canVerify && document._id && <button type="button" className={`btn btn-sm ${document.verified ? 'btn-success' : 'btn-outline-success'}`} onClick={() => verify(document)}>{document.verified ? 'Verified' : 'Verify'}</button>}
+                      {canVerify && document._id && (
+                        <button
+                          type="button"
+                          className={`btn btn-sm ${document.verified ? 'btn-success' : 'btn-outline-success'}`}
+                          disabled={verifyingId === document._id}
+                          onClick={() => verify(document)}
+                        >
+                          {verifyingId === document._id
+                            ? '…'
+                            : document.verified
+                              ? <><i className="bi bi-check-lg me-1"></i>Verified</>
+                              : 'Verify'}
+                        </button>
+                      )}
+                      {canVerify && !document._id && (
+                        <span className="badge bg-secondary-subtle text-secondary align-self-center" title="This document was uploaded by an older version and cannot be verified. Ask the employee to re-upload it.">
+                          Legacy upload
+                        </span>
+                      )}
 
                       <button
                         type="button"
@@ -843,15 +944,7 @@ const ProfileReviewDetails = () => {
         </div>
       )}
 
-      {profile?.status === 'SUBMITTED' && !profile?.reviewEligibility?.canReview && profile?.reviewEligibility?.reason && (
-
-        <div className="alert alert-info border-0 shadow-sm">
-          {profile.reviewEligibility.reason}
-        </div>
-
-      )}
-
-      {profile?.status === 'SUBMITTED' && profile?.reviewEligibility?.canReview && (
+      {isSubmitted && (
 
         <div className="card border-0 shadow-sm">
 
@@ -860,40 +953,61 @@ const ProfileReviewDetails = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
 
               <div>
-                <h5 className="fw-bold mb-1">
-                  Profile Review
-                </h5>
-
+                <h5 className="fw-bold mb-1">Profile Review</h5>
                 <p className="text-muted mb-0">
-                  Verify the employee information and documents before taking action.
+                  {documents.length > 0
+                    ? `${verifiedCount} of ${documents.length} documents verified.`
+                    : 'No documents submitted.'}
+                  {unverifiedCount > 0 && ' Verify or request a re-upload of the rest before approving.'}
                 </p>
               </div>
 
-              <div className="d-flex gap-2">
-
+              {canReview ? (
+                <div className="d-flex gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-success px-4"
+                    disabled={reviewing}
+                    onClick={() => review('APPROVED')}
+                  >
+                    {reviewing ? 'Processing...' : 'Approve Profile'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger px-4"
+                    disabled={reviewing}
+                    onClick={() => review('REJECTED')}
+                  >
+                    Reject Profile
+                  </button>
+                </div>
+              ) : canVerify && unverifiedCount > 0 ? (
                 <button
                   type="button"
-                  className="btn btn-success px-4"
-                  disabled={reviewing}
-                  onClick={() => review('APPROVED')}
+                  className="btn btn-outline-primary px-4"
+                  disabled={requestingReupload}
+                  onClick={requestReupload}
                 >
-                  {reviewing
-                    ? 'Processing...'
-                    : 'Approve Profile'}
+                  <i className="bi bi-send me-1"></i>Request document re-upload
                 </button>
-
-                <button
-                  type="button"
-                  className="btn btn-outline-danger px-4"
-                  disabled={reviewing}
-                  onClick={() => review('REJECTED')}
-                >
-                  Reject Profile
-                </button>
-
-              </div>
+              ) : null}
 
             </div>
+
+            {!canReview && (
+              <div className="alert alert-info border-0 mt-3 mb-0">
+                <i className="bi bi-info-circle me-2"></i>
+                {profile?.reviewEligibility?.reason
+                  || 'Only a company owner or HR manager can approve or reject this profile. You can still verify documents and request re-uploads.'}
+              </div>
+            )}
+
+            {canReview && unverifiedCount > 0 && (
+              <div className="alert alert-warning border-0 mt-3 mb-0">
+                <i className="bi bi-exclamation-triangle me-2"></i>
+                {unverifiedCount} document(s) are still unverified.
+              </div>
+            )}
 
           </div>
 

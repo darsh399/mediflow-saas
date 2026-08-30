@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import userApi from "../../api/userApi";
 import organizationApi from "../../api/organizationApi";
 import { Link, useNavigate } from "react-router-dom";
+import { PageContainer, PageHeader } from "../../components/ui";
 
 const Profile = () => {
   const auth = useSelector((s) => s.auth);
@@ -69,8 +70,7 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="min-vh-100 bg-light py-5">
-        <div className="container">
+      <div className="container-fluid py-4"><div className="mf-page mf-page--narrow">
           <div className="alert alert-warning border-0 shadow-sm rounded-4">
             <div className="d-flex align-items-center gap-3">
               <div
@@ -105,8 +105,7 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-vh-100 bg-light py-5">
-        <div className="container">
+      <div className="container-fluid py-4"><div className="mf-page mf-page--narrow">
           <div
             className="card border-0 shadow-sm rounded-4"
             style={{ minHeight: "400px" }}
@@ -138,8 +137,7 @@ const Profile = () => {
 
   if (!profile) {
     return (
-      <div className="min-vh-100 bg-light py-5">
-        <div className="container">
+      <div className="container-fluid py-4"><div className="mf-page mf-page--narrow">
           <div className="alert alert-info border-0 shadow-sm rounded-4">
             <div className="d-flex align-items-center gap-3">
               <i className="bi bi-info-circle fs-3"></i>
@@ -162,6 +160,42 @@ const Profile = () => {
 
   const p = profile.profile || {};
 
+  // Joining date comes from the offer letter (synced onto the account); the
+  // onboarding profile carries prior-experience details.
+  const joiningDate =
+    profile.joiningDate ||
+    p.jobDetails?.startDate ||
+    profile.onboardingProfile?.jobDetails?.startDate ||
+    null;
+
+  const tenureText = (() => {
+    if (!joiningDate) return null;
+    const start = new Date(joiningDate);
+    if (Number.isNaN(start.getTime())) return null;
+    const totalMonths = Math.max(
+      0,
+      (new Date().getFullYear() - start.getFullYear()) * 12 +
+        (new Date().getMonth() - start.getMonth())
+    );
+    const years = Math.floor(totalMonths / 12);
+    const months = totalMonths % 12;
+    if (years === 0 && months === 0) return "Joined this month";
+    return [years ? `${years} yr${years > 1 ? "s" : ""}` : null, months ? `${months} mo` : null]
+      .filter(Boolean)
+      .join(" ");
+  })();
+
+  const priorExperience = (() => {
+    if (profile.experienceType === "fresher") return "Fresher";
+    const ob = profile.onboardingProfile || {};
+    const parts = [];
+    if (ob.totalExperienceYears) parts.push(`${ob.totalExperienceYears} year(s)`);
+    if (ob.previousCompany) parts.push(`at ${ob.previousCompany}`);
+    if (parts.length) return `Experienced · ${parts.join(" ")}`;
+    if (profile.experienceType === "experienced") return "Experienced";
+    return null;
+  })();
+
   const initials = (
     profile.name ||
     profile.email ||
@@ -180,35 +214,19 @@ const Profile = () => {
     : "-";
 
   return (
-    <div className="profile-page min-vh-100 bg-light py-4 py-md-5">
-      <div className="container">
-
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-          <div>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <span className="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">
-                <i className="bi bi-person-badge me-1"></i>
-                My Account
-              </span>
-            </div>
-
-            <h2 className="fw-bold mb-1">
-              My Profile
-            </h2>
-
-            <p className="text-muted mb-0">
-              View and manage your personal and professional information.
-            </p>
-          </div>
-
-          <button
-            className="btn btn-primary rounded-3 px-4 shadow-sm"
-            onClick={() => nav("/profile/edit")}
-          >
-            <i className="bi bi-pencil-square me-2"></i>
-            Edit Profile
+    <PageContainer width="narrow">
+      <PageHeader
+        eyebrow="My account"
+        title="My Profile"
+        description="View and manage your personal and professional information."
+        actions={
+          <button className="btn btn-primary rounded-3 fw-semibold" onClick={() => nav("/profile/edit")}>
+            <i className="bi bi-pencil-square me-2"></i> Edit Profile
           </button>
-        </div>
+        }
+      />
+
+      <div className="container-fluid px-0">
 
         <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
           <div
@@ -489,8 +507,8 @@ const Profile = () => {
                     style={{
                       width: 45,
                       height: 45,
-                      background: "rgba(111, 66, 193, 0.1)",
-                      color: "#6f42c1",
+                      background: "rgba(14, 116, 144, 0.12)",
+                      color: "var(--mf-color-accent)",
                     }}
                   >
                     <i className="bi bi-briefcase fs-5"></i>
@@ -533,6 +551,33 @@ const Profile = () => {
                     </div>
                   </div>
 
+                  <div className="col-md-6">
+                    <div className="p-3 rounded-3 bg-light">
+                      <small className="text-muted d-block">
+                        Joining Date
+                      </small>
+
+                      <div className="fw-semibold mt-1">
+                        {joiningDate
+                          ? new Date(joiningDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                          : "Not set"}
+                        {tenureText && <span className="text-muted fw-normal"> · {tenureText}</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="p-3 rounded-3 bg-light">
+                      <small className="text-muted d-block">
+                        Prior Experience
+                      </small>
+
+                      <div className="fw-semibold mt-1">
+                        {priorExperience || "Not provided"}
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
 
               </div>
@@ -546,7 +591,7 @@ const Profile = () => {
                   <div className="d-flex align-items-center gap-3">
                     <div
                       className="rounded-3 d-flex align-items-center justify-content-center"
-                      style={{ width: 45, height: 45, background: "rgba(37, 99, 235, 0.1)", color: "var(--mf-color-primary)" }}
+                      style={{ width: 45, height: 45, background: "rgba(13, 148, 136, 0.15)", color: "var(--mf-color-primary)" }}
                     >
                       <i className="bi bi-diagram-3 fs-5"></i>
                     </div>
@@ -640,7 +685,7 @@ const Profile = () => {
 
         .detail-box:hover {
           transform: translateY(-3px);
-          border-color: rgba(37, 99, 235, 0.2);
+          border-color: rgba(13, 148, 136, 0.25);
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
         }
 
@@ -674,7 +719,7 @@ const Profile = () => {
           }
         }
       `}</style>
-    </div>
+    </PageContainer>
   );
 };
 

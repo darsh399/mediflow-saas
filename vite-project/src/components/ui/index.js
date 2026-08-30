@@ -1,4 +1,11 @@
 export { default as PageHeader } from "./PageHeader";
+export { default as PageContainer } from "./PageContainer";
+export { default as Breadcrumbs } from "./Breadcrumbs";
+export { default as FilterBar } from "./FilterBar";
+export { default as FormSection } from "./FormSection";
+export { default as DataTable } from "./DataTable";
+export { default as AppModal } from "./AppModal";
 export { default as StatCard } from "./StatCard";
 export { default as Badge } from "./Badge";
 export { default as EmptyState } from "./EmptyState";
+export { Skeleton, SkeletonTable } from "./Skeleton";

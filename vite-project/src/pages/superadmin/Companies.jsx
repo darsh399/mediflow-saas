@@ -570,7 +570,7 @@ const Companies = () => {
           align-items: center;
           justify-content: center;
           border-radius: 16px;
-          background: rgba(37, 99, 235, 0.1);
+          background: rgba(13, 148, 136, 0.15);
           color: var(--mf-color-primary);
           font-size: 24px;
         }
@@ -610,7 +610,7 @@ const Companies = () => {
 
         .section-icon.primary {
           color: var(--mf-color-primary);
-          background: rgba(37, 99, 235, 0.09);
+          background: rgba(13, 148, 136, 0.06);
         }
 
         .section-icon.success {
@@ -619,8 +619,8 @@ const Companies = () => {
         }
 
         .section-icon.purple {
-          color: #6f42c1;
-          background: rgba(111, 66, 193, 0.1);
+          color: var(--mf-color-accent);
+          background: rgba(14, 116, 144, 0.12);
         }
 
         .form-label {
@@ -666,13 +666,13 @@ const Companies = () => {
         .modern-input .form-control:focus,
         .modern-input .form-select:focus {
           border-color: #86b7fe;
-          box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
+          box-shadow: 0 0 0 0.2rem rgba(13, 148, 136, 0.15);
         }
 
         .modern-input:focus-within .input-group-text {
           border-color: #86b7fe;
           color: var(--mf-color-primary);
-          background: rgba(37, 99, 235, 0.04);
+          background: rgba(13, 148, 136, 0.06);
         }
 
         .summary-card {
@@ -686,7 +686,7 @@ const Companies = () => {
           align-items: center;
           justify-content: center;
           border-radius: 13px;
-          background: rgba(37, 99, 235, 0.09);
+          background: rgba(13, 148, 136, 0.06);
           color: var(--mf-color-primary);
           font-size: 20px;
           margin-bottom: 18px;
@@ -723,7 +723,7 @@ const Companies = () => {
           align-items: center;
           justify-content: center;
           border-radius: 12px;
-          background: rgba(37, 99, 235, 0.08);
+          background: rgba(13, 148, 136, 0.06);
           color: var(--mf-color-primary);
           margin-bottom: 14px;
           font-size: 19px;

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import leaveApi from "../../api/leaveApi";
 import { downloadBlob } from "../../utils/downloadBlob";
+import { PageContainer, PageHeader, StatCard, SkeletonTable } from "../../components/ui";
 
 const LeaveManagement = () => {
   const [leaves, setLeaves] = useState([]);
@@ -270,127 +271,25 @@ const LeaveManagement = () => {
 
   if (loading) {
     return (
-      <div
-        className="container-fluid py-4"
-        style={{
-          backgroundColor: "#f8f9fc",
-          minHeight: "100vh",
-        }}
-      >
-        <div className="card border-0 shadow-sm rounded-4">
-          <div className="card-body text-center py-5">
-            <div
-              className="spinner-border text-primary mb-3"
-              style={{
-                width: "3rem",
-                height: "3rem",
-              }}
-            ></div>
-
-            <h5 className="fw-semibold">
-              Loading Leave Requests
-            </h5>
-
-            <p className="text-muted mb-0">
-              Please wait while we fetch company leaves...
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageContainer>
+        <PageHeader eyebrow="HR operations" title="Leave Management" description="Review and manage leave requests from your team." />
+        <SkeletonTable rows={8} columns={6} />
+      </PageContainer>
     );
   }
 
   return (
-    <div
-      className="container-fluid py-4"
-      style={{
-        backgroundColor: "#f8f9fc",
-        minHeight: "100vh",
-      }}
-    >
+    <PageContainer>
+      <PageHeader eyebrow="HR operations" title="Leave Management" description="Review and manage leave requests from your team." />
+
+      <div className="row g-3">
+        <div className="col-4"><StatCard label="Pending" value={pending} icon="bi-hourglass-split" iconBg="var(--mf-color-warning-subtle)" iconColor="var(--mf-color-warning)" /></div>
+        <div className="col-4"><StatCard label="Approved" value={approved} icon="bi-check2-circle" iconBg="var(--mf-color-success-subtle)" iconColor="var(--mf-color-success)" /></div>
+        <div className="col-4"><StatCard label="Rejected" value={rejected} icon="bi-x-circle" iconBg="var(--mf-color-danger-subtle)" iconColor="var(--mf-color-danger)" /></div>
+      </div>
+
+      {/* content follows in the original structure */}
       <div className="container-fluid px-0">
-
-        {/* HEADER */}
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div
-            className="card-body p-4 p-lg-5 text-white"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)",
-            }}
-          >
-            <div className="row align-items-center">
-              <div className="col-lg-7">
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div
-                    className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: "55px",
-                      height: "55px",
-                    }}
-                  >
-                    <i className="bi bi-calendar2-check fs-3"></i>
-                  </div>
-
-                  <div>
-                    <span className="small opacity-75">
-                      HR OPERATIONS
-                    </span>
-
-                    <h2 className="fw-bold mb-0">
-                      Leave Management
-                    </h2>
-                  </div>
-                </div>
-
-                <p className="mb-0 opacity-75">
-                  Review and manage leave requests from your
-                  team.
-                </p>
-              </div>
-
-              <div className="col-lg-5 mt-4 mt-lg-0">
-                <div className="row g-3">
-                  <div className="col-4">
-                    <div className="bg-white bg-opacity-10 rounded-4 p-3 text-center">
-                      <div className="fs-3 fw-bold">
-                        {pending}
-                      </div>
-
-                      <small className="opacity-75">
-                        Pending
-                      </small>
-                    </div>
-                  </div>
-
-                  <div className="col-4">
-                    <div className="bg-white bg-opacity-10 rounded-4 p-3 text-center">
-                      <div className="fs-3 fw-bold">
-                        {approved}
-                      </div>
-
-                      <small className="opacity-75">
-                        Approved
-                      </small>
-                    </div>
-                  </div>
-
-                  <div className="col-4">
-                    <div className="bg-white bg-opacity-10 rounded-4 p-3 text-center">
-                      <div className="fs-3 fw-bold">
-                        {rejected}
-                      </div>
-
-                      <small className="opacity-75">
-                        Rejected
-                      </small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* ALERTS */}
         {success && (
@@ -554,11 +453,7 @@ const LeaveManagement = () => {
           ) : (
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead
-                  style={{
-                    backgroundColor: "#f8f9fc",
-                  }}
-                >
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     <th className="px-4 py-3 border-0">
                       #
@@ -629,8 +524,7 @@ const LeaveManagement = () => {
                                 style={{
                                   width: "45px",
                                   height: "45px",
-                                  background:
-                                    "linear-gradient(135deg, #e7f1ff, #ede7ff)",
+                                  background: "var(--mf-color-primary-subtle)",
                                   color: "var(--mf-color-primary)",
                                 }}
                               >
@@ -780,8 +674,9 @@ const LeaveManagement = () => {
         </div>
 
       </div>
-    </div>
+    </PageContainer>
   );
 };
 
-export default LeaveManagement; 
+export default LeaveManagement;
+

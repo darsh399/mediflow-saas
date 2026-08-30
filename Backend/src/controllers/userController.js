@@ -45,6 +45,7 @@ async function fetchAndSendUser(req, res, successMessage = 'User retrieved succe
         }).select('profileData experienceType status');
         const userData = user.toObject();
         userData.onboardingProfile = employeeProfile?.profileData || {};
+        userData.experienceType = employeeProfile?.experienceType || null;
         if (user.companyId && (String(req.user.id) === String(user._id) || hasPermission(req.user, 'attendance.view'))) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);

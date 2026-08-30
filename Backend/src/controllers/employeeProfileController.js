@@ -161,7 +161,10 @@ function computeReviewEligibility(profile, reqUser) {
     return { canReview: false, reason: 'You cannot review your own profile.' };
   }
   const creatorId = employee.createdBy?._id || employee.createdBy;
-  if (creatorId && String(creatorId) === String(reqUser.id)) {
+  // Maker-checker applies to hr_manager: they may not review an employee they
+  // created. company_owner and admin are the final authority and are exempt —
+  // in a small company they are often the only reviewer.
+  if (reqUser.role === 'hr_manager' && creatorId && String(creatorId) === String(reqUser.id)) {
     return { canReview: false, reason: 'You created this employee. Another authorized administrator must review this profile.' };
   }
   if (profile.status !== 'SUBMITTED') return { canReview: false, reason: null };
@@ -191,7 +194,8 @@ export async function reviewProfile(req, res) {
   const profile = await EmployeeProfile.findOne({ _id: req.params.id, companyId: req.user.companyId }).populate('userId', 'role createdBy');
   if (!profile) return res.status(404).json({ message: 'Employee profile not found' });
   if (String(profile.userId._id) === String(req.user.id)) return res.status(403).json({ message: 'You cannot review your own profile' });
-  if (profile.userId.createdBy && String(profile.userId.createdBy) === String(req.user.id)) {
+  // Maker-checker for hr_manager only — company_owner / admin are exempt.
+  if (req.user.role === 'hr_manager' && profile.userId.createdBy && String(profile.userId.createdBy) === String(req.user.id)) {
     return res.status(403).json({ message: 'You created this employee. Another authorized administrator must review this profile.' });
   }
   if (!canActOn(req.user, profile.userId.role)) return res.status(403).json({ message: 'Insufficient permissions to review this profile' });

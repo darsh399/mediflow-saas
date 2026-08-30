@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { doctorVisit, medicalVisit } from '../../redux/slices/visitSlice'
+import { PageContainer, PageHeader } from '../../components/ui'
 import doctorApi from '../../api/doctorApi'
 import medicalApi from '../../api/medicalApi'
 import { Link } from 'react-router-dom'
@@ -13,6 +14,9 @@ const AddVisit = ()=>{
   const [medicals, setMedicals] = useState([])
   const [selected, setSelected] = useState('')
   const [notes, setNotes] = useState('')
+  const [discussion, setDiscussion] = useState('')
+  const [doctorResponse, setDoctorResponse] = useState('')
+  const [doctorResponseNotes, setDoctorResponseNotes] = useState('')
   const [location, setLocation] = useState({ latitude: '', longitude: '' })
   const [visitPhoto, setVisitPhoto] = useState(null)
   const cameraInputRef = useRef(null)
@@ -76,6 +80,9 @@ const AddVisit = ()=>{
     if(!location.latitude || !location.longitude) return alert('Current location is not available yet')
     const submitVisit = async ()=>{
       const payload = { currentLatitude: Number(location.latitude), currentLongitude: Number(location.longitude), purpose: 'field_visit', notes }
+      if (discussion.trim()) payload.discussion = discussion.trim()
+      if (doctorResponse) payload.doctorResponse = doctorResponse
+      if (doctorResponseNotes.trim()) payload.doctorResponseNotes = doctorResponseNotes.trim()
       if (visitPhoto) payload.visitPhoto = visitPhoto
       if(type === 'doctor') payload.doctorId = selected
       else payload.medicalId = selected
@@ -96,8 +103,8 @@ const AddVisit = ()=>{
     : ''
 
   return (
-    <div>
-      <h2>Add Visit</h2>
+    <PageContainer width="narrow">
+      <PageHeader eyebrow="Field" title="Add Visit" description="Log a doctor or chemist visit at your current location." />
       <div className="mb-3">
         <label className="form-label">Type</label>
         <select className="form-select" value={type} onChange={e=>setType(e.target.value)}>
@@ -120,6 +127,30 @@ const AddVisit = ()=>{
       <div className="mb-3">
         <label className="form-label">Notes</label>
         <textarea className="form-control" rows={3} value={notes} onChange={e=>setNotes(e.target.value)} />
+      </div>
+
+      <div className="mb-3">
+        <label className="form-label">What did you discuss with the {type === 'doctor' ? 'doctor' : 'chemist'}?</label>
+        <textarea className="form-control" rows={3} value={discussion} onChange={e=>setDiscussion(e.target.value)} placeholder="Products detailed, questions asked, commitments made..." />
+      </div>
+
+      <div className="row g-2 mb-3">
+        <div className="col-md-5">
+          <label className="form-label">{type === 'doctor' ? 'Doctor' : 'Chemist'} response</label>
+          <select className="form-select" value={doctorResponse} onChange={e=>setDoctorResponse(e.target.value)}>
+            <option value="">Not recorded</option>
+            <option value="POSITIVE">Positive</option>
+            <option value="NEGATIVE">Negative</option>
+            <option value="NEUTRAL">Neutral</option>
+            <option value="INTERESTED">Interested</option>
+            <option value="NOT_INTERESTED">Not interested</option>
+            <option value="FOLLOW_UP_REQUIRED">Follow-up required</option>
+          </select>
+        </div>
+        <div className="col-md-7">
+          <label className="form-label">Response detail (optional)</label>
+          <input className="form-control" value={doctorResponseNotes} onChange={e=>setDoctorResponseNotes(e.target.value)} placeholder="e.g. Interested, wants another meeting next week" />
+        </div>
       </div>
 
       <div className="mb-3">
@@ -147,7 +178,7 @@ const AddVisit = ()=>{
       <button className="btn btn-primary" onClick={handleUseLocationAndSubmit} disabled={loading || !selected}>{loading? 'Submitting...':'Use my location & Submit'}</button>
       {error && <div className="mt-3 alert alert-danger">{error.message||JSON.stringify(error)}</div>}
       {lastResult && lastResult.message && <div className="mt-3 alert alert-success">{lastResult.message}</div>}
-    </div>
+    </PageContainer>
   )
 }
 

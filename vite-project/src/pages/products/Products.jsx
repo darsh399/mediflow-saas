@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import companyProductApi from "../../api/companyProductApi";
 import { useNotify } from "../../components/NotificationProvider";
 import { resolveAssetUrl } from "../../utils/resolveAssetUrl";
+import { PageContainer, PageHeader, SkeletonTable } from "../../components/ui";
 
 const MANAGER_ROLES = ["admin", "company_owner", "hr_manager"];
 
@@ -114,47 +115,27 @@ const Products = () => {
 
   if (loading) {
     return (
-      <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-        <div className="card border-0 shadow-sm rounded-4">
-          <div className="card-body text-center py-5">
-            <div className="spinner-border text-primary mb-3" style={{ width: "3rem", height: "3rem" }}></div>
-            <h5 className="fw-semibold">Loading Products</h5>
-            <p className="text-muted mb-0">Please wait while we fetch your company's products...</p>
-          </div>
-        </div>
-      </div>
+      <PageContainer>
+        <PageHeader eyebrow="Product catalog" title="Products" description="Company products for your team and MRs to reference during doctor visits." />
+        <SkeletonTable rows={8} columns={5} />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-      <div className="container-fluid px-0">
+    <PageContainer>
+      <PageHeader
+        eyebrow="Product catalog"
+        title="Products"
+        description="Company products for your team and MRs to reference during doctor visits."
+        actions={canManage && (
+          <Link to="/products/add" className="btn btn-primary rounded-3 fw-semibold">
+            <i className="bi bi-plus-lg me-2"></i> Add Product
+          </Link>
+        )}
+      />
 
-        {/* HEADER */}
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}>
-            <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-              <div>
-                <div className="d-flex align-items-center gap-3 mb-2">
-                  <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: "55px", height: "55px" }}>
-                    <i className="bi bi-capsule fs-3"></i>
-                  </div>
-                  <div>
-                    <span className="small opacity-75">PRODUCT CATALOG</span>
-                    <h2 className="fw-bold mb-0">All Products</h2>
-                  </div>
-                </div>
-                <p className="mb-0 opacity-75">Company products for your team and MRs to reference during doctor visits.</p>
-              </div>
-              {canManage && (
-                <Link to="/products/add" className="btn btn-light fw-semibold px-4 rounded-3">
-                  <i className="bi bi-plus-lg me-2"></i>
-                  Add Product
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
+      <div className="container-fluid px-0">
 
         {error && (
           <div className="alert alert-danger border-0 shadow-sm rounded-4">
@@ -333,18 +314,13 @@ const Products = () => {
             width: 100%;
             aspect-ratio: 4 / 3;
             object-fit: cover;
-            background-color: #f1f3f5;
+            background-color: var(--mf-slate-100);
           }
-          .product-card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-          }
-          .product-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.08) !important;
-          }
+          .product-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+          .product-card:hover { transform: translateY(-3px); box-shadow: var(--mf-shadow-md) !important; }
         `}
       </style>
-    </div>
+    </PageContainer>
   );
 };
 

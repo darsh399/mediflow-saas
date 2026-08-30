@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import userApi from '../../api/userApi'
+import { PageContainer, PageHeader, Breadcrumbs } from '../../components/ui'
 
 const ROLES = [
   { value: 'employee', label: 'Employee' },
@@ -54,7 +55,7 @@ const AddEmployee = () => {
   if (result) {
     const credentials = result.generatedCredentials
     return (
-      <div className="container-fluid py-4" style={{ maxWidth: 640 }}>
+      <PageContainer width="narrow">
         <div className="card border-0 shadow-sm">
           <div className="card-body p-4 p-md-5 text-center">
             <div className="mx-auto mb-3 rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style={{ width: 70, height: 70, fontSize: 28 }}>
@@ -84,17 +85,14 @@ const AddEmployee = () => {
             </div>
           </div>
         </div>
-      </div>
+      </PageContainer>
     )
   }
 
   return (
-    <div className="container-fluid py-4" style={{ maxWidth: 640 }}>
-      <div className="mb-4">
-        <span className="text-primary fw-semibold small">EMPLOYEES</span>
-        <h2 className="fw-bold mb-1 mt-1">Add Employee</h2>
-        <p className="text-muted mb-0">A company login email and a secure temporary password will be generated automatically and emailed to the employee.</p>
-      </div>
+    <PageContainer width="narrow">
+      <Breadcrumbs items={[{ label: 'Employees', to: '/users' }, { label: 'Add Employee' }]} />
+      <PageHeader eyebrow="People" title="Add Employee" description="A company login email and a secure temporary password will be generated automatically and emailed to the employee." />
 
       {error && <div className="alert alert-danger">{error}</div>}
 
@@ -148,7 +146,7 @@ const AddEmployee = () => {
           </button>
         </div>
       </form>
-    </div>
+    </PageContainer>
   )
 }
 

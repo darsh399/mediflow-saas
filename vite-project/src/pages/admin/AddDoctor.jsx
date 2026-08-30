@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { createDoctor } from '../../redux/slices/doctorSlice'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import territoryApi from '../../api/territoryApi'
+import { PageContainer, PageHeader, Breadcrumbs } from '../../components/ui'
 
 const AddDoctor = () => {
   const [form, setForm] = useState({
@@ -14,9 +15,12 @@ const AddDoctor = () => {
     state: '',
     latitude: '',
     longitude: '',
+    altitude: '',
     phone: '',
     specialty: '',
     dateOfBirth: '',
+    anniversaryDate: '',
+    tier: 'UNGRADED',
     territoryId: ''
   })
   const [territories, setTerritories] = useState([])
@@ -58,7 +62,8 @@ const AddDoctor = () => {
         setForm((f) => ({
           ...f,
           latitude: pos.coords.latitude.toFixed(6),
-          longitude: pos.coords.longitude.toFixed(6)
+          longitude: pos.coords.longitude.toFixed(6),
+          altitude: pos.coords.altitude != null ? pos.coords.altitude.toFixed(1) : f.altitude
         }))
 
         setLocationStatus('Location updated successfully')
@@ -90,7 +95,8 @@ const AddDoctor = () => {
         setForm((f) => ({
           ...f,
           latitude: pos.coords.latitude.toFixed(6),
-          longitude: pos.coords.longitude.toFixed(6)
+          longitude: pos.coords.longitude.toFixed(6),
+          altitude: pos.coords.altitude != null ? pos.coords.altitude.toFixed(1) : f.altitude
         }))
 
         setLocationStatus('Live location active')
@@ -140,7 +146,8 @@ const AddDoctor = () => {
       const payload = {
         ...form,
         latitude: Number(form.latitude),
-        longitude: Number(form.longitude)
+        longitude: Number(form.longitude),
+        altitude: form.altitude === '' ? undefined : Number(form.altitude)
       }
 
       await dispatch(createDoctor(payload)).unwrap()
@@ -159,64 +166,27 @@ const AddDoctor = () => {
   }
 
   return (
-    <div className="container-fluid py-4">
+    <PageContainer>
+      <Breadcrumbs items={[{ label: 'Doctors', to: '/doctors' }, { label: 'Add Doctor' }]} />
 
-      {/* Header */}
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <PageHeader
+        eyebrow="Field"
+        title="Add Doctor"
+        description="Register a doctor with their clinic and territory information."
+        actions={
+          <Link to="/doctors" className="btn btn-ghost rounded-3">
+            <i className="bi bi-arrow-left me-2"></i> Back to Doctors
+          </Link>
+        }
+      />
 
-        <div>
-          <div className="d-flex align-items-center gap-3 mb-2">
-
-            <div
-              className="bg-primary text-white rounded-4 d-flex align-items-center justify-content-center shadow-sm"
-              style={{
-                width: '52px',
-                height: '52px'
-              }}
-            >
-              <i className="bi bi-person-plus-fill fs-4"></i>
-            </div>
-
-            <div>
-              <h2 className="fw-bold mb-0">
-                Add Doctor
-              </h2>
-
-              <p className="text-muted mb-0">
-                Add a doctor and clinic information
-              </p>
-            </div>
-
-          </div>
-        </div>
-
-        <button
-          type="button"
-          className="btn btn-outline-secondary rounded-3 px-4"
-          onClick={() => nav('/doctors')}
-        >
-          <i className="bi bi-arrow-left me-2"></i>
-          Back to Doctors
-        </button>
-
-      </div>
-
-      {/* Error */}
       {error && (
-        <div className="alert alert-danger border-0 rounded-4 shadow-sm d-flex align-items-start mb-4">
-
-          <i className="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
-
+        <div className="alert alert-danger border-0 shadow-sm d-flex align-items-start gap-3 mb-0">
+          <i className="bi bi-exclamation-triangle-fill fs-5"></i>
           <div>
-            <div className="fw-semibold">
-              Unable to add doctor
-            </div>
-
-            <div className="small mt-1">
-              {error}
-            </div>
+            <div className="fw-semibold">Unable to add doctor</div>
+            <div className="small mt-1">{error}</div>
           </div>
-
         </div>
       )}
 
@@ -415,6 +385,29 @@ const AddDoctor = () => {
                 </div>
 
                 <div className="mb-4 mt-4">
+                  <label className="form-label fw-semibold" htmlFor="doctor-tier">
+                    Tier <span className="text-muted fw-normal">(optional)</span>
+                  </label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-light border-end-0">
+                      <i className="bi bi-award text-primary"></i>
+                    </span>
+                    <select
+                      id="doctor-tier"
+                      name="tier"
+                      value={form.tier}
+                      onChange={handleChange}
+                      className="form-select border-start-0"
+                    >
+                      <option value="UNGRADED">Ungraded</option>
+                      <option value="A">A — high priority</option>
+                      <option value="B">B — medium priority</option>
+                      <option value="C">C — low priority</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mb-4 mt-4">
                   <label className="form-label fw-semibold" htmlFor="doctor-territory">
                     Territory <span className="text-muted fw-normal">(optional)</span>
                   </label>
@@ -452,6 +445,25 @@ const AddDoctor = () => {
                       type="date"
                       name="dateOfBirth"
                       value={form.dateOfBirth}
+                      onChange={handleChange}
+                      className="form-control border-start-0"
+                    />
+                  </div>
+                </div>
+
+                <div className="mb-4 mt-4">
+                  <label className="form-label fw-semibold" htmlFor="doctor-anniversary">
+                    Practice Anniversary <span className="text-muted fw-normal">(optional)</span>
+                  </label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-light border-end-0">
+                      <i className="bi bi-calendar-heart text-primary"></i>
+                    </span>
+                    <input
+                      id="doctor-anniversary"
+                      type="date"
+                      name="anniversaryDate"
+                      value={form.anniversaryDate}
                       onChange={handleChange}
                       className="form-control border-start-0"
                     />
@@ -520,6 +532,24 @@ const AddDoctor = () => {
                         className="form-control"
                         placeholder="Longitude"
                         required
+                      />
+
+                    </div>
+
+                    <div className="col-md-6">
+
+                      <label className="form-label small text-muted">
+                        Altitude <span className="fw-normal">(optional)</span>
+                      </label>
+
+                      <input
+                        name="altitude"
+                        type="number"
+                        step="any"
+                        value={form.altitude}
+                        onChange={handleChange}
+                        className="form-control"
+                        placeholder="Metres above sea level"
                       />
 
                     </div>
@@ -715,36 +745,7 @@ const AddDoctor = () => {
 
       </div>
 
-      <style>
-        {`
-          .card {
-            transition: all 0.2s ease;
-          }
-
-          .card:hover {
-            transform: translateY(-2px);
-          }
-
-          .form-control,
-          .input-group-text {
-            min-height: 45px;
-          }
-
-          .form-control:focus {
-            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
-          }
-
-          .btn {
-            transition: all 0.2s ease;
-          }
-
-          .btn:hover {
-            transform: translateY(-1px);
-          }
-        `}
-      </style>
-
-    </div>
+    </PageContainer>
   )
 }
 

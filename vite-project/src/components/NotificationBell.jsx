@@ -11,6 +11,7 @@ const TYPE_META = {
   TASK_ASSIGNED: { icon: 'bi-check2-square', color: 'var(--mf-color-primary)' },
   EMPLOYEE_PROMOTED: { icon: 'bi-arrow-up-circle', color: '#fd7e14' },
   DOCTOR_BIRTHDAY: { icon: 'bi-gift', color: '#0dcaf0' },
+  DOCUMENT_REUPLOAD_REQUESTED: { icon: 'bi-file-earmark-arrow-up', color: '#fd7e14' },
   company_message: { icon: 'bi-megaphone', color: 'var(--mf-color-primary)' },
   DEMO_REQUEST: { icon: 'bi-megaphone', color: '#d63384' },
 }

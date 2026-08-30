@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { getAllMyVisits } from "../../redux/slices/userSlice";
 import VisitActionModal from "../../components/VisitActionModal";
 import VisitDetailsModal from "../../components/VisitDetailsModal";
+import { PageContainer, PageHeader, StatCard, SkeletonTable } from "../../components/ui";
 
 const MyVisits = () => {
   const dispatch = useDispatch();
@@ -78,7 +79,7 @@ const MyVisits = () => {
       case "approved":
         return { backgroundColor: "#e8f8ef", color: "#198754", icon: "bi-check-circle-fill", label: "Completed" };
       case "scheduled":
-        return { backgroundColor: "#e7f1ff", color: "var(--mf-color-primary)", icon: "bi-calendar-event", label: "Scheduled" };
+        return { backgroundColor: "var(--mf-color-primary-subtle)", color: "var(--mf-color-primary)", icon: "bi-calendar-event", label: "Scheduled" };
       case "cancelled":
       case "rejected":
         return { backgroundColor: "#fdecec", color: "#dc3545", icon: "bi-x-circle-fill", label: status === "rejected" ? "Rejected" : "Cancelled" };
@@ -194,155 +195,37 @@ const MyVisits = () => {
 
   if (loading) {
     return (
-      <div className="container-fluid py-4">
-        <div className="card border-0 shadow-sm rounded-4">
-          <div className="card-body py-5 text-center">
-            <div
-              className="spinner-border text-primary mb-3"
-              style={{
-                width: "3rem",
-                height: "3rem",
-              }}
-              role="status"
-            >
-              <span className="visually-hidden">
-                Loading...
-              </span>
-            </div>
-
-            <h5 className="fw-semibold mb-1">
-              Loading Visit History
-            </h5>
-
-            <p className="text-muted mb-0">
-              Please wait while we fetch your visits...
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageContainer>
+        <PageHeader eyebrow="Activity overview" title="My Visits" description="View and track all doctor visits completed by you." />
+        <SkeletonTable rows={8} columns={5} />
+      </PageContainer>
     );
   }
 
   if (error) {
     return (
-      <div className="container-fluid py-4">
-        <div className="card border-0 shadow-sm rounded-4">
-          <div className="card-body p-4">
-            <div className="alert alert-danger border-0 rounded-3 mb-0 d-flex align-items-start gap-3">
-              <div
-                className="rounded-circle bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center flex-shrink-0"
-                style={{
-                  width: "45px",
-                  height: "45px",
-                }}
-              >
-                <i className="bi bi-exclamation-triangle fs-5"></i>
-              </div>
-
-              <div>
-                <h6 className="fw-bold mb-1">
-                  Unable to load visits
-                </h6>
-
-                <p className="mb-0 small">
-                  {error?.message ||
-                    "Something went wrong while loading your visits."}
-                </p>
-              </div>
-            </div>
+      <PageContainer>
+        <PageHeader eyebrow="Activity overview" title="My Visits" />
+        <div className="alert alert-danger border-0 shadow-sm d-flex align-items-start gap-3 mb-0">
+          <i className="bi bi-exclamation-triangle fs-5"></i>
+          <div>
+            <div className="fw-bold">Unable to load visits</div>
+            <p className="mb-0 small">{error?.message || "Something went wrong while loading your visits."}</p>
           </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div
-      className="container-fluid py-4"
-      style={{
-        backgroundColor: "#f8f9fc",
-        minHeight: "100vh",
-      }}
-    >
+    <PageContainer>
+      <PageHeader eyebrow="Activity overview" title="My Visits" description="View and track all doctor visits completed by you." />
+
+      <div className="row g-3">
+        <div className="col-6 col-md-3"><StatCard label="Showing" value={filteredVisits.length} icon="bi-funnel" /></div>
+      </div>
+
       <div className="container-fluid px-0">
-
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div
-            className="card-body p-4 p-lg-5 text-white"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)",
-            }}
-          >
-            <div className="row align-items-center">
-              <div className="col-lg-8">
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div
-                    className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: "55px",
-                      height: "55px",
-                    }}
-                  >
-                    <i className="bi bi-clipboard2-pulse fs-3"></i>
-                  </div>
-
-                  <div>
-                    <span className="small opacity-75">
-                      ACTIVITY OVERVIEW
-                    </span>
-
-                    <h2 className="fw-bold mb-0">
-                      My Visits
-                    </h2>
-                  </div>
-                </div>
-
-                <p className="mb-0 opacity-75">
-                  View and track all doctor visits completed by you.
-                </p>
-              </div>
-
-              <div className="col-lg-4 mt-4 mt-lg-0">
-                <div className="row g-3 justify-content-lg-end">
-                  <div className="col-6 col-lg-auto">
-                    <div
-                      className="bg-white bg-opacity-10 rounded-4 p-3 text-center"
-                      style={{
-                        minWidth: "125px",
-                      }}
-                    >
-                      <div className="fs-2 fw-bold">
-                        {filteredVisits.length}
-                      </div>
-
-                      <div className="small opacity-75">
-                        Showing
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-6 col-lg-auto">
-                    <div
-                      className="bg-white bg-opacity-10 rounded-4 p-3 text-center"
-                      style={{
-                        minWidth: "125px",
-                      }}
-                    >
-                      <div className="fs-2 fw-bold">
-                        <i className="bi bi-check-circle"></i>
-                      </div>
-
-                      <div className="small opacity-75">
-                        Completed
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <div className="card border-0 shadow-sm rounded-4 mb-4">
           <div className="card-body p-4">
@@ -508,7 +391,7 @@ const MyVisits = () => {
                   width: "90px",
                   height: "90px",
                   background:
-                    "linear-gradient(135deg, rgba(37,99,235,.1), rgba(102,16,242,.1))",
+                    "linear-gradient(135deg, rgba(13, 148, 136, 0.15), rgba(102,16,242,.1))",
                 }}
               >
                 <i className="bi bi-clipboard2-x text-primary fs-1"></i>
@@ -583,7 +466,7 @@ const MyVisits = () => {
 
                   <thead
                     style={{
-                      backgroundColor: "#f8f9fc",
+                      backgroundColor: "var(--mf-surface-2)",
                     }}
                   >
                     <tr>
@@ -654,7 +537,7 @@ const MyVisits = () => {
                                 width: "45px",
                                 height: "45px",
                                 background:
-                                  "linear-gradient(135deg, #e7f1ff, #ede7ff)",
+                                  "var(--mf-color-primary-subtle)",
                               }}
                             >
                               <i className="bi bi-person-vcard text-primary fs-5"></i>
@@ -831,7 +714,7 @@ const MyVisits = () => {
                     style={{
                       width: "45px",
                       height: "45px",
-                      backgroundColor: "#e7f1ff",
+                      backgroundColor: "var(--mf-color-primary-subtle)",
                     }}
                   >
                     <i className="bi bi-clipboard-check text-primary fs-5"></i>
@@ -893,7 +776,7 @@ const MyVisits = () => {
                     style={{
                       width: "45px",
                       height: "45px",
-                      backgroundColor: "#e7f1ff",
+                      backgroundColor: "var(--mf-color-primary-subtle)",
                     }}
                   >
                     <i className="bi bi-calendar-event text-primary fs-5"></i>
@@ -936,7 +819,7 @@ const MyVisits = () => {
           onDone={() => { dispatch(getAllMyVisits()); closeDetails(); }}
         />
       )}
-    </div>
+    </PageContainer>
   );
 };
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import notificationApi from "../../api/notificationApi";
+import { PageContainer, PageHeader, StatCard } from "../../components/ui";
 
 const Notifications = () => {
   const [items, setItems] = useState([]);
@@ -71,78 +72,14 @@ const Notifications = () => {
   };
 
   return (
-    <div
-      className="container-fluid py-4"
-      style={{
-        backgroundColor: "#f8f9fc",
-        minHeight: "100vh",
-      }}
-    >
+    <PageContainer>
+      <PageHeader eyebrow="Activity center" title="Notifications" description="Stay updated with important alerts, activities and account notifications." />
+
+      <div className="row g-3">
+        <div className="col-6 col-md-3"><StatCard label="Unread" value={unreadCount} icon="bi-bell" /></div>
+      </div>
+
       <div className="container-fluid px-0">
-
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div
-            className="card-body p-4 p-lg-5 text-white"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)",
-            }}
-          >
-            <div className="row align-items-center">
-
-              <div className="col-lg-8">
-                <div className="d-flex align-items-center gap-3 mb-3">
-
-                  <div
-                    className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: "55px",
-                      height: "55px",
-                    }}
-                  >
-                    <i className="bi bi-bell fs-3"></i>
-                  </div>
-
-                  <div>
-                    <span className="small opacity-75">
-                      ACTIVITY CENTER
-                    </span>
-
-                    <h2 className="fw-bold mb-0">
-                      Notifications
-                    </h2>
-                  </div>
-
-                </div>
-
-                <p className="mb-0 opacity-75">
-                  Stay updated with important alerts, activities
-                  and account notifications.
-                </p>
-              </div>
-
-              <div className="col-lg-4 mt-4 mt-lg-0">
-                <div className="d-flex justify-content-lg-end">
-
-                  <div
-                    className="bg-white bg-opacity-10 rounded-4 px-4 py-3 text-center"
-                    style={{ minWidth: "140px" }}
-                  >
-                    <div className="fs-2 fw-bold">
-                      {unreadCount}
-                    </div>
-
-                    <div className="small opacity-75">
-                      Unread
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
 
         {error && (
           <div className="alert alert-danger border-0 shadow-sm rounded-4 d-flex align-items-center gap-3">
@@ -236,7 +173,7 @@ const Notifications = () => {
                     width: "85px",
                     height: "85px",
                     background:
-                      "linear-gradient(135deg, #e7f1ff, #ede7ff)",
+                      "var(--mf-color-primary-subtle)",
                   }}
                 >
                   <i className="bi bi-bell-slash text-primary fs-1"></i>
@@ -285,7 +222,7 @@ const Notifications = () => {
                             width: "48px",
                             height: "48px",
                             backgroundColor: unread
-                              ? "#e7f1ff"
+                              ? "var(--mf-color-primary-subtle)"
                               : "#f1f3f5",
                             color: unread
                               ? "var(--mf-color-primary)"
@@ -391,7 +328,7 @@ const Notifications = () => {
         </div>
 
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

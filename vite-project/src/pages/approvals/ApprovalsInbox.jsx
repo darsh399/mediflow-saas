@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useApprovals } from "../../hooks/useApprovals";
 import { useNotify } from "../../components/NotificationProvider";
+import { PageContainer, PageHeader, StatCard } from "../../components/ui";
 import leaveApi from "../../api/leaveApi";
 import expenseApi from "../../api/expenseApi";
 import salaryApi from "../../api/salaryApi";
@@ -88,42 +89,14 @@ const ApprovalsInbox = () => {
     capabilities.leaves || capabilities.expenses || capabilities.onboarding || capabilities.offers;
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-      <div className="container-fluid px-0">
+    <PageContainer>
+      <PageHeader eyebrow="My approvals" title="Approvals Inbox" description="Everything waiting on your review, in one place." />
 
-        {/* HEADER */}
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div
-            className="card-body p-4 p-lg-5 text-white"
-            style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}
-          >
-            <div className="row align-items-center">
-              <div className="col-lg-8">
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div
-                    className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center"
-                    style={{ width: "55px", height: "55px" }}
-                  >
-                    <i className="bi bi-inbox-fill fs-3"></i>
-                  </div>
-                  <div>
-                    <span className="small opacity-75">MY APPROVALS</span>
-                    <h2 className="fw-bold mb-0">Approvals Inbox</h2>
-                  </div>
-                </div>
-                <p className="mb-0 opacity-75">
-                  Everything waiting on your review, in one place.
-                </p>
-              </div>
-              <div className="col-lg-4 mt-4 mt-lg-0">
-                <div className="bg-white bg-opacity-10 rounded-4 p-4 text-center">
-                  <div className="display-6 fw-bold">{loading ? "…" : total}</div>
-                  <small className="opacity-75">Pending your action</small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="row g-3">
+        <div className="col-6 col-md-3"><StatCard label="Pending your action" value={loading ? "…" : total} icon="bi-inbox" /></div>
+      </div>
+
+      <div className="container-fluid px-0">
 
         {error && (
           <div className="alert alert-warning border-0 shadow-sm rounded-4">
@@ -196,7 +169,7 @@ const ApprovalsInbox = () => {
           <Section id="section-leaves" meta={SECTION_META.leaves} count={counts.leaves}>
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     <th className="px-4 py-3 border-0">Employee</th>
                     <th className="py-3 border-0">Type</th>
@@ -245,7 +218,7 @@ const ApprovalsInbox = () => {
           <Section id="section-expenses" meta={SECTION_META.expenses} count={counts.expenses}>
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     <th className="px-4 py-3 border-0">Employee</th>
                     <th className="py-3 border-0">Category</th>
@@ -286,7 +259,7 @@ const ApprovalsInbox = () => {
           <Section id="section-onboarding" meta={SECTION_META.onboarding} count={counts.onboarding}>
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     <th className="px-4 py-3 border-0">Employee</th>
                     <th className="py-3 border-0">Role</th>
@@ -335,7 +308,7 @@ const ApprovalsInbox = () => {
           <Section id="section-offers" meta={SECTION_META.offers} count={counts.offers}>
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     <th className="px-4 py-3 border-0">Candidate</th>
                     <th className="py-3 border-0">Job title</th>
@@ -381,7 +354,7 @@ const ApprovalsInbox = () => {
         )}
 
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

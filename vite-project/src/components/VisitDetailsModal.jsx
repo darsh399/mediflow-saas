@@ -8,11 +8,28 @@ const formatDateTime = (value) => {
   return new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
+const RESPONSE_LABELS = {
+  POSITIVE: 'Positive',
+  NEGATIVE: 'Negative',
+  NEUTRAL: 'Neutral',
+  INTERESTED: 'Interested',
+  NOT_INTERESTED: 'Not interested',
+  FOLLOW_UP_REQUIRED: 'Follow-up required',
+}
+const RESPONSE_CLASS = {
+  POSITIVE: 'text-bg-success',
+  INTERESTED: 'text-bg-success',
+  NEGATIVE: 'text-bg-danger',
+  NOT_INTERESTED: 'text-bg-danger',
+  NEUTRAL: 'text-bg-secondary',
+  FOLLOW_UP_REQUIRED: 'text-bg-warning',
+}
+
 const VisitDetailsModal = ({ visit, onClose, onReschedule, onCancel, onComplete }) => {
   if (!visit) return null
 
   const isAssignedTask = Boolean(visit.assignedBy)
-  const canAct = isAssignedTask && visit.status === 'scheduled'
+  const canAct = isAssignedTask && visit.status === 'scheduled' && Boolean(onComplete)
 
   const target = visit.doctorId
     ? { type: 'Doctor', name: visit.doctorId.name, extra: visit.doctorId.specialty || visit.doctorId.phone }
@@ -76,6 +93,23 @@ const VisitDetailsModal = ({ visit, onClose, onReschedule, onCancel, onComplete 
               <div className="mb-2">
                 <small className="text-muted d-block">Notes</small>
                 <div>{visit.notes}</div>
+              </div>
+            )}
+
+            {visit.discussion && (
+              <div className="mb-2">
+                <small className="text-muted d-block">What was discussed</small>
+                <div style={{ whiteSpace: 'pre-wrap' }}>{visit.discussion}</div>
+              </div>
+            )}
+
+            {visit.doctorResponse && (
+              <div className="mb-2">
+                <small className="text-muted d-block">Doctor response</small>
+                <span className={`badge ${RESPONSE_CLASS[visit.doctorResponse] || 'text-bg-secondary'}`}>
+                  {RESPONSE_LABELS[visit.doctorResponse] || visit.doctorResponse}
+                </span>
+                {visit.doctorResponseNotes && <div className="mt-1">{visit.doctorResponseNotes}</div>}
               </div>
             )}
 

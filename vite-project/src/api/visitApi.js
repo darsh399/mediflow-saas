@@ -36,8 +36,8 @@ function toMultipart(payload) {
   return formData
 }
 
-export async function listVisits(){
-  const resp = await axios.get('/api/visits')
+export async function listVisits(params){
+  const resp = await axios.get('/api/visits', { params })
   return resp.data
 }
 

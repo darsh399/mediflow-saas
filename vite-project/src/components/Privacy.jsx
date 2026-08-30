@@ -606,10 +606,10 @@ const PrivacyPolicy = () => {
           .policy-intro {
             background: linear-gradient(
               135deg,
-              rgba(37,99,235,0.08),
+              rgba(13, 148, 136, 0.06),
               rgba(99,102,241,0.06)
             );
-            border: 1px solid rgba(37,99,235,0.1);
+            border: 1px solid rgba(13, 148, 136, 0.15);
           }
 
           .policy-card {
@@ -622,7 +622,7 @@ const PrivacyPolicy = () => {
 
           .policy-card:hover {
             transform: translateY(-5px);
-            border-color: rgba(37,99,235,0.25);
+            border-color: rgba(13, 148, 136, 0.25);
             box-shadow: 0 15px 35px rgba(0,0,0,0.08);
           }
 
@@ -669,10 +669,10 @@ const PrivacyPolicy = () => {
             border-radius: 20px;
             background: linear-gradient(
               135deg,
-              rgba(37,99,235,0.07),
+              rgba(13, 148, 136, 0.06),
               rgba(99,102,241,0.08)
             );
-            border: 1px solid rgba(37,99,235,0.12);
+            border: 1px solid rgba(13, 148, 136, 0.15);
           }
 
           .contact-icon {
