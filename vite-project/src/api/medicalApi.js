@@ -10,6 +10,11 @@ export async function listMedicals(){
   return resp.data
 }
 
+export async function exportMedicals(params){
+  const resp = await axios.get('/api/medicals/export', { params, responseType: 'blob' })
+  return resp.data
+}
+
 export async function getMedical(id){
   const resp = await axios.get(`/api/medicals/${id}`)
   return resp.data
@@ -25,4 +30,4 @@ export async function deleteMedical(id){
   return resp.data
 }
 
-export default { createMedical, listMedicals, getMedical, updateMedical, deleteMedical }
+export default { createMedical, listMedicals, exportMedicals, getMedical, updateMedical, deleteMedical }
