@@ -51,6 +51,7 @@ const AdminLayout = () => {
   const canViewTopPerformers = TOP_PERFORMER_ROLES.includes(role);
   const canViewReports = REPORT_VIEWER_ROLES.includes(role);
   const canImportDoctors = DOCTOR_IMPORT_ROLES.includes(role);
+  const canManageCompanySettings = ["admin", "company_owner", "hr_manager"].includes(role);
 
   // Company feature entitlements (Super Admin controlled). `has(key)` combines
   // with the role check below; a link shows only when BOTH pass.
@@ -63,8 +64,11 @@ const AdminLayout = () => {
   const canSeeDoctors = (isMr || canManageCompany || canImportDoctors) && has("doctors");
   const canSeeVisits = (isMr || canManageCompany) && has("visits");
   const canSeeTerritories = canManageCompany && has("territories");
-  const canSeeFieldGroup = canSeeDoctors || canSeeVisits || canSeeTerritories;
-  const canSeeCompanyGroup = (canViewTopPerformers && has("visits")) || canViewAuditLog || canViewBilling || canSendCompanyMessages;
+  const canSeeDcr = (isMr || ["employee", "manager", "project_manager"].includes(role)) && has("visits");
+  const canSeeTeamDcr = ["admin", "company_owner", "hr_manager", "manager", "project_manager"].includes(role) && has("visits");
+  const canSeeSamples = (isMr || ["employee", "manager", "project_manager", "admin", "company_owner", "hr_manager"].includes(role)) && has("visits");
+  const canSeeFieldGroup = canSeeDoctors || canSeeVisits || canSeeTerritories || canSeeDcr || canSeeTeamDcr || canSeeSamples;
+  const canSeeCompanyGroup = (canViewTopPerformers && has("visits")) || canViewAuditLog || canViewBilling || canSendCompanyMessages || canManageCompanySettings;
   const canSeeLeave = has("leaves");
   const canSeeExpenses = has("expenses");
   const canSeePayrollGroup = canViewSalary && has("payroll");
@@ -175,6 +179,9 @@ const AdminLayout = () => {
             </>}
 
             {canSeeTerritories && <NavLink className={navClass} to="/territories" onClick={closeSidebar}><i className="bi bi-geo"></i> Territories</NavLink>}
+            {canSeeDcr && <NavLink className={navClass} to="/mr/dcr" onClick={closeSidebar}><i className="bi bi-journal-check"></i> Daily Call Report</NavLink>}
+            {canSeeTeamDcr && <NavLink className={navClass} to="/dcr/team" onClick={closeSidebar}><i className="bi bi-journal-text"></i> Team Call Reports</NavLink>}
+            {canSeeSamples && <NavLink className={navClass} to="/samples" onClick={closeSidebar}><i className="bi bi-box-seam"></i> Samples &amp; Gifts</NavLink>}
           </>}
 
           {/* ---- SALES & ACTIVITY ---- */}
@@ -233,6 +240,7 @@ const AdminLayout = () => {
             {canViewAuditLog && <NavLink className={navClass} to="/audit-log" onClick={closeSidebar}><i className="bi bi-clock-history"></i> Audit Log</NavLink>}
             {canViewBilling && <NavLink className={navClass} to="/billing" onClick={closeSidebar}><i className="bi bi-credit-card"></i> Billing</NavLink>}
             {canSendCompanyMessages && <NavLink className={navClass} to="/messages/send" onClick={closeSidebar}><i className="bi bi-send"></i> Send Message</NavLink>}
+            {canManageCompanySettings && <NavLink className={navClass} to="/settings" onClick={closeSidebar}><i className="bi bi-sliders"></i> Company Settings</NavLink>}
           </>}
         </nav>
       </aside>

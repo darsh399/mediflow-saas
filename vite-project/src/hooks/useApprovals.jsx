@@ -6,6 +6,7 @@ import expenseApi from "../api/expenseApi";
 import employeeProfileApi from "../api/employeeProfileApi";
 import salaryApi from "../api/salaryApi";
 import attendanceApi from "../api/attendanceApi";
+import dcrApi from "../api/dcrApi";
 import { useFeatureSet, hasFeature } from "./useFeature";
 
 // Which roles can actually action each kind of request. These mirror the
@@ -16,20 +17,48 @@ const EXPENSE_APPROVER_ROLES = ["admin", "company_owner", "hr_manager"];
 const ONBOARDING_REVIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr"];
 const OFFER_MANAGER_ROLES = ["admin", "company_owner", "hr_manager"];
 const ATTENDANCE_REVIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr"];
+const DCR_REVIEWER_ROLES = ["admin", "company_owner", "hr_manager", "manager", "project_manager"];
 
-const EMPTY_GROUPS = { leaves: [], expenses: [], onboarding: [], offers: [], attendance: [] };
+// A request older than this (calendar days) is flagged overdue in the inbox.
+const SLA_DAYS = 3;
+
+const EMPTY_GROUPS = { leaves: [], expenses: [], onboarding: [], offers: [], attendance: [], dcr: [] };
 
 const ApprovalsContext = createContext({
   groups: EMPTY_GROUPS,
-  counts: { leaves: 0, expenses: 0, onboarding: 0, offers: 0, attendance: 0 },
+  counts: { leaves: 0, expenses: 0, onboarding: 0, offers: 0, attendance: 0, dcr: 0 },
   total: 0,
+  overdue: 0,
+  slaDays: SLA_DAYS,
   loading: false,
   error: "",
   ready: false,
   active: false,
-  capabilities: { leaves: false, expenses: false, onboarding: false, offers: false, attendance: false },
+  capabilities: { leaves: false, expenses: false, onboarding: false, offers: false, attendance: false, dcr: false },
   refresh: () => {},
 });
+
+// When each request kind started waiting.
+const PENDING_SINCE = {
+  leaves: (item) => item.appliedAt || item.createdAt || item.fromDate || item.startDate,
+  expenses: (item) => item.createdAt || item.expenseDate,
+  onboarding: (item) => item.submittedAt || item.updatedAt || item.createdAt,
+  offers: (item) => item.createdAt,
+  attendance: (item) => item.correction?.requestedAt || item.updatedAt,
+  dcr: (item) => item.updatedAt || item.date,
+};
+
+// Adds `_ageDays` / `_overdue` to each row and sorts oldest first.
+function annotateAge(list, key) {
+  const now = Date.now();
+  return list
+    .map((item) => {
+      const since = PENDING_SINCE[key]?.(item);
+      const ageDays = since ? Math.max(0, Math.floor((now - new Date(since).getTime()) / 86400000)) : 0;
+      return { ...item, _ageDays: ageDays, _overdue: ageDays >= SLA_DAYS };
+    })
+    .sort((a, b) => b._ageDays - a._ageDays);
+}
 
 export function useApprovals() {
   return useContext(ApprovalsContext);
@@ -53,6 +82,7 @@ function ApprovalsProvider({ children }) {
       onboarding: ONBOARDING_REVIEWER_ROLES.includes(role),
       offers: OFFER_MANAGER_ROLES.includes(role),
       attendance: ATTENDANCE_REVIEWER_ROLES.includes(role) && hasFeature(featureSet, "attendance"),
+      dcr: DCR_REVIEWER_ROLES.includes(role) && hasFeature(featureSet, "visits"),
     }),
     [role, featureSet]
   );
@@ -83,12 +113,13 @@ function ApprovalsProvider({ children }) {
     setLoading(true);
     setError("");
 
-    const [leaveResult, expenseResult, onboardingResult, offerResult, attendanceResult] = await Promise.allSettled([
+    const [leaveResult, expenseResult, onboardingResult, offerResult, attendanceResult, dcrResult] = await Promise.allSettled([
       capabilities.leaves ? leaveApi.listLeaves() : Promise.resolve(null),
       capabilities.expenses ? expenseApi.listExpenses() : Promise.resolve(null),
       capabilities.onboarding ? employeeProfileApi.listProfiles() : Promise.resolve(null),
       capabilities.offers ? salaryApi.listOffers({ limit: 100 }) : Promise.resolve(null),
       capabilities.attendance ? attendanceApi.listAttendance({ correction: "PENDING", limit: 100 }) : Promise.resolve(null),
+      capabilities.dcr ? dcrApi.listReports({ status: "SUBMITTED" }) : Promise.resolve(null),
     ]);
 
     if (!mountedRef.current) return;
@@ -101,6 +132,7 @@ function ApprovalsProvider({ children }) {
       [capabilities.onboarding, onboardingResult],
       [capabilities.offers, offerResult],
       [capabilities.attendance, attendanceResult],
+      [capabilities.dcr, dcrResult],
     ].some(([entitled, result]) => entitled && result.status === "rejected");
 
     const valueOf = (result) => (result.status === "fulfilled" ? result.value : null);
@@ -116,8 +148,16 @@ function ApprovalsProvider({ children }) {
     const attendance = asArray(valueOf(attendanceResult), "attendance").filter(
       (record) => record.correction?.status === "PENDING"
     );
+    const dcr = asArray(valueOf(dcrResult), "reports").filter((report) => report.status === "SUBMITTED");
 
-    setGroups({ leaves, expenses, onboarding, offers, attendance });
+    setGroups({
+      leaves: annotateAge(leaves, "leaves"),
+      expenses: annotateAge(expenses, "expenses"),
+      onboarding: annotateAge(onboarding, "onboarding"),
+      offers: annotateAge(offers, "offers"),
+      attendance: annotateAge(attendance, "attendance"),
+      dcr: annotateAge(dcr, "dcr"),
+    });
     setError(failed ? "Some approval queues could not be loaded." : "");
     setLoading(false);
     setReady(true);
@@ -134,15 +174,21 @@ function ApprovalsProvider({ children }) {
       onboarding: groups.onboarding.length,
       offers: groups.offers.length,
       attendance: groups.attendance.length,
+      dcr: groups.dcr.length,
     }),
     [groups]
   );
 
-  const total = counts.leaves + counts.expenses + counts.onboarding + counts.offers + counts.attendance;
+  const total = counts.leaves + counts.expenses + counts.onboarding + counts.offers + counts.attendance + counts.dcr;
+
+  const overdue = useMemo(
+    () => Object.values(groups).reduce((sum, list) => sum + list.filter((item) => item._overdue).length, 0),
+    [groups]
+  );
 
   const value = useMemo(
-    () => ({ groups, counts, total, loading, error, ready, refresh, capabilities, active }),
-    [groups, counts, total, loading, error, ready, refresh, capabilities, active]
+    () => ({ groups, counts, total, overdue, slaDays: SLA_DAYS, loading, error, ready, refresh, capabilities, active }),
+    [groups, counts, total, overdue, loading, error, ready, refresh, capabilities, active]
   );
 
   return <ApprovalsContext.Provider value={value}>{children}</ApprovalsContext.Provider>;

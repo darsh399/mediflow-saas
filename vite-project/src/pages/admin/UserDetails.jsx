@@ -4,8 +4,10 @@ import { fetchUser, changeUserStatus, promoteEmployee } from '../../redux/slices
 import { fetchTopPerformers } from '../../redux/slices/visitSlice'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import userApi from '../../api/userApi'
+import EmployeeActivityPanel from '../../components/EmployeeActivityPanel'
 
 const PROMOTERS = ['admin', 'company_owner', 'hr_manager', 'hr']
+const ACTIVITY_VIEWERS = ['admin', 'company_owner', 'hr_manager']
 const TOP_PERFORMER_VIEWERS = ['admin', 'company_owner', 'hr_manager']
 const TOP_PERFORMER_RANGES = [['TODAY', 'Today'], ['THIS_WEEK', 'This week'], ['THIS_MONTH', 'This month']]
 const errorMessage = (error) => error?.message || error?.response?.data?.message || 'Unable to promote employee'
@@ -18,6 +20,7 @@ const UserDetails = () => {
   const { current, loading, error } = useSelector((state) => state.users)
   const actorRole = useSelector((state) => state.auth.user?.role)
   const canPromote = PROMOTERS.includes(actorRole)
+  const canViewActivity = ACTIVITY_VIEWERS.includes(actorRole)
   const canViewTopPerformer = TOP_PERFORMER_VIEWERS.includes(actorRole)
   const topPerformer = useSelector((state) => state.visits.topPerformers)
   const [promoteForm, setPromoteForm] = useState({ designation: '', department: '', note: '', effectiveDate: '' })
@@ -662,6 +665,8 @@ const UserDetails = () => {
             </div>
 
           </div>
+
+          {canViewActivity && <div className="mt-4"><EmployeeActivityPanel employeeId={id} /></div>}
 
         </div>
 
