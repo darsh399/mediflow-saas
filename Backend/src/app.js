@@ -60,11 +60,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use((req, res, next) => {
-  console.log(
-    `➡️ ${req.method} ${req.originalUrl}`
-  );
-
-  next();
+    if(req.path === '/favicon.ico' || req.path === '/favicon.png') {
+        res.status(204).end();
+    } else {
+        next();
+    }
 });
 
 app.use((req, res, next) => {

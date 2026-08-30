@@ -135,12 +135,15 @@ const Header = () => {
     window.dispatchEvent(new CustomEvent("mediflow:close-sidebar"));
   };
 
+  const canToggleSidebar = signedIn && user?.role !== "super_admin";
+
   const toggleNavigation = () => {
-    setOpen((value) => !value);
     setProfileOpen(false);
-    if (signedIn && user?.role !== "super_admin") {
+    if (canToggleSidebar) {
       window.dispatchEvent(new CustomEvent("mediflow:toggle-sidebar"));
+      return;
     }
+    setOpen((value) => !value);
   };
 
   const initials = (
@@ -235,21 +238,8 @@ const Header = () => {
             </div>
           </Link>
 
-          <button
-            className="navbar-toggler border-0 shadow-none"
-            type="button"
-            aria-controls="mainNavbar"
-            aria-expanded={open}
-            aria-label="Toggle navigation"
-            onClick={toggleNavigation}
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-
           <div
-            className={`navbar-collapse ${
-              open ? "show" : ""
-            }`}
+            className={`navbar-collapse ${open && !signedIn ? "show" : ""}`}
             id="mainNavbar"
           >
             <ul className="navbar-nav mx-auto mb-3 mb-lg-0 align-items-lg-center">
@@ -303,13 +293,25 @@ const Header = () => {
               )}
             </ul>
 
-            <div
-              className="d-flex align-items-center gap-2 flex-wrap justify-content-center"
-              style={{
-                position: "relative",
-                zIndex: 3000,
-              }}
-            >
+            {!signedIn && (
+              <Link
+                to="/login"
+                className="btn btn-primary rounded-3 shadow-sm w-100 mt-2 d-lg-none"
+                onClick={closeMenus}
+              >
+                <i className="bi bi-box-arrow-in-right me-1"></i>
+                Login
+              </Link>
+            )}
+          </div>
+
+          <div
+            className="d-flex align-items-center gap-2 ms-auto flex-nowrap"
+            style={{
+              position: "relative",
+              zIndex: 3000,
+            }}
+          >
               <button
                 type="button"
                 className="btn dark-mode-toggle rounded-circle d-inline-flex align-items-center justify-content-center"
@@ -333,11 +335,13 @@ const Header = () => {
 
               {signedIn ? (
                 <>
-                  <GlobalSearch />
+                  <span className="d-none d-lg-inline-flex">
+                    <GlobalSearch />
+                  </span>
 
                   <NotificationBell />
 
-                  <span className="mf-role-badge">
+                  <span className="mf-role-badge d-none d-lg-inline-flex">
                     <i className="bi bi-person-badge"></i>
                     {formattedRole}
                   </span>
@@ -550,15 +554,27 @@ const Header = () => {
               ) : (
                 <Link
                   to="/login"
-                  className="btn btn-primary rounded-3 px-4 shadow-sm"
+                  className="btn btn-primary rounded-3 px-4 shadow-sm d-none d-lg-inline-flex align-items-center"
                   onClick={closeMenus}
                 >
                   <i className="bi bi-box-arrow-in-right me-1"></i>
                   Login
                 </Link>
               )}
+
+              {(canToggleSidebar || !signedIn) && (
+                <button
+                  className="navbar-toggler border-0 shadow-none d-lg-none ms-1"
+                  type="button"
+                  aria-controls="mainNavbar"
+                  aria-expanded={open}
+                  aria-label="Toggle navigation"
+                  onClick={toggleNavigation}
+                >
+                  <span className="navbar-toggler-icon"></span>
+                </button>
+              )}
             </div>
-          </div>
         </div>
       </nav>
 
@@ -645,22 +661,39 @@ const Header = () => {
             }
           }
 
-          @media (max-width: 991px) {
-            .navbar-collapse {
-              padding: 1rem 0;
+          @media (max-width: 991.98px) {
+            .mf-navbar .navbar-collapse {
+              display: none;
+              position: absolute;
+              top: calc(100% + 8px);
+              right: 12px;
+              left: auto;
+              width: min(260px, calc(100vw - 24px));
+              max-height: calc(100vh - 96px);
+              overflow-y: auto;
+              padding: 8px;
+              background: var(--mf-surface, #fff);
+              border: 1px solid var(--mf-border, #e5e7eb);
+              border-radius: 14px;
+              box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18);
             }
 
-            .navbar-nav {
+            .mf-navbar .navbar-collapse.show {
+              display: block;
+            }
+
+            .mf-navbar .navbar-nav {
               width: 100%;
             }
 
-            .navbar-nav .nav-link {
-              padding: 0.75rem 1rem !important;
+            .mf-navbar .navbar-nav .nav-link {
+              padding: 0.6rem 0.75rem !important;
+              border-radius: 8px;
             }
 
-            .navbar-collapse > div:last-child {
-              padding-top: 0.75rem;
-              border-top: 1px solid #eee;
+            body.dark-mode .mf-navbar .navbar-collapse {
+              background: #1f2937;
+              border-color: #374151;
             }
           }
 
