@@ -5,6 +5,7 @@ import Invite from '../models/Invite.js';
 import { hasAnyRole } from '../utils/authorize.js';
 import User from '../models/User.js';
 import Company from '../models/Company.js';
+import { resolveEnabledModules } from '../config/modules.js';
 import hashPassword from '../utils/hashPassword.js';
 import { clearSessionCookies, refreshSession, issueSession } from '../services/sessionService.js';
 import { requireRole } from '../utils/authorize.js';
@@ -170,7 +171,7 @@ export const currentUser = async (req, res) => {
       .select("-password")
       .populate(
         "companyId",
-        "name website phone email address"
+        "name companyName website phone email address status isActive enabledModules"
       );
 
     if (!user) {
@@ -179,9 +180,12 @@ export const currentUser = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
-      user,
-    });
+    const userObj = user.toObject();
+    userObj.enabledModules = user.role === "super_admin"
+      ? []
+      : resolveEnabledModules(user.companyId);
+
+    return res.status(200).json({ user: userObj });
 
   } catch (error) {
     console.error("Current user error:", error);

@@ -22,7 +22,7 @@ import mailService from '../services/mailService.js'
 import subscriptionService, { PLAN_DEFAULTS } from '../services/subscriptionService.js'
 import companyService from '../services/companyService.js'
 import SubscriptionHistory from '../models/SubscriptionHistory.js'
-import { normalizeModules } from '../config/modules.js'
+import { normalizeModules, applyDependencies, MODULE_CATALOG } from '../config/modules.js'
 import recordAudit from '../utils/audit.js'
 import fs from 'fs/promises'
 import path from 'path'
@@ -674,13 +674,30 @@ export const updateCompanySubscription = async (req, res) => {
   }
 }
 
+// Feature catalogue — labels, categories and dependencies for the UI.
+export const listFeatureCatalog = async (req, res) => {
+  return res.status(200).json({ features: MODULE_CATALOG })
+}
+
 export const updateCompanyModules = async (req, res) => {
-  const enabledModules = normalizeModules(req.body.enabledModules)
   if (!Array.isArray(req.body.enabledModules)) return res.status(400).json({ message: 'enabledModules must be an array' })
+  const existing = await Company.findById(req.params.id).select('companyName enabledModules')
+  if (!existing) return res.status(404).json({ message: 'Company not found' })
+
+  const before = normalizeModules(existing.enabledModules)
+  const enabledModules = applyDependencies(req.body.enabledModules)
+  const added = enabledModules.filter((k) => !before.includes(k))
+  const removed = before.filter((k) => !enabledModules.includes(k))
+
   const company = await Company.findByIdAndUpdate(req.params.id, { enabledModules }, { new: true, runValidators: true })
-  if (!company) return res.status(404).json({ message: 'Company not found' })
-  await recordAudit(req, 'company_modules_updated', { companyId: company._id, entityId: company._id, module: 'company', newValue: { enabledModules } })
-  return res.status(200).json({ enabledModules: company.enabledModules })
+  if (added.length || removed.length) {
+    await recordAudit(req, 'company_modules_updated', {
+      companyId: company._id, entityId: company._id, module: 'company',
+      oldValue: { enabledModules: before },
+      newValue: { enabledModules, added, removed },
+    })
+  }
+  return res.status(200).json({ enabledModules: company.enabledModules, added, removed })
 }
 
 export const getCompanyUsage = async (req, res) => {

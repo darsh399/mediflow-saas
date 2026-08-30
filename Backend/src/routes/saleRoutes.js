@@ -6,7 +6,7 @@ import { createSale, listSales, getSale, deleteSale } from '../controllers/saleC
 
 const router = express.Router()
 
-router.use(authMiddleware, companyMiddleware, requireModule('orders'))
+router.use(authMiddleware, companyMiddleware, requireModule('sales_targets'))
 
 router.post('/', createSale)
 router.get('/', listSales)

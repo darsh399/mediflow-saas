@@ -10,6 +10,7 @@ import EmployeeProfile from '../models/EmployeeProfile.js';
 import Attendance from '../models/Attendance.js';
 import Notification from '../models/Notification.js';
 import { hasPermission } from '../config/permissions.js';
+import { resolveEnabledModules } from '../config/modules.js';
 import recordAudit from '../utils/audit.js';
 import { issueSession, revokeRefreshToken, clearSessionCookies } from '../services/sessionService.js';
 import mailService from '../services/mailService.js';
@@ -205,6 +206,12 @@ export const loginUser = async (req, res) => {
         const token = await issueSession(res, userExists);
         const userObj = userExists.toObject();
         delete userObj.password;
+        if (userExists.role !== 'super_admin' && userExists.companyId) {
+            const company = await Company.findById(userExists.companyId).select('enabledModules');
+            userObj.enabledModules = resolveEnabledModules(company);
+        } else {
+            userObj.enabledModules = [];
+        }
         // Set HTTP-only cookie with JWT for client to send on subsequent requests
         res.status(200).json({ message: 'Login successful', user: userObj, token });
     }catch(error){

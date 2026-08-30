@@ -18,22 +18,7 @@ const PLAN_OPTIONS = [
   { value: '3_YEAR', label: '3 Years' },
 ]
 
-const MODULE_OPTIONS = [
-  { value: 'employees', label: 'Employees', icon: 'bi-people' },
-  { value: 'attendance', label: 'Attendance', icon: 'bi-clock-history' },
-  { value: 'leaves', label: 'Leave Management', icon: 'bi-calendar2-week' },
-  { value: 'doctors', label: 'Doctors', icon: 'bi-heart-pulse' },
-  { value: 'medicals', label: 'Medicals', icon: 'bi-hospital' },
-  { value: 'visits', label: 'Field Visits', icon: 'bi-geo-alt' },
-  { value: 'tasks', label: 'Tasks', icon: 'bi-check2-square' },
-  { value: 'orders', label: 'Orders', icon: 'bi-bag' },
-  { value: 'reports', label: 'Reports', icon: 'bi-bar-chart' },
-  { value: 'performance', label: 'Performance', icon: 'bi-trophy' },
-  { value: 'documents', label: 'Documents', icon: 'bi-file-earmark-text' },
-  { value: 'notifications', label: 'Notifications', icon: 'bi-bell' },
-  { value: 'calendar', label: 'Calendar', icon: 'bi-calendar3' },
-  { value: 'payroll', label: 'Payroll & Salary', icon: 'bi-cash-stack' },
-]
+const CATEGORY_ICON = { Core: 'bi-grid', Field: 'bi-geo-alt', Sales: 'bi-graph-up-arrow', 'People Ops': 'bi-people', Payroll: 'bi-cash-stack' }
 
 const PLAN_COLORS = {
   TRIAL: '#0dcaf0',
@@ -116,6 +101,11 @@ const CompanyDetails = () => {
   const [subLoading, setSubLoading] = useState(false)
   const [modulesForm, setModulesForm] = useState([])
   const [modulesLoading, setModulesLoading] = useState(false)
+  const [featureCatalog, setFeatureCatalog] = useState([])
+
+  useEffect(() => {
+    superAdminApi.getFeatureCatalog().then((r) => setFeatureCatalog(r.features || [])).catch(() => setFeatureCatalog([]))
+  }, [])
 
   useEffect(() => {
     const loadCompany = async () => {
@@ -239,12 +229,24 @@ const CompanyDetails = () => {
     }
   }
 
+  const dependentsOf = key => featureCatalog.filter(f => (f.dependsOn || []).includes(key)).map(f => f.key)
+
   const toggleModule = value => {
-    setModulesForm(current =>
-      current.includes(value)
-        ? current.filter(module => module !== value)
-        : [...current, value]
-    )
+    setModulesForm(current => {
+      if (current.includes(value)) {
+        const feature = featureCatalog.find(f => f.key === value)
+        const blockers = dependentsOf(value).filter(k => current.includes(k))
+        if (blockers.length && !window.confirm(
+          `Disabling "${feature?.label || value}" will also disable: ${blockers.map(k => featureCatalog.find(f => f.key === k)?.label || k).join(', ')}. Continue?`
+        )) return current
+        const remove = new Set([value, ...blockers])
+        return current.filter(m => !remove.has(m))
+      }
+      // enabling — pull in any dependency
+      const feature = featureCatalog.find(f => f.key === value)
+      const add = new Set([value, ...(feature?.dependsOn || [])])
+      return [...new Set([...current, ...add])]
+    })
   }
 
   const saveModules = async () => {
@@ -796,54 +798,68 @@ const CompanyDetails = () => {
 
       <div className="card border-0 shadow-sm mt-4 overflow-hidden">
 
-        <div className="card-header border-0 p-4 text-white" style={{ background: 'linear-gradient(135deg, #198754 0%, #0dcaf0 100%)' }}>
+        <div className="card-header border-0 p-4">
           <h5 className="fw-bold mb-1">
             <i className="bi bi-toggles me-2"></i>
-            Manage Services
+            Feature Management
           </h5>
-          <p className="mb-0 opacity-75 small">
-            Activate or deactivate individual services (like Payroll) for this company.
+          <p className="mb-0 text-muted small">
+            Enable or disable features for this company. Disabled features disappear from the
+            company&apos;s app and their APIs are blocked. {modulesForm.length} of {featureCatalog.length} enabled.
           </p>
         </div>
 
         <div className="card-body p-4">
-          <div className="row g-3">
-            {MODULE_OPTIONS.map(option => {
-              const enabled = modulesForm.includes(option.value)
-              return (
-                <div className="col-xl-3 col-md-4 col-sm-6" key={option.value}>
-                  <div
-                    className="d-flex align-items-center justify-content-between border rounded-3 p-3 h-100"
-                    style={{ borderColor: enabled ? '#198754' : undefined, backgroundColor: enabled ? '#19875408' : undefined }}
-                  >
-                    <div className="d-flex align-items-center gap-2">
-                      <i className={`bi ${option.icon}`} style={{ color: enabled ? '#198754' : '#6c757d' }}></i>
-                      <span className="fw-semibold small">{option.label}</span>
+          {[...new Set(featureCatalog.map(f => f.category))].map(category => (
+            <div className="mb-4" key={category}>
+              <div className="text-muted fw-semibold text-uppercase small mb-2">
+                <i className={`bi ${CATEGORY_ICON[category] || 'bi-grid'} me-1`}></i> {category}
+              </div>
+              <div className="row g-3">
+                {featureCatalog.filter(f => f.category === category).map(feature => {
+                  const enabled = modulesForm.includes(feature.key)
+                  return (
+                    <div className="col-xl-4 col-md-6" key={feature.key}>
+                      <label
+                        htmlFor={`feature-${feature.key}`}
+                        className="d-flex align-items-start justify-content-between border rounded-3 p-3 h-100"
+                        style={{ borderColor: enabled ? 'var(--mf-color-success)' : undefined, cursor: 'pointer' }}
+                      >
+                        <div className="pe-2">
+                          <div className="fw-semibold small">{feature.label}</div>
+                          <div className="text-muted" style={{ fontSize: '.75rem' }}>{feature.description}</div>
+                          {feature.dependsOn?.length > 0 && (
+                            <div className="text-muted mt-1" style={{ fontSize: '.7rem' }}>
+                              <i className="bi bi-link-45deg"></i> needs {feature.dependsOn.map(k => featureCatalog.find(f => f.key === k)?.label || k).join(', ')}
+                            </div>
+                          )}
+                        </div>
+                        <div className="form-check form-switch mb-0 flex-shrink-0">
+                          <input
+                            type="checkbox"
+                            role="switch"
+                            className="form-check-input"
+                            id={`feature-${feature.key}`}
+                            checked={enabled}
+                            onChange={() => toggleModule(feature.key)}
+                          />
+                        </div>
+                      </label>
                     </div>
-                    <div className="form-check form-switch mb-0">
-                      <input
-                        type="checkbox"
-                        role="switch"
-                        className="form-check-input"
-                        id={`module-${option.value}`}
-                        checked={enabled}
-                        onChange={() => toggleModule(option.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
 
-          <div className="d-flex justify-content-end mt-4">
-            <button type="button" className="btn btn-success rounded-3" disabled={modulesLoading} onClick={saveModules}>
+          <div className="d-flex justify-content-end mt-2">
+            <button type="button" className="btn btn-primary rounded-3" disabled={modulesLoading} onClick={saveModules}>
               {modulesLoading ? (
                 <span className="spinner-border spinner-border-sm"></span>
               ) : (
                 <>
                   <i className="bi bi-check2-circle me-1"></i>
-                  Save Services
+                  Save features
                 </>
               )}
             </button>

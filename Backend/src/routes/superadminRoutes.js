@@ -1,5 +1,5 @@
 import express from 'express'
-import { login as superLogin, createCompanyOnboard, dashboard as superDashboard, logout as superLogout, updateCompanySubscription, updateCompanyModules, getCompanyUsage, listAuditLogs } from '../controllers/superAdminController.js'
+import { login as superLogin, createCompanyOnboard, dashboard as superDashboard, logout as superLogout, updateCompanySubscription, updateCompanyModules, getCompanyUsage, listAuditLogs, listFeatureCatalog } from '../controllers/superAdminController.js'
 import authMiddleware from '../middleware/authMiddleware.js'
 import { requireRole } from '../utils/authorize.js'
 
@@ -11,6 +11,7 @@ router.post('/login', superLogin)
 // Protected: dashboard
 router.get('/dashboard', authMiddleware, requireRole('super_admin'), superDashboard)
 router.get('/audit-logs', authMiddleware, requireRole('super_admin'), listAuditLogs)
+router.get('/features', authMiddleware, requireRole('super_admin'), listFeatureCatalog)
 
 // logout
 router.post('/logout', superLogout)

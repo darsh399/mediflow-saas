@@ -3,6 +3,8 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getDashboardRoute } from "../utils/dashboardRoute";
 import { useApprovals } from "../hooks/useApprovals";
+import { useFeatureSet, hasFeature } from "../hooks/useFeature";
+import FeatureGuard from "../components/FeatureGuard";
 
 // ---------------------------------------------------------------------------
 // Role sets — unchanged from before. Each nav link is gated by exactly the
@@ -50,13 +52,22 @@ const AdminLayout = () => {
   const canViewReports = REPORT_VIEWER_ROLES.includes(role);
   const canImportDoctors = DOCTOR_IMPORT_ROLES.includes(role);
 
+  // Company feature entitlements (Super Admin controlled). `has(key)` combines
+  // with the role check below; a link shows only when BOTH pass.
+  const featureSet = useFeatureSet();
+  const has = (key) => hasFeature(featureSet, key);
+
   // The Doctors area is reachable by field + management roles; hr_manager also
   // gets it now purely so they can run the Excel import.
-  const canSeeMedicals = isMr || canManageCompany;
-  const canSeeDoctors = canSeeMedicals || canImportDoctors;
-  const canSeeVisits = isMr || canManageCompany;
-  const canSeeFieldGroup = canSeeDoctors || canSeeVisits || canManageCompany;
-  const canSeeCompanyGroup = canViewTopPerformers || canViewAuditLog || canViewBilling || canSendCompanyMessages;
+  const canSeeMedicals = (isMr || canManageCompany) && has("medicals");
+  const canSeeDoctors = (isMr || canManageCompany || canImportDoctors) && has("doctors");
+  const canSeeVisits = (isMr || canManageCompany) && has("visits");
+  const canSeeTerritories = canManageCompany && has("territories");
+  const canSeeFieldGroup = canSeeDoctors || canSeeVisits || canSeeTerritories;
+  const canSeeCompanyGroup = (canViewTopPerformers && has("visits")) || canViewAuditLog || canViewBilling || canSendCompanyMessages;
+  const canSeeLeave = has("leaves");
+  const canSeeExpenses = has("expenses");
+  const canSeePayrollGroup = canViewSalary && has("payroll");
 
   const startsWith = (prefix) => location.pathname.startsWith(prefix);
 
@@ -141,11 +152,11 @@ const AdminLayout = () => {
           <NavLink className={navClass} to={getDashboardRoute(role)} onClick={closeSidebar}><i className="bi bi-grid-1x2"></i> Dashboard</NavLink>
           <NavLink className={navClass} to="/profile" onClick={closeSidebar}><i className="bi bi-person"></i> My Profile</NavLink>
           <NavLink className={navClass} to="/employee/onboarding" onClick={closeSidebar}><i className="bi bi-clipboard2-check"></i> Complete Profile</NavLink>
-          {canViewOnboarding && <NavLink className={navClass} to="/employee/profiles" onClick={closeSidebar}><i className="bi bi-people-fill"></i> Onboarding Review</NavLink>}
+          {canViewOnboarding && has("documents") && <NavLink className={navClass} to="/employee/profiles" onClick={closeSidebar}><i className="bi bi-people-fill"></i> Onboarding Review</NavLink>}
           {hasApprovals && <NavLink className={navClass} to="/approvals" onClick={closeSidebar}><i className="bi bi-inbox"></i> Approvals{approvalsCount > 0 && <span className="badge rounded-pill bg-danger ms-auto">{approvalsCount > 99 ? "99+" : approvalsCount}</span>}</NavLink>}
-          <NavLink className={navClass} to="/calendar" onClick={closeSidebar}><i className="bi bi-calendar3"></i> Calendar</NavLink>
-          <NavLink className={navClass} to="/tasks" onClick={closeSidebar}><i className="bi bi-check2-square"></i> Tasks</NavLink>
-          <NavLink className={navClass} to="/notifications" onClick={closeSidebar}><i className="bi bi-bell"></i> Notifications</NavLink>
+          {has("calendar") && <NavLink className={navClass} to="/calendar" onClick={closeSidebar}><i className="bi bi-calendar3"></i> Calendar</NavLink>}
+          {has("tasks") && <NavLink className={navClass} to="/tasks" onClick={closeSidebar}><i className="bi bi-check2-square"></i> Tasks</NavLink>}
+          {has("notifications") && <NavLink className={navClass} to="/notifications" onClick={closeSidebar}><i className="bi bi-bell"></i> Notifications</NavLink>}
 
           {/* ---- FIELD ---- */}
           {canSeeFieldGroup && <>
@@ -163,63 +174,69 @@ const AdminLayout = () => {
               </div>}
             </>}
 
-            {canManageCompany && <NavLink className={navClass} to="/territories" onClick={closeSidebar}><i className="bi bi-geo"></i> Territories</NavLink>}
+            {canSeeTerritories && <NavLink className={navClass} to="/territories" onClick={closeSidebar}><i className="bi bi-geo"></i> Territories</NavLink>}
           </>}
 
           {/* ---- SALES & ACTIVITY ---- */}
-          <p className="sidebar-label">SALES &amp; ACTIVITY</p>
-          <NavLink className={navClass} to="/sales" onClick={closeSidebar}><i className="bi bi-graph-up-arrow"></i> Sales Targets</NavLink>
-          <NavLink className={navClass} to="/orders" onClick={closeSidebar}><i className="bi bi-bag"></i> Orders</NavLink>
-          <NavLink className={navClass} to="/tours" onClick={closeSidebar}><i className="bi bi-signpost-split"></i> Tour Plans</NavLink>
-          {canViewProducts && <NavLink end className={navClass} to="/products" onClick={closeSidebar}><i className="bi bi-capsule"></i> Products</NavLink>}
-          {canViewReports
+          {(has("sales_targets") || has("orders") || has("tour_plans") || (canViewProducts && has("products")) || has("reports")) && (
+            <p className="sidebar-label">SALES &amp; ACTIVITY</p>
+          )}
+          {has("sales_targets") && <NavLink className={navClass} to="/sales" onClick={closeSidebar}><i className="bi bi-graph-up-arrow"></i> Sales Targets</NavLink>}
+          {has("orders") && <NavLink className={navClass} to="/orders" onClick={closeSidebar}><i className="bi bi-bag"></i> Orders</NavLink>}
+          {has("tour_plans") && <NavLink className={navClass} to="/tours" onClick={closeSidebar}><i className="bi bi-signpost-split"></i> Tour Plans</NavLink>}
+          {canViewProducts && has("products") && <NavLink end className={navClass} to="/products" onClick={closeSidebar}><i className="bi bi-capsule"></i> Products</NavLink>}
+          {has("reports") && (canViewReports
             ? <NavLink className={navClass} to="/reports" onClick={closeSidebar}><i className="bi bi-bar-chart-line"></i> Reports</NavLink>
-            : <NavLink className={navClass} to="/reports/visits" onClick={closeSidebar}><i className="bi bi-clipboard-data"></i> Visit Report</NavLink>}
+            : <NavLink className={navClass} to="/reports/visits" onClick={closeSidebar}><i className="bi bi-clipboard-data"></i> Visit Report</NavLink>)}
 
           {/* ---- PEOPLE ---- */}
           <p className="sidebar-label">PEOPLE</p>
-          {canViewEmployees && <NavLink end className={navClass} to="/users" onClick={closeSidebar}><i className="bi bi-people"></i> Employees</NavLink>}
+          {canViewEmployees && has("employees") && <NavLink end className={navClass} to="/users" onClick={closeSidebar}><i className="bi bi-people"></i> Employees</NavLink>}
           {canManageCompany && <NavLink className={navClass} to="/projects" onClick={closeSidebar}><i className="bi bi-kanban"></i> Projects</NavLink>}
-          <NavLink className={navClass} to="/organization" onClick={closeSidebar}><i className="bi bi-diagram-3"></i> Org Chart</NavLink>
-          <NavLink className={navClass} to="/attendance" onClick={closeSidebar}><i className="bi bi-clock-history"></i> Attendance</NavLink>
+          {has("organization_chart") && <NavLink className={navClass} to="/organization" onClick={closeSidebar}><i className="bi bi-diagram-3"></i> Org Chart</NavLink>}
+          {has("attendance") && <NavLink className={navClass} to="/attendance" onClick={closeSidebar}><i className="bi bi-clock-history"></i> Attendance</NavLink>}
 
-          {folder("Leave", "bi-calendar2-week", leavesOpen, setLeavesOpen, ["/leaves"])}
-          {leavesOpen && <div className="sidebar-submenu">
-            <NavLink className={navClass} to="/leaves/apply" onClick={closeSidebar}><i className="bi bi-plus-circle"></i> Apply Leave</NavLink>
-            <NavLink className={navClass} to="/leaves/my" onClick={closeSidebar}><i className="bi bi-clock-history"></i> My Leave Requests</NavLink>
-            {canReviewLeaves && <NavLink className={navClass} to="/leaves/manage" onClick={closeSidebar}><i className="bi bi-clipboard-check"></i> Review Requests</NavLink>}
-          </div>}
+          {canSeeLeave && <>
+            {folder("Leave", "bi-calendar2-week", leavesOpen, setLeavesOpen, ["/leaves"])}
+            {leavesOpen && <div className="sidebar-submenu">
+              <NavLink className={navClass} to="/leaves/apply" onClick={closeSidebar}><i className="bi bi-plus-circle"></i> Apply Leave</NavLink>
+              <NavLink className={navClass} to="/leaves/my" onClick={closeSidebar}><i className="bi bi-clock-history"></i> My Leave Requests</NavLink>
+              {canReviewLeaves && <NavLink className={navClass} to="/leaves/manage" onClick={closeSidebar}><i className="bi bi-clipboard-check"></i> Review Requests</NavLink>}
+            </div>}
+          </>}
 
-          {folder("Expenses", "bi-receipt", expensesOpen, setExpensesOpen, ["/expenses"])}
-          {expensesOpen && <div className="sidebar-submenu">
-            <NavLink className={navClass} to="/expenses/apply" onClick={closeSidebar}><i className="bi bi-plus-circle"></i> Submit Expense</NavLink>
-            {canReviewExpenses && <NavLink className={navClass} to="/expenses/manage" onClick={closeSidebar}><i className="bi bi-clipboard-check"></i> Review Expenses</NavLink>}
-          </div>}
+          {canSeeExpenses && <>
+            {folder("Expenses", "bi-receipt", expensesOpen, setExpensesOpen, ["/expenses"])}
+            {expensesOpen && <div className="sidebar-submenu">
+              <NavLink className={navClass} to="/expenses/apply" onClick={closeSidebar}><i className="bi bi-plus-circle"></i> Submit Expense</NavLink>
+              {canReviewExpenses && <NavLink className={navClass} to="/expenses/manage" onClick={closeSidebar}><i className="bi bi-clipboard-check"></i> Review Expenses</NavLink>}
+            </div>}
+          </>}
 
           {/* ---- PAYROLL ---- */}
-          {canViewSalary && <>
+          {canSeePayrollGroup && <>
             <p className="sidebar-label">{canManageSalary ? "PAYROLL" : "MY PAYROLL"}</p>
             {folder(canManageSalary ? "Salary & Offers" : "Salary & Offer", "bi-cash-stack", payrollOpen, setPayrollOpen, ["/salary", "/offers"])}
             {payrollOpen && <div className="sidebar-submenu">
               <NavLink className={navClass} to="/salary/slips" onClick={closeSidebar}><i className="bi bi-receipt"></i> Salary Slips</NavLink>
               {canManageSalary && <NavLink className={navClass} to="/salary/runs" onClick={closeSidebar}><i className="bi bi-cash-coin"></i> Payroll Runs</NavLink>}
               {canManageSalary && <NavLink className={navClass} to="/salary/structures" onClick={closeSidebar}><i className="bi bi-diagram-3"></i> Salary Structures</NavLink>}
-              <NavLink className={navClass} to="/offers" onClick={closeSidebar}><i className="bi bi-file-earmark-text"></i> {canManageSalary ? "Offer Letters" : "Offer Details"}</NavLink>
-              {canManageSalary && <NavLink className={navClass} to="/offers/create" onClick={closeSidebar}><i className="bi bi-file-earmark-plus"></i> Create Offer</NavLink>}
+              {has("offer_letters") && <NavLink className={navClass} to="/offers" onClick={closeSidebar}><i className="bi bi-file-earmark-text"></i> {canManageSalary ? "Offer Letters" : "Offer Details"}</NavLink>}
+              {has("offer_letters") && canManageSalary && <NavLink className={navClass} to="/offers/create" onClick={closeSidebar}><i className="bi bi-file-earmark-plus"></i> Create Offer</NavLink>}
             </div>}
           </>}
 
           {/* ---- COMPANY ---- */}
           {canSeeCompanyGroup && <>
             <p className="sidebar-label">COMPANY</p>
-            {canViewTopPerformers && <NavLink className={navClass} to="/admin/top-performers" onClick={closeSidebar}><i className="bi bi-trophy"></i> Top Performers</NavLink>}
+            {canViewTopPerformers && has("visits") && <NavLink className={navClass} to="/admin/top-performers" onClick={closeSidebar}><i className="bi bi-trophy"></i> Top Performers</NavLink>}
             {canViewAuditLog && <NavLink className={navClass} to="/audit-log" onClick={closeSidebar}><i className="bi bi-clock-history"></i> Audit Log</NavLink>}
             {canViewBilling && <NavLink className={navClass} to="/billing" onClick={closeSidebar}><i className="bi bi-credit-card"></i> Billing</NavLink>}
             {canSendCompanyMessages && <NavLink className={navClass} to="/messages/send" onClick={closeSidebar}><i className="bi bi-send"></i> Send Message</NavLink>}
           </>}
         </nav>
       </aside>
-      <main className="app-content"><Outlet /></main>
+      <main className="app-content"><FeatureGuard><Outlet /></FeatureGuard></main>
     </div>
   );
 };

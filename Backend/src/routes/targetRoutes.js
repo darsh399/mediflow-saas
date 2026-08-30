@@ -15,7 +15,7 @@ const router = express.Router()
 
 // Reps view their own target; team leads and company-wide roles view/manage
 // more. Every scope and permission check is enforced in the controller.
-router.use(authMiddleware, companyMiddleware, requireModule('orders'))
+router.use(authMiddleware, companyMiddleware, requireModule('sales_targets'))
 
 router.get('/dashboard', getTargetDashboard)
 router.get('/', listTargets)
