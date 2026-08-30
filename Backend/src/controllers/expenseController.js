@@ -1,8 +1,11 @@
 import Expense from '../models/Expense.js';
 import Notification from '../models/Notification.js';
+import Company from '../models/Company.js';
+import Visit from '../models/Visit.js';
 import recordAudit from '../utils/audit.js';
 import { hasAnyRole } from '../utils/authorize.js';
 import { sendCsv } from '../utils/csv.js';
+import { summariseTravelClaim } from '../utils/travelClaim.js';
 
 // Only company_owner and hr_manager review expense claims (admin retains its
 // platform-wide override) — same restriction already applied to leave review,
@@ -136,4 +139,68 @@ export const reviewExpense = async (req, res) => {
   }
 };
 
-export default { applyExpense, listExpenses, exportExpenses, reviewExpense };
+const defaultTravelAllowance = { ratePerKm: 0, dailyAllowance: 0 };
+
+export const getExpenseSettings = async (req, res) => {
+  try {
+    const company = await Company.findById(req.user.companyId).select('travelAllowance').lean();
+    return res.status(200).json({ travelAllowance: company?.travelAllowance || defaultTravelAllowance });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error loading expense settings', error: error.message });
+  }
+};
+
+export const updateExpenseSettings = async (req, res) => {
+  try {
+    const ratePerKm = Number(req.body?.ratePerKm);
+    const dailyAllowance = Number(req.body?.dailyAllowance);
+    if (![ratePerKm, dailyAllowance].every((value) => Number.isFinite(value) && value >= 0)) {
+      return res.status(400).json({ message: 'Rate per km and daily allowance must be zero or more' });
+    }
+    const company = await Company.findById(req.user.companyId);
+    if (!company) return res.status(404).json({ message: 'Company not found' });
+    const oldValue = company.travelAllowance;
+    company.travelAllowance = { ratePerKm, dailyAllowance };
+    await company.save();
+    await recordAudit(req, 'expense_settings_updated', { companyId: company._id, entityId: company._id, module: 'expenses', oldValue, newValue: company.travelAllowance });
+    return res.status(200).json({ travelAllowance: company.travelAllowance });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+};
+
+// Sums point-to-point distance between a rep's logged visit locations per day
+// and applies the company rate + daily allowance. Does not include home legs.
+export const previewTravelClaim = async (req, res) => {
+  try {
+    const companyId = req.user.companyId;
+    let employeeId = req.user.id;
+    if (req.query.employeeId && isApprover(req.user)) employeeId = req.query.employeeId;
+    const from = new Date(req.query.from);
+    const to = new Date(req.query.to);
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || to < from) {
+      return res.status(400).json({ message: 'A valid from and to date is required' });
+    }
+    to.setHours(23, 59, 59, 999);
+    const company = await Company.findById(companyId).select('travelAllowance').lean();
+    const ratePerKm = Number(req.query.ratePerKm ?? company?.travelAllowance?.ratePerKm ?? 0);
+    const dailyAllowance = Number(req.query.dailyAllowance ?? company?.travelAllowance?.dailyAllowance ?? 0);
+
+    const visits = await Visit.find({
+      companyId,
+      employeeId,
+      status: { $in: ['completed', 'approved'] },
+      visitLatitude: { $ne: null },
+      visitLongitude: { $ne: null },
+      visitedAt: { $gte: from, $lte: to },
+    }).select('visitLatitude visitLongitude visitedAt').sort({ visitedAt: 1 }).lean();
+
+    const summary = summariseTravelClaim(visits, ratePerKm, dailyAllowance);
+    return res.status(200).json({ from, to, ratePerKm, dailyAllowance, ...summary });
+  } catch (error) {
+    console.error('Preview travel claim error:', error);
+    return res.status(500).json({ message: 'Error calculating travel claim', error: error.message });
+  }
+};
+
+export default { applyExpense, listExpenses, exportExpenses, reviewExpense, getExpenseSettings, updateExpenseSettings, previewTravelClaim };
