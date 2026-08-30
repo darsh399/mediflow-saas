@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Backend for project",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
