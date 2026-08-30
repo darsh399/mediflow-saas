@@ -32,11 +32,11 @@ router.get('/slips/:id', authorize('salary_slip.view'), controller.getSlip)
 router.delete('/slips/:id', manager, authorize('salary_slip.manage'), controller.deleteSlip)
 router.post('/slips/:id/send', manager, authorize('salary_slip.manage'), controller.sendSlip)
 
-router.get('/offers/my', authorize('offer.view'), controller.listOffers)
-router.get('/offers', authorize('offer.view'), controller.listOffers)
-router.get('/offers/:id', authorize('offer.view'), controller.getOffer)
-router.post('/offers', manager, authorize('offer.manage'), controller.createOffer)
-router.put('/offers/:id', manager, authorize('offer.manage'), controller.updateOffer)
-router.post('/offers/:id/send', manager, authorize('offer.manage'), controller.sendOffer)
+router.get('/offers/my', requireModule('offer_letters'), authorize('offer.view'), controller.listOffers)
+router.get('/offers', requireModule('offer_letters'), authorize('offer.view'), controller.listOffers)
+router.get('/offers/:id', requireModule('offer_letters'), authorize('offer.view'), controller.getOffer)
+router.post('/offers', requireModule('offer_letters'), manager, authorize('offer.manage'), controller.createOffer)
+router.put('/offers/:id', requireModule('offer_letters'), manager, authorize('offer.manage'), controller.updateOffer)
+router.post('/offers/:id/send', requireModule('offer_letters'), manager, authorize('offer.manage'), controller.sendOffer)
 
 export default router

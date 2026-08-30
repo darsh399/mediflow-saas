@@ -6,7 +6,7 @@ import authorize from '../middleware/permissionMiddleware.js'
 import { listUnits, createUnit, updateUnit, deleteUnit, getOrgChart } from '../controllers/organizationController.js'
 
 const router = express.Router()
-router.use(authMiddleware, companyMiddleware, requireModule('employees'))
+router.use(authMiddleware, companyMiddleware, requireModule('organization_chart'))
 // The reporting chart is company-wide, non-sensitive context — any authenticated
 // member of the company can view it (names, roles, reporting lines only).
 router.get('/chart', getOrgChart)

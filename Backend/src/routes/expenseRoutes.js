@@ -3,6 +3,7 @@ import multer from 'multer';
 import authMiddleware from '../middleware/authMiddleware.js';
 import companyMiddleware from '../middleware/companyMiddleware.js';
 import authorize from '../middleware/permissionMiddleware.js';
+import requireModule from '../middleware/moduleMiddleware.js';
 import { applyExpense, listExpenses, exportExpenses, reviewExpense } from '../controllers/expenseController.js';
 
 const upload = multer({
@@ -16,7 +17,7 @@ const upload = multer({
 
 const router = express.Router();
 
-router.use(authMiddleware, companyMiddleware);
+router.use(authMiddleware, companyMiddleware, requireModule('expenses'));
 // Proof document is optional — upload.single lets the request through with
 // or without a "receipt" file attached.
 router.post('/', authorize('expense.apply'), upload.single('receipt'), applyExpense);

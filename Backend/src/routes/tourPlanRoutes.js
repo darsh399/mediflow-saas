@@ -16,7 +16,7 @@ const router = express.Router()
 
 // Reps plan their own visits; managers review. Ownership and reviewer checks
 // live in the controller.
-router.use(authMiddleware, companyMiddleware, requireModule('visits'))
+router.use(authMiddleware, companyMiddleware, requireModule('tour_plans'))
 
 router.get('/', listTourPlans)
 router.get('/:id', getTourPlan)

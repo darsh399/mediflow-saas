@@ -16,7 +16,7 @@ const router = express.Router()
 
 const canManage = requireRole('admin', 'company_owner', 'hr_manager', 'manager')
 
-router.use(authMiddleware, companyMiddleware, requireModule('doctors'))
+router.use(authMiddleware, companyMiddleware, requireModule('territories'))
 
 // Any company member can see the territory list / their territory.
 router.get('/', listTerritories)

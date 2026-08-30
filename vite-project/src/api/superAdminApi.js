@@ -39,6 +39,11 @@ export async function updateCompanyModules(id, enabledModules){
   return resp.data
 }
 
+export async function getFeatureCatalog(){
+  const resp = await axios.get('/api/superadmin/features')
+  return resp.data
+}
+
 export async function getCompanyUsage(id){
   const resp = await axios.get(`/api/superadmin/companies/${id}/usage`)
   return resp.data
@@ -59,4 +64,4 @@ export async function updateDemoRequestStatus(id, status){
   return resp.data
 }
 
-export default { login, dashboard, createCompany, updateCompanyStatus, updateCompanySubscription, updateCompanyModules, getCompanyUsage, listAuditLogs, listDemoRequests, updateDemoRequestStatus, getCompany, deleteCompany }
+export default { login, dashboard, createCompany, updateCompanyStatus, updateCompanySubscription, updateCompanyModules, getFeatureCatalog, getCompanyUsage, listAuditLogs, listDemoRequests, updateDemoRequestStatus, getCompany, deleteCompany }

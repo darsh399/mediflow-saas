@@ -3,6 +3,7 @@ import multer from 'multer';
 import authMiddleware from '../middleware/authMiddleware.js';
 import companyMiddleware from '../middleware/companyMiddleware.js';
 import authorize from '../middleware/permissionMiddleware.js';
+import requireModule from '../middleware/moduleMiddleware.js';
 import { createProduct, listProducts, getProduct, updateProduct, updateProductStatus, deleteProduct } from '../controllers/companyProductController.js';
 
 const upload = multer({
@@ -17,7 +18,7 @@ const uploadImages = upload.fields([{ name: 'mainImage', maxCount: 1 }, { name: 
 
 const router = express.Router();
 
-router.use(authMiddleware, companyMiddleware);
+router.use(authMiddleware, companyMiddleware, requireModule('products'));
 
 // Company Owner and HR Manager only (admin/super_admin keep their
 // platform-wide override via the '*' permission).

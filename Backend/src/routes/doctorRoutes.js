@@ -37,8 +37,8 @@ router.get('/', listDoctors);
 
 // Static routes before the /:id param route.
 router.get('/engagement', listDoctorEngagement);
-router.get('/import/template', importRoles, downloadDoctorTemplate);
-router.post('/import', importRoles, receiveSpreadsheet, importDoctors);
+router.get('/import/template', requireModule('doctor_import'), importRoles, downloadDoctorTemplate);
+router.post('/import', requireModule('doctor_import'), importRoles, receiveSpreadsheet, importDoctors);
 
 router.get('/:id', getDoctor);
 router.get('/:id/summary', getDoctorSummary);
