@@ -1,15 +1,31 @@
+import { useEffect, useState } from "react";
 import { SkeletonTable } from "./Skeleton";
 
-// Consistent table shell used across list pages.
-//
-// columns: [{ key, header, render?(row), align?: "left"|"right", width?, mobileHidden? }]
-// rows:    array of row objects
-// rowKey:  (row, index) => key   (defaults to row._id ?? row.id ?? index)
-// loading: shows a skeleton table
-// empty:   node shown when there are no rows (pass an <EmptyState/>)
-// mobileCards: on <=640px, stack each row as a labelled card instead of scrolling
-//
-// Presentational only — sorting/pagination/filtering stay with the caller.
+const Pagination = ({ page, pageCount, total, from, to, onChange }) => {
+  if (pageCount <= 1) return null;
+  const nums = [];
+  for (let i = 1; i <= pageCount; i += 1) {
+    if (i === 1 || i === pageCount || Math.abs(i - page) <= 1) nums.push(i);
+    else if (nums[nums.length - 1] !== "…") nums.push("…");
+  }
+  return (
+    <div className="mf-pagination">
+      <span className="mf-pagination__info">{from}–{to} of {total}</span>
+      <div className="mf-pagination__controls">
+        <button type="button" className="btn btn-sm btn-ghost" disabled={page === 1} onClick={() => onChange(page - 1)} aria-label="Previous page">
+          <i className="bi bi-chevron-left"></i>
+        </button>
+        {nums.map((n, index) => n === "…"
+          ? <span key={`gap-${index}`} className="mf-pagination__gap">…</span>
+          : <button key={n} type="button" className={`btn btn-sm ${n === page ? "btn-primary" : "btn-ghost"}`} onClick={() => onChange(n)}>{n}</button>)}
+        <button type="button" className="btn btn-sm btn-ghost" disabled={page === pageCount} onClick={() => onChange(page + 1)} aria-label="Next page">
+          <i className="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const DataTable = ({
   columns = [],
   rows = [],
@@ -19,11 +35,21 @@ const DataTable = ({
   mobileCards = false,
   onRowClick,
   className = "",
+  pageSize = 0,
 }) => {
+  const [page, setPage] = useState(1);
+  const total = rows.length;
+  const paginate = pageSize > 0 && total > pageSize;
+  const pageCount = paginate ? Math.ceil(total / pageSize) : 1;
+
+  useEffect(() => { if (page > pageCount) setPage(1); }, [page, pageCount]);
+
   if (loading) return <SkeletonTable rows={6} columns={Math.max(columns.length, 2)} />;
-  if (!rows.length && empty) return <div className="mf-data-table__wrap">{empty}</div>;
+  if (!total && empty) return <div className="mf-data-table__wrap">{empty}</div>;
 
   const keyFor = rowKey || ((row, index) => row?._id ?? row?.id ?? index);
+  const start = paginate ? (page - 1) * pageSize : 0;
+  const visible = paginate ? rows.slice(start, start + pageSize) : rows;
 
   return (
     <div className="mf-data-table__wrap">
@@ -32,19 +58,16 @@ const DataTable = ({
           <thead>
             <tr>
               {columns.map((col) => (
-                <th
-                  key={col.key}
-                  style={{ width: col.width, textAlign: col.align === "right" ? "right" : undefined }}
-                >
+                <th key={col.key} style={{ width: col.width, textAlign: col.align === "right" ? "right" : undefined }}>
                   {col.header}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
+            {visible.map((row, index) => (
               <tr
-                key={keyFor(row, index)}
+                key={keyFor(row, start + index)}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
                 style={onRowClick ? { cursor: "pointer" } : undefined}
               >
@@ -62,6 +85,16 @@ const DataTable = ({
           </tbody>
         </table>
       </div>
+      {paginate && (
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          total={total}
+          from={start + 1}
+          to={Math.min(start + pageSize, total)}
+          onChange={setPage}
+        />
+      )}
     </div>
   );
 };

@@ -489,7 +489,7 @@ const Contact = () => {
           .form-control:focus,
           .form-select:focus {
             border-color: var(--mf-color-primary);
-            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 0.2rem rgba(13, 148, 136, 0.15);
           }
 
           @media (max-width: 768px) {

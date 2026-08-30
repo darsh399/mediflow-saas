@@ -201,6 +201,8 @@ body.mf-drawer-open { overflow: hidden; }
 .app-sidebar::-webkit-scrollbar-thumb { background: rgba(148,163,184,.35); border-radius: 999px; }
 .app-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,.55); }
 .app-content { min-height: calc(100vh - 68px); margin-left: 260px; padding: var(--mf-page-gap); }
+/* Footer sits after the fixed sidebar — clear it on desktop. */
+.app-shell + .mf-footer { margin-left: 260px; }
 .sidebar-backdrop { display: none; }
 .sidebar-close { display: none; }
 .sidebar-brand { display:flex; align-items:center; gap:10px; padding:0 10px 22px; color:#fff; font-size:16px; }
@@ -250,6 +252,7 @@ body.dark-mode .mf-empty-state__icon { background: rgba(37,99,235,.18); }
   .app-sidebar { top: 0; width: min(290px, calc(100vw - 48px)); padding-top: 18px; transform: translateX(-105%); transition: transform .2s ease; box-shadow: 16px 0 40px rgba(15,23,42,.28); }
   .app-sidebar.is-open { transform: translateX(0); }
   .app-content { margin-left: 0; padding: 1rem; }
+  .app-shell + .mf-footer { margin-left: 0; }
   .sidebar-backdrop { position: fixed; inset: 0; display: block; z-index: 1035; background: rgba(15,23,42,.45); border: 0; }
   .sidebar-close { display: grid; place-items:center; width: 34px; height: 34px; margin-left: auto; border:0; border-radius:8px; color:#fff; background:rgba(255,255,255,.12); }
   .sidebar-brand { padding-bottom: 14px; }
@@ -299,7 +302,10 @@ body.dark-mode .btn-ghost { --bs-btn-hover-bg: rgba(255,255,255,.06); --bs-btn-a
 .mf-breadcrumbs li:last-child { color: var(--mf-text); font-weight: 600; }
 
 /* --- Page header (refined; keeps the old class names) --- */
-.mf-page-header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap: var(--mf-space-md); margin-bottom: 0; }
+/* Default bottom margin for pages that are NOT wrapped in .mf-page; inside
+   .mf-page the flex `gap` handles spacing so the margin is reset. */
+.mf-page-header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap: var(--mf-space-md); margin-bottom: var(--mf-space-lg); }
+.mf-page > .mf-page-header { margin-bottom: 0; }
 .mf-page-header__eyebrow { color: var(--mf-color-primary); font-weight:700; font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; }
 .mf-page-header__title { font-weight:700; margin:.15rem 0 .3rem; font-size: clamp(1.35rem, 2vw, 1.6rem); color: var(--mf-text); letter-spacing:-.01em; text-wrap: balance; }
 .mf-page-header__description { color: var(--mf-text-muted); margin:0; max-width: 60ch; }
@@ -339,6 +345,13 @@ body.dark-mode .mf-data-table__wrap { background:#1f2937; border-color:#374151; 
 body.dark-mode .mf-data-table thead th { background:#111827; border-color:#374151; }
 body.dark-mode .mf-data-table tbody td { border-color:#374151; }
 body.dark-mode .mf-data-table tbody tr:hover { background: rgba(255,255,255,.03); }
+
+.mf-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; padding: .75rem 1rem; border-top: 1px solid var(--mf-border); }
+.mf-pagination__info { font-size: .8125rem; color: var(--mf-text-muted); }
+.mf-pagination__controls { display: flex; align-items: center; gap: .25rem; flex-wrap: wrap; }
+.mf-pagination__controls .btn { min-width: 2.25rem; min-height: 2.25rem; }
+.mf-pagination__gap { color: var(--mf-text-muted); padding: 0 .25rem; }
+body.dark-mode .mf-pagination { border-color: #374151; }
 
 /* Mobile: let a DataTable fall back to stacked cards when it opts in */
 @media (max-width: 640px) {

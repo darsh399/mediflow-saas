@@ -227,7 +227,7 @@ const TargetsTab = ({ role, period, setPeriod }) => {
         ) : (
           <div className="table-responsive">
             <table className="table align-middle mb-0">
-              <thead style={{ backgroundColor: "#f8f9fc" }}>
+              <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                 <tr>
                   <th className="px-4 py-3 border-0">Employee</th>
                   <th className="py-3 border-0">Visit target</th>

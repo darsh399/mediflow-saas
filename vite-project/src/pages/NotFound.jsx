@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 const NotFound = () => (
-  <main className="min-vh-100 d-flex align-items-center justify-content-center py-5" style={{ background: "linear-gradient(135deg, #f5f8ff 0%, #eef3f8 100%)" }}>
+  <main className="min-vh-100 d-flex align-items-center justify-content-center py-5" style={{ background: "var(--mf-bg)" }}>
     <div className="container px-3 text-center">
       <div className="card border-0 shadow-lg rounded-4 mx-auto overflow-hidden" style={{ maxWidth: "480px" }}>
         <div className="card-body p-4 p-md-5">
