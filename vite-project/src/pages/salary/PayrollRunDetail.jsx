@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { PageContainer, Breadcrumbs, SkeletonTable } from "../../components/ui";
 
 import payrollApi from "../../api/payrollApi";
 import { useNotify } from "../../components/NotificationProvider";
@@ -81,28 +82,28 @@ const PayrollRunDetail = () => {
 
   if (loading) {
     return (
-      <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-        <div className="card border-0 shadow-sm rounded-4"><div className="card-body text-center py-5"><div className="spinner-border text-primary"></div></div></div>
-      </div>
+      <PageContainer>
+        <Breadcrumbs items={[{ label: "Payroll Runs", to: "/salary/runs" }, { label: "Run" }]} />
+        <SkeletonTable rows={8} columns={5} />
+      </PageContainer>
     );
   }
   if (error || !run) {
     return (
-      <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-        <div className="alert alert-danger border-0 shadow-sm rounded-4"><i className="bi bi-exclamation-triangle-fill me-2"></i>{error || "Not found"}</div>
-        <Link to="/salary/runs" className="btn btn-outline-secondary">Back to payroll runs</Link>
-      </div>
+      <PageContainer width="narrow">
+        <div className="alert alert-danger border-0 shadow-sm mb-0"><i className="bi bi-exclamation-triangle-fill me-2"></i>{error || "Not found"}</div>
+        <Link to="/salary/runs" className="btn btn-ghost rounded-3">Back to payroll runs</Link>
+      </PageContainer>
     );
   }
 
   const activeLines = run.lines.filter((line) => !line.excluded);
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
+    <PageContainer>
+      <Breadcrumbs items={[{ label: "Payroll Runs", to: "/salary/runs" }, { label: `${MONTHS[run.month - 1]} ${run.year}` }]} />
+
       <div className="container-fluid px-0">
-        <button type="button" className="btn btn-sm btn-light border mb-3" onClick={() => navigate("/salary/runs")}>
-          <i className="bi bi-arrow-left me-1"></i>Payroll runs
-        </button>
 
         <div className="card border-0 shadow-sm rounded-4 mb-4">
           <div className="card-body p-4">
@@ -176,7 +177,7 @@ const PayrollRunDetail = () => {
         <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
           <div className="table-responsive">
             <table className="table align-middle mb-0">
-              <thead style={{ backgroundColor: "#f8f9fc" }}>
+              <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                 <tr>
                   <th className="px-4 py-3 border-0">Employee</th>
                   <th className="py-3 border-0">Gross</th>
@@ -230,7 +231,7 @@ const PayrollRunDetail = () => {
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

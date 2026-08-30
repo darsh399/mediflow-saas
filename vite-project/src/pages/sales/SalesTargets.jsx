@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 import targetApi from "../../api/targetApi";
 import { useNotify } from "../../components/NotificationProvider";
+import { PageContainer, PageHeader } from "../../components/ui";
 import TargetsTab from "./TargetsTab";
 import SalesTab from "./SalesTab";
 import {
@@ -103,7 +104,7 @@ const Overview = ({ role, period }) => {
           <div className="card-header bg-white border-0 p-4"><h5 className="fw-bold mb-0">Employee-wise performance</h5></div>
           <div className="table-responsive">
             <table className="table align-middle mb-0">
-              <thead style={{ backgroundColor: "#f8f9fc" }}>
+              <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                 <tr>
                   <th className="px-4 py-3 border-0">Employee</th>
                   <th className="py-3 border-0">Visit target</th>
@@ -203,31 +204,16 @@ const SalesTargets = () => {
   ];
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-      <div className="container-fluid px-0">
+    <PageContainer>
+      <PageHeader
+        eyebrow="Revenue & field performance"
+        title="Sales Targets"
+        description={`${isManager
+          ? "Set monthly sales and visit targets and track them against real activity."
+          : "Your monthly sales and visit targets, and how you're tracking against them."} Showing ${monthLabel(period.month, period.year)}.`}
+      />
 
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div
-            className="card-body p-4 p-lg-5 text-white"
-            style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}
-          >
-            <div className="d-flex align-items-center gap-3 mb-2">
-              <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: "55px", height: "55px" }}>
-                <i className="bi bi-graph-up-arrow fs-3"></i>
-              </div>
-              <div>
-                <span className="small opacity-75">REVENUE &amp; FIELD PERFORMANCE</span>
-                <h2 className="fw-bold mb-0">Sales Target</h2>
-              </div>
-            </div>
-            <p className="mb-0 opacity-75">
-              {isManager
-                ? "Set monthly sales and visit targets and track them against real activity."
-                : "Your monthly sales and visit targets, and how you're tracking against them."}
-              {" "}Showing {monthLabel(period.month, period.year)}.
-            </p>
-          </div>
-        </div>
+      <div className="container-fluid px-0">
 
         <ul className="nav nav-pills gap-2 mb-4 flex-nowrap overflow-auto pb-1">
           {tabs.map((t) => (
@@ -247,7 +233,7 @@ const SalesTargets = () => {
         {tab === "targets" && <TargetsTab role={role} period={period} setPeriod={setPeriod} />}
         {tab === "sales" && <SalesTab role={role} period={period} setPeriod={setPeriod} />}
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

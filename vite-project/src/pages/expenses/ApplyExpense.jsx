@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import expenseApi from "../../api/expenseApi";
+import { PageContainer, PageHeader, StatCard } from "../../components/ui";
 
 const CATEGORIES = [
   { code: "TRAVEL", name: "Travel" },
@@ -115,44 +116,15 @@ const ApplyExpense = () => {
   const approvedCount = expenses.filter((item) => item.status === "approved").length;
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-      <div className="container-fluid px-0">
+    <PageContainer>
+      <PageHeader eyebrow="Expenses" title="Submit Expense" description="Submit an expense claim and track its approval status." />
 
-        {/* HEADER */}
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}>
-            <div className="row align-items-center">
-              <div className="col-lg-8">
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: "55px", height: "55px" }}>
-                    <i className="bi bi-receipt fs-3"></i>
-                  </div>
-                  <div>
-                    <span className="small opacity-75">EXPENSE MANAGEMENT</span>
-                    <h2 className="fw-bold mb-0">Submit Expense</h2>
-                  </div>
-                </div>
-                <p className="mb-0 opacity-75">Submit an expense claim and track its approval status.</p>
-              </div>
-              <div className="col-lg-4 mt-4 mt-lg-0">
-                <div className="row g-3">
-                  <div className="col-6">
-                    <div className="bg-white bg-opacity-10 rounded-4 p-3 text-center">
-                      <div className="fs-2 fw-bold">{pendingCount}</div>
-                      <div className="small opacity-75">Pending</div>
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="bg-white bg-opacity-10 rounded-4 p-3 text-center">
-                      <div className="fs-2 fw-bold">{approvedCount}</div>
-                      <div className="small opacity-75">Approved</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="row g-3">
+        <div className="col-6 col-md-3"><StatCard label="Pending" value={pendingCount} icon="bi-hourglass-split" iconBg="var(--mf-color-warning-subtle)" iconColor="var(--mf-color-warning)" /></div>
+        <div className="col-6 col-md-3"><StatCard label="Approved" value={approvedCount} icon="bi-check2-circle" iconBg="var(--mf-color-success-subtle)" iconColor="var(--mf-color-success)" /></div>
+      </div>
+
+      <div className="container-fluid px-0">
 
         {/* ALERTS */}
         {message && (
@@ -179,7 +151,7 @@ const ApplyExpense = () => {
         <div className="card border-0 shadow-sm rounded-4 mb-4">
           <div className="card-header bg-white border-0 p-4">
             <div className="d-flex align-items-center gap-3">
-              <div className="rounded-3 d-flex align-items-center justify-content-center" style={{ width: "45px", height: "45px", backgroundColor: "#e7f1ff", color: "var(--mf-color-primary)" }}>
+              <div className="rounded-3 d-flex align-items-center justify-content-center" style={{ width: "45px", height: "45px", backgroundColor: "var(--mf-color-primary-subtle)", color: "var(--mf-color-primary)" }}>
                 <i className="bi bi-pencil-square fs-5"></i>
               </div>
               <div>
@@ -294,7 +266,7 @@ const ApplyExpense = () => {
           ) : (
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     <th className="px-4 py-3 border-0">Expense For</th>
                     <th className="py-3 border-0">Amount</th>
@@ -340,7 +312,7 @@ const ApplyExpense = () => {
         </div>
 
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

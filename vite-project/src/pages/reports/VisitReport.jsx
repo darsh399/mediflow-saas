@@ -6,6 +6,7 @@ import visitApi from "../../api/visitApi";
 import doctorApi from "../../api/doctorApi";
 import userApi from "../../api/userApi";
 import VisitDetailsModal from "../../components/VisitDetailsModal";
+import { PageContainer, PageHeader } from "../../components/ui";
 import {
   MANAGER_ROLES,
   errorMessage,
@@ -89,28 +90,14 @@ const VisitReport = () => {
   }, [visits]);
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-      <div className="container-fluid px-0">
+    <PageContainer>
+      <PageHeader
+        eyebrow="Field reports"
+        title="Visit Report"
+        description={isManager ? "Every visit in your scope with what was discussed and how the doctor responded." : "Your visit history."}
+      />
 
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div
-            className="card-body p-4 p-lg-5 text-white"
-            style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}
-          >
-            <div className="d-flex align-items-center gap-3 mb-2">
-              <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: "55px", height: "55px" }}>
-                <i className="bi bi-clipboard-data fs-3"></i>
-              </div>
-              <div>
-                <span className="small opacity-75">FIELD REPORTS</span>
-                <h2 className="fw-bold mb-0">Visit Report</h2>
-              </div>
-            </div>
-            <p className="mb-0 opacity-75">
-              {isManager ? "Every visit in your scope with what was discussed and how the doctor responded." : "Your visit history."}
-            </p>
-          </div>
-        </div>
+      <div className="container-fluid px-0">
 
         <div className="card border-0 shadow-sm rounded-4 mb-3">
           <div className="card-body p-3">
@@ -184,7 +171,7 @@ const VisitReport = () => {
           ) : (
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     <th className="px-4 py-3 border-0">Date</th>
                     {isManager && <th className="py-3 border-0">Employee</th>}
@@ -227,7 +214,7 @@ const VisitReport = () => {
       </div>
 
       {selected && <VisitDetailsModal visit={selected} onClose={() => setSelected(null)} />}
-    </div>
+    </PageContainer>
   );
 };
 

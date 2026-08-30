@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import payrollApi from "../../api/payrollApi";
 import userApi from "../../api/userApi";
 import { useNotify } from "../../components/NotificationProvider";
+import { PageContainer, PageHeader, SkeletonTable } from "../../components/ui";
 
 const errorMessage = (err, fallback) => err?.response?.data?.message || err?.message || fallback;
 const money = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
@@ -123,44 +124,32 @@ const PayrollRuns = () => {
   };
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
+    <PageContainer>
+      <PageHeader
+        eyebrow="Payroll"
+        title="Payroll Runs"
+        description="Run the whole month's payroll in one reviewed batch — LOP, PF, ESI, PT and TDS applied, then generate every slip at once."
+        actions={
+          <>
+            <button type="button" className="btn btn-ghost rounded-3" onClick={() => setSummaryOpen(true)}>
+              <i className="bi bi-file-earmark-text me-1"></i> Annual summary
+            </button>
+            <button type="button" className="btn btn-ghost rounded-3" onClick={openSettings}>
+              <i className="bi bi-sliders me-1"></i> Statutory settings
+            </button>
+            <button type="button" className="btn btn-primary rounded-3 fw-semibold" onClick={startCreate}>
+              <i className="bi bi-plus-lg me-1"></i> New run
+            </button>
+          </>
+        }
+      />
+
       <div className="container-fluid px-0">
 
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}>
-            <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
-              <div className="d-flex align-items-center gap-3">
-                <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: "55px", height: "55px" }}>
-                  <i className="bi bi-cash-coin fs-3"></i>
-                </div>
-                <div>
-                  <span className="small opacity-75">PAYROLL</span>
-                  <h2 className="fw-bold mb-0">Payroll Runs</h2>
-                </div>
-              </div>
-              <div className="d-flex gap-2">
-                <button type="button" className="btn btn-light" onClick={() => setSummaryOpen(true)}>
-                  <i className="bi bi-file-earmark-text me-1"></i>Annual summary
-                </button>
-                <button type="button" className="btn btn-light" onClick={openSettings}>
-                  <i className="bi bi-sliders me-1"></i>Statutory settings
-                </button>
-              </div>
-            </div>
-            <p className="mb-0 mt-3 opacity-75">Run the whole month's payroll in one reviewed batch — LOP, PF, ESI, PT and TDS applied, then generate every slip at once.</p>
-          </div>
-        </div>
-
-        {error && <div className="alert alert-danger border-0 shadow-sm rounded-4"><i className="bi bi-exclamation-triangle-fill me-2"></i>{error}</div>}
-
-        <div className="mb-3">
-          <button type="button" className="btn btn-primary rounded-3 fw-semibold" onClick={startCreate}>
-            <i className="bi bi-plus-lg me-2"></i>New Payroll Run
-          </button>
-        </div>
+        {error && <div className="alert alert-danger border-0 shadow-sm"><i className="bi bi-exclamation-triangle-fill me-2"></i>{error}</div>}
 
         {loading ? (
-          <div className="card border-0 shadow-sm rounded-4"><div className="card-body text-center py-5"><div className="spinner-border text-primary"></div></div></div>
+          <SkeletonTable rows={6} columns={5} />
         ) : runs.length === 0 ? (
           <div className="card border-0 shadow-sm rounded-4"><div className="card-body text-center py-5">
             <i className="bi bi-cash-coin text-primary fs-1"></i>
@@ -171,7 +160,7 @@ const PayrollRuns = () => {
           <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     <th className="px-4 py-3 border-0">Month</th>
                     <th className="py-3 border-0">Headcount</th>
@@ -298,7 +287,7 @@ const PayrollRuns = () => {
       )}
 
       {summaryOpen && <AnnualSummaryModal onClose={() => setSummaryOpen(false)} />}
-    </div>
+    </PageContainer>
   );
 };
 

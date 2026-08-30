@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 
 import reportApi from "../../api/reportApi";
 import { useNotify } from "../../components/NotificationProvider";
 import { downloadBlob } from "../../utils/downloadBlob";
+import { PageContainer, PageHeader, Breadcrumbs } from "../../components/ui";
 
 const errorMessage = (err, fallback) => err?.response?.data?.message || err?.message || fallback;
 
@@ -85,30 +86,15 @@ const ReportView = () => {
   };
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
+    <PageContainer>
+      <Breadcrumbs items={[{ label: "Reports", to: "/reports" }, { label: TITLES[type] }]} />
+      <PageHeader
+        eyebrow="Insights"
+        title={TITLES[type]}
+        description={data ? `${data.period}${data.scope === "team" ? " · your team" : ""}` : undefined}
+      />
+
       <div className="container-fluid px-0">
-
-        <Link to="/reports" className="btn btn-sm btn-light border mb-3">
-          <i className="bi bi-arrow-left me-1"></i>All reports
-        </Link>
-
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div
-            className="card-body p-4 p-lg-5 text-white"
-            style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}
-          >
-            <div className="d-flex align-items-center gap-3">
-              <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: "55px", height: "55px" }}>
-                <i className="bi bi-bar-chart-line fs-3"></i>
-              </div>
-              <div>
-                <span className="small opacity-75">INSIGHTS</span>
-                <h2 className="fw-bold mb-0">{TITLES[type]}</h2>
-              </div>
-            </div>
-            {data && <p className="mb-0 mt-3 opacity-75">{data.period}{data.scope === "team" ? " · your team" : ""}</p>}
-          </div>
-        </div>
 
         <div className="card border-0 shadow-sm rounded-4 mb-3">
           <div className="card-body p-3 d-flex flex-wrap gap-3 align-items-end">
@@ -154,7 +140,7 @@ const ReportView = () => {
           ) : (
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead style={{ backgroundColor: "#f8f9fc" }}>
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
                   <tr>
                     {data.columns.map((column) => (
                       <th key={column.key} className="py-3 border-0 px-3">{column.label}</th>
@@ -175,7 +161,7 @@ const ReportView = () => {
           )}
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

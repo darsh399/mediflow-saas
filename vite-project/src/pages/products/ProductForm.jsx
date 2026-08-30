@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import companyProductApi from "../../api/companyProductApi";
 import { useNotify } from "../../components/NotificationProvider";
+import { PageContainer, PageHeader, Breadcrumbs, SkeletonTable } from "../../components/ui";
 import { resolveAssetUrl } from "../../utils/resolveAssetUrl";
 
 const emptyForm = {
@@ -200,40 +201,25 @@ const ProductForm = ({ mode = "create", productId }) => {
 
   if (loadingProduct) {
     return (
-      <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-        <div className="card border-0 shadow-sm rounded-4">
-          <div className="card-body text-center py-5">
-            <div className="spinner-border text-primary mb-3"></div>
-            <h6 className="text-muted mb-0">Loading product...</h6>
-          </div>
-        </div>
-      </div>
+      <PageContainer>
+        <PageHeader eyebrow="Product catalog" title={isEdit ? "Edit Product" : "Add Product"} />
+        <SkeletonTable rows={5} columns={2} />
+      </PageContainer>
     );
   }
 
   const usedGallerySlots = existingGalleryImages.length + newGalleryFiles.length;
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fc", minHeight: "100vh" }}>
-      <div className="container-fluid px-0">
+    <PageContainer>
+      <Breadcrumbs items={[{ label: "Products", to: "/products" }, { label: isEdit ? "Edit Product" : "Add Product" }]} />
+      <PageHeader
+        eyebrow="Product catalog"
+        title={isEdit ? "Edit Product" : "Add Product"}
+        description={isEdit ? "Update this product's information for your team." : "Add a company product so your team and MRs can quickly reference it during doctor visits."}
+      />
 
-        {/* HEADER */}
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-          <div className="card-body p-4 p-lg-5 text-white" style={{ background: "linear-gradient(135deg, var(--mf-color-primary) 0%, var(--mf-color-accent) 100%)" }}>
-            <div className="d-flex align-items-center gap-3">
-              <div className="bg-white bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center" style={{ width: "55px", height: "55px" }}>
-                <i className="bi bi-capsule fs-3"></i>
-              </div>
-              <div>
-                <span className="small opacity-75">PRODUCT CATALOG</span>
-                <h2 className="fw-bold mb-0">{isEdit ? "Edit Product" : "Add Product"}</h2>
-              </div>
-            </div>
-            <p className="mb-0 opacity-75 mt-3">
-              {isEdit ? "Update this product's information for your team." : "Add a company product so your team and MRs can quickly reference it during doctor visits."}
-            </p>
-          </div>
-        </div>
+      <div className="container-fluid px-0">
 
         {error && (
           <div className="alert alert-danger border-0 shadow-sm rounded-4 d-flex align-items-center gap-3">
@@ -422,7 +408,7 @@ const ProductForm = ({ mode = "create", productId }) => {
         </form>
 
       </div>
-    </div>
+    </PageContainer>
   );
 };
 
