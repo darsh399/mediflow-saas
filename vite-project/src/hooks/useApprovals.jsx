@@ -5,6 +5,8 @@ import leaveApi from "../api/leaveApi";
 import expenseApi from "../api/expenseApi";
 import employeeProfileApi from "../api/employeeProfileApi";
 import salaryApi from "../api/salaryApi";
+import attendanceApi from "../api/attendanceApi";
+import { useFeatureSet, hasFeature } from "./useFeature";
 
 // Which roles can actually action each kind of request. These mirror the
 // gating already used across the app (AdminLayout / AppRoutes / the individual
@@ -13,18 +15,19 @@ const LEAVE_APPROVER_ROLES = ["admin", "company_owner", "hr_manager", "manager",
 const EXPENSE_APPROVER_ROLES = ["admin", "company_owner", "hr_manager"];
 const ONBOARDING_REVIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr"];
 const OFFER_MANAGER_ROLES = ["admin", "company_owner", "hr_manager"];
+const ATTENDANCE_REVIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr"];
 
-const EMPTY_GROUPS = { leaves: [], expenses: [], onboarding: [], offers: [] };
+const EMPTY_GROUPS = { leaves: [], expenses: [], onboarding: [], offers: [], attendance: [] };
 
 const ApprovalsContext = createContext({
   groups: EMPTY_GROUPS,
-  counts: { leaves: 0, expenses: 0, onboarding: 0, offers: 0 },
+  counts: { leaves: 0, expenses: 0, onboarding: 0, offers: 0, attendance: 0 },
   total: 0,
   loading: false,
   error: "",
   ready: false,
   active: false,
-  capabilities: { leaves: false, expenses: false, onboarding: false, offers: false },
+  capabilities: { leaves: false, expenses: false, onboarding: false, offers: false, attendance: false },
   refresh: () => {},
 });
 
@@ -41,6 +44,7 @@ function ApprovalsProvider({ children }) {
   const role = useSelector((state) => state.auth.user?.role);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const token = useSelector((state) => state.auth.token);
+  const featureSet = useFeatureSet();
 
   const capabilities = useMemo(
     () => ({
@@ -48,8 +52,9 @@ function ApprovalsProvider({ children }) {
       expenses: EXPENSE_APPROVER_ROLES.includes(role),
       onboarding: ONBOARDING_REVIEWER_ROLES.includes(role),
       offers: OFFER_MANAGER_ROLES.includes(role),
+      attendance: ATTENDANCE_REVIEWER_ROLES.includes(role) && hasFeature(featureSet, "attendance"),
     }),
-    [role]
+    [role, featureSet]
   );
 
   const hasAnyCapability = Object.values(capabilities).some(Boolean);
@@ -78,11 +83,12 @@ function ApprovalsProvider({ children }) {
     setLoading(true);
     setError("");
 
-    const [leaveResult, expenseResult, onboardingResult, offerResult] = await Promise.allSettled([
+    const [leaveResult, expenseResult, onboardingResult, offerResult, attendanceResult] = await Promise.allSettled([
       capabilities.leaves ? leaveApi.listLeaves() : Promise.resolve(null),
       capabilities.expenses ? expenseApi.listExpenses() : Promise.resolve(null),
       capabilities.onboarding ? employeeProfileApi.listProfiles() : Promise.resolve(null),
       capabilities.offers ? salaryApi.listOffers({ limit: 100 }) : Promise.resolve(null),
+      capabilities.attendance ? attendanceApi.listAttendance({ correction: "PENDING", limit: 100 }) : Promise.resolve(null),
     ]);
 
     if (!mountedRef.current) return;
@@ -94,6 +100,7 @@ function ApprovalsProvider({ children }) {
       [capabilities.expenses, expenseResult],
       [capabilities.onboarding, onboardingResult],
       [capabilities.offers, offerResult],
+      [capabilities.attendance, attendanceResult],
     ].some(([entitled, result]) => entitled && result.status === "rejected");
 
     const valueOf = (result) => (result.status === "fulfilled" ? result.value : null);
@@ -106,8 +113,11 @@ function ApprovalsProvider({ children }) {
     const offers = asArray(valueOf(offerResult), "data").filter(
       (offer) => String(offer.status || "").toUpperCase() === "DRAFT"
     );
+    const attendance = asArray(valueOf(attendanceResult), "attendance").filter(
+      (record) => record.correction?.status === "PENDING"
+    );
 
-    setGroups({ leaves, expenses, onboarding, offers });
+    setGroups({ leaves, expenses, onboarding, offers, attendance });
     setError(failed ? "Some approval queues could not be loaded." : "");
     setLoading(false);
     setReady(true);
@@ -123,11 +133,12 @@ function ApprovalsProvider({ children }) {
       expenses: groups.expenses.length,
       onboarding: groups.onboarding.length,
       offers: groups.offers.length,
+      attendance: groups.attendance.length,
     }),
     [groups]
   );
 
-  const total = counts.leaves + counts.expenses + counts.onboarding + counts.offers;
+  const total = counts.leaves + counts.expenses + counts.onboarding + counts.offers + counts.attendance;
 
   const value = useMemo(
     () => ({ groups, counts, total, loading, error, ready, refresh, capabilities, active }),

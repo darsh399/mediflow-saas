@@ -7,6 +7,7 @@ import { PageContainer, PageHeader, StatCard } from "../../components/ui";
 import leaveApi from "../../api/leaveApi";
 import expenseApi from "../../api/expenseApi";
 import salaryApi from "../../api/salaryApi";
+import attendanceApi from "../../api/attendanceApi";
 
 const formatDate = (date) => {
   if (!date) return "N/A";
@@ -18,6 +19,13 @@ const formatDate = (date) => {
 const formatAmount = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
+const formatDateTime = (value) => {
+  if (!value) return "—";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "—";
+  return parsed.toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+};
+
 const personName = (person) => person?.name || person?.email || "Unknown";
 
 const errorMessage = (err, fallback) =>
@@ -28,6 +36,7 @@ const SECTION_META = {
   expenses: { icon: "bi-receipt", label: "Expense claims", accent: "#0dcaf0" },
   onboarding: { icon: "bi-person-vcard", label: "Onboarding profiles", accent: "#6610f2" },
   offers: { icon: "bi-file-earmark-text", label: "Offer letters", accent: "#198754" },
+  attendance: { icon: "bi-clock-history", label: "Attendance corrections", accent: "#20c997" },
 };
 
 const ApprovalsInbox = () => {
@@ -85,8 +94,18 @@ const ApprovalsInbox = () => {
       failure: "Unable to send offer",
     });
 
+  const reviewAttendanceCorrection = (record, action) =>
+    runAction(
+      record._id,
+      () => attendanceApi.reviewCorrection(record._id, { action: action === "approve" ? "APPROVED" : "REJECTED" }),
+      {
+        success: `Correction ${action === "approve" ? "approved" : "rejected"}`,
+        failure: "Unable to update correction",
+      }
+    );
+
   const anySource =
-    capabilities.leaves || capabilities.expenses || capabilities.onboarding || capabilities.offers;
+    capabilities.leaves || capabilities.expenses || capabilities.onboarding || capabilities.offers || capabilities.attendance;
 
   return (
     <PageContainer>
@@ -344,6 +363,50 @@ const ApprovalsInbox = () => {
                             </>
                           )}
                         </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        )}
+
+        {/* ATTENDANCE CORRECTIONS */}
+        {!loading && counts.attendance > 0 && (
+          <Section id="section-attendance" meta={SECTION_META.attendance} count={counts.attendance}>
+            <div className="table-responsive">
+              <table className="table align-middle mb-0">
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
+                  <tr>
+                    <th className="px-4 py-3 border-0">Employee</th>
+                    <th className="py-3 border-0">Date</th>
+                    <th className="py-3 border-0">Requested times</th>
+                    <th className="py-3 border-0">Reason</th>
+                    <th className="py-3 border-0 pe-4 text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groups.attendance.map((record) => (
+                    <tr key={record._id}>
+                      <td className="px-4 py-3">
+                        <div className="fw-semibold">{personName(record.employeeId)}</div>
+                        <small className="text-muted">{record.employeeId?.email || ""}</small>
+                      </td>
+                      <td className="py-3">{formatDate(record.date)}</td>
+                      <td className="py-3">
+                        <div className="small">In: {formatDateTime(record.correction?.checkIn)}</div>
+                        <div className="small">Out: {formatDateTime(record.correction?.checkOut)}</div>
+                      </td>
+                      <td className="py-3">
+                        <div className="text-muted small" style={{ maxWidth: "220px" }}>{record.correction?.reason || "-"}</div>
+                      </td>
+                      <td className="py-3 pe-4">
+                        <RowActions
+                          busy={busyId === record._id}
+                          onApprove={() => reviewAttendanceCorrection(record, "approve")}
+                          onReject={() => reviewAttendanceCorrection(record, "reject")}
+                        />
                       </td>
                     </tr>
                   ))}

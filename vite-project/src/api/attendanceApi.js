@@ -30,4 +30,14 @@ export async function getEmployeeAttendance(employeeId, params) {
   return response.data
 }
 
-export default { getToday, checkIn, checkOut, toggleBreak, listAttendance, getEmployeeAttendance }
+export async function requestCorrection(id, payload) {
+  const response = await axios.post(`/api/attendance/${id}/correction`, payload)
+  return response.data
+}
+
+export async function reviewCorrection(id, payload) {
+  const response = await axios.post(`/api/attendance/${id}/correction/review`, payload)
+  return response.data
+}
+
+export default { getToday, checkIn, checkOut, toggleBreak, listAttendance, getEmployeeAttendance, requestCorrection, reviewCorrection }
