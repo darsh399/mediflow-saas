@@ -1,4 +1,5 @@
 import Medical from '../models/Medical.js';
+import { sendCsv } from '../utils/csv.js';
 
 export const createMedical = async (req, res) => {
   try {
@@ -30,6 +31,35 @@ export const listMedicals = async (req, res) => {
   } catch (error) {
     console.error('List medicals error:', error);
     return res.status(500).json({ message: 'Error listing medicals', error: error.message });
+  }
+};
+
+// Company-scoped CSV of the medical/chemist directory.
+export const exportMedicals = async (req, res) => {
+  try {
+    const companyId = req.user?.companyId;
+    const query = companyId ? { companyId } : {};
+    if (req.query?.unassigned === 'true') query.territoryId = null;
+    else if (req.query?.territoryId) query.territoryId = req.query.territoryId;
+    const meds = await Medical.find(query).populate('territoryId', 'name code').sort({ name: 1 }).lean();
+    const columns = [
+      { label: 'Name', value: (m) => m.name },
+      { label: 'Contact Person', value: (m) => m.contactPerson },
+      { label: 'Mobile', value: (m) => m.mobile },
+      { label: 'Email', value: (m) => m.email },
+      { label: 'License Number', value: (m) => m.licenseNumber },
+      { label: 'Address', value: (m) => m.address },
+      { label: 'Area', value: (m) => m.area },
+      { label: 'City', value: (m) => m.city },
+      { label: 'Latitude', value: (m) => m.latitude },
+      { label: 'Longitude', value: (m) => m.longitude },
+      { label: 'Territory', value: (m) => m.territoryId?.name || '' },
+      { label: 'Created At', value: (m) => (m.createdAt ? new Date(m.createdAt).toISOString().slice(0, 10) : '') },
+    ];
+    return sendCsv(res, `medicals-${new Date().toISOString().slice(0, 10)}.csv`, meds, columns);
+  } catch (error) {
+    console.error('Export medicals error:', error);
+    return res.status(500).json({ message: 'Error exporting medicals', error: error.message });
   }
 };
 
@@ -76,4 +106,4 @@ export const deleteMedical = async (req, res) => {
   }
 };
 
-export default { createMedical, listMedicals, getMedical, updateMedical, deleteMedical };
+export default { createMedical, listMedicals, exportMedicals, getMedical, updateMedical, deleteMedical };

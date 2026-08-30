@@ -4,9 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { useApprovals } from "../../hooks/useApprovals";
 import { useNotify } from "../../components/NotificationProvider";
 import { PageContainer, PageHeader, StatCard } from "../../components/ui";
+import DcrDetailModal from "../../components/DcrDetailModal";
 import leaveApi from "../../api/leaveApi";
 import expenseApi from "../../api/expenseApi";
 import salaryApi from "../../api/salaryApi";
+import attendanceApi from "../../api/attendanceApi";
+import dcrApi from "../../api/dcrApi";
 
 const formatDate = (date) => {
   if (!date) return "N/A";
@@ -18,23 +21,47 @@ const formatDate = (date) => {
 const formatAmount = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
+const formatDateTime = (value) => {
+  if (!value) return "—";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "—";
+  return parsed.toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+};
+
+
 const personName = (person) => person?.name || person?.email || "Unknown";
 
 const errorMessage = (err, fallback) =>
   err?.response?.data?.message || err?.message || fallback;
+
+const AgePill = ({ item, slaDays }) => {
+  if (item?._ageDays == null) return null;
+  const label = item._ageDays === 0 ? "today" : `${item._ageDays}d`;
+  return (
+    <span
+      className={`badge rounded-pill ms-2 ${item._overdue ? "text-bg-danger" : "text-bg-light text-muted"}`}
+      title={item._overdue ? `Waiting ${label} — past the ${slaDays}-day SLA` : `Waiting ${label}`}
+    >
+      <i className="bi bi-clock me-1"></i>{label}
+    </span>
+  );
+};
 
 const SECTION_META = {
   leaves: { icon: "bi-calendar2-week", label: "Leave requests", accent: "#fd7e14" },
   expenses: { icon: "bi-receipt", label: "Expense claims", accent: "#0dcaf0" },
   onboarding: { icon: "bi-person-vcard", label: "Onboarding profiles", accent: "#6610f2" },
   offers: { icon: "bi-file-earmark-text", label: "Offer letters", accent: "#198754" },
+  attendance: { icon: "bi-clock-history", label: "Attendance corrections", accent: "#20c997" },
+  dcr: { icon: "bi-journal-check", label: "Daily call reports", accent: "#6f42c1" },
 };
 
 const ApprovalsInbox = () => {
   const navigate = useNavigate();
   const { notify } = useNotify();
-  const { groups, counts, total, loading, error, refresh, capabilities } = useApprovals();
+  const { groups, counts, total, overdue, slaDays, loading, error, refresh, capabilities } = useApprovals();
   const [busyId, setBusyId] = useState(null);
+  const [dcrReview, setDcrReview] = useState(null);
 
   const runAction = async (id, work, { success, failure }) => {
     try {
@@ -85,8 +112,29 @@ const ApprovalsInbox = () => {
       failure: "Unable to send offer",
     });
 
+  const reviewAttendanceCorrection = (record, action) =>
+    runAction(
+      record._id,
+      () => attendanceApi.reviewCorrection(record._id, { action: action === "approve" ? "APPROVED" : "REJECTED" }),
+      {
+        success: `Correction ${action === "approve" ? "approved" : "rejected"}`,
+        failure: "Unable to update correction",
+      }
+    );
+
+  const reviewDcr = (report, action) => {
+    const note = window.prompt(action === "reject" ? "Reason for rejection:" : "Note (optional):", "");
+    if (note === null) return;
+    if (action === "reject" && !note.trim()) return;
+    setDcrReview(null);
+    runAction(report._id, () => dcrApi.reviewReport(report._id, { action, reviewNote: note.trim() }), {
+      success: `Report ${action === "approve" ? "approved" : "rejected"}`,
+      failure: "Unable to update report",
+    });
+  };
+
   const anySource =
-    capabilities.leaves || capabilities.expenses || capabilities.onboarding || capabilities.offers;
+    capabilities.leaves || capabilities.expenses || capabilities.onboarding || capabilities.offers || capabilities.attendance || capabilities.dcr;
 
   return (
     <PageContainer>
@@ -94,6 +142,15 @@ const ApprovalsInbox = () => {
 
       <div className="row g-3">
         <div className="col-6 col-md-3"><StatCard label="Pending your action" value={loading ? "…" : total} icon="bi-inbox" /></div>
+        <div className="col-6 col-md-3">
+          <StatCard
+            label={`Overdue (> ${slaDays}d)`}
+            value={loading ? "…" : overdue}
+            icon="bi-alarm"
+            iconBg="var(--mf-color-danger-subtle)"
+            iconColor="var(--mf-color-danger)"
+          />
+        </div>
       </div>
 
       <div className="container-fluid px-0">
@@ -184,7 +241,7 @@ const ApprovalsInbox = () => {
                     return (
                       <tr key={leave._id}>
                         <td className="px-4 py-3">
-                          <div className="fw-semibold">{personName(person)}</div>
+                          <div className="fw-semibold">{personName(person)}<AgePill item={leave} slaDays={slaDays} /></div>
                           <small className="text-muted">{person?.email || ""}</small>
                         </td>
                         <td className="py-3">{leave.leaveType || leave.type || "-"}</td>
@@ -231,7 +288,7 @@ const ApprovalsInbox = () => {
                   {groups.expenses.map((expense) => (
                     <tr key={expense._id}>
                       <td className="px-4 py-3">
-                        <div className="fw-semibold">{personName(expense.employeeId)}</div>
+                        <div className="fw-semibold">{personName(expense.employeeId)}<AgePill item={expense} slaDays={slaDays} /></div>
                         <small className="text-muted">{expense.employeeId?.email || ""}</small>
                       </td>
                       <td className="py-3 text-capitalize">
@@ -271,7 +328,7 @@ const ApprovalsInbox = () => {
                   {groups.onboarding.map((profile) => (
                     <tr key={profile._id}>
                       <td className="px-4 py-3">
-                        <div className="fw-semibold">{personName(profile.userId)}</div>
+                        <div className="fw-semibold">{personName(profile.userId)}<AgePill item={profile} slaDays={slaDays} /></div>
                         <small className="text-muted">{profile.userId?.email || ""}</small>
                       </td>
                       <td className="py-3 text-capitalize">
@@ -319,7 +376,7 @@ const ApprovalsInbox = () => {
                 <tbody>
                   {groups.offers.map((offer) => (
                     <tr key={offer._id}>
-                      <td className="px-4 py-3 fw-semibold">{personName(offer.employeeId)}</td>
+                      <td className="px-4 py-3 fw-semibold">{personName(offer.employeeId)}<AgePill item={offer} slaDays={slaDays} /></td>
                       <td className="py-3">{offer.jobTitle || "-"}</td>
                       <td className="py-3">{formatDate(offer.createdAt)}</td>
                       <td className="py-3 pe-4 text-end">
@@ -353,7 +410,101 @@ const ApprovalsInbox = () => {
           </Section>
         )}
 
+        {/* ATTENDANCE CORRECTIONS */}
+        {!loading && counts.attendance > 0 && (
+          <Section id="section-attendance" meta={SECTION_META.attendance} count={counts.attendance}>
+            <div className="table-responsive">
+              <table className="table align-middle mb-0">
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
+                  <tr>
+                    <th className="px-4 py-3 border-0">Employee</th>
+                    <th className="py-3 border-0">Date</th>
+                    <th className="py-3 border-0">Requested times</th>
+                    <th className="py-3 border-0">Reason</th>
+                    <th className="py-3 border-0 pe-4 text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groups.attendance.map((record) => (
+                    <tr key={record._id}>
+                      <td className="px-4 py-3">
+                        <div className="fw-semibold">{personName(record.employeeId)}<AgePill item={record} slaDays={slaDays} /></div>
+                        <small className="text-muted">{record.employeeId?.email || ""}</small>
+                      </td>
+                      <td className="py-3">{formatDate(record.date)}</td>
+                      <td className="py-3">
+                        <div className="small">In: {formatDateTime(record.correction?.checkIn)}</div>
+                        <div className="small">Out: {formatDateTime(record.correction?.checkOut)}</div>
+                      </td>
+                      <td className="py-3">
+                        <div className="text-muted small" style={{ maxWidth: "220px" }}>{record.correction?.reason || "-"}</div>
+                      </td>
+                      <td className="py-3 pe-4">
+                        <RowActions
+                          busy={busyId === record._id}
+                          onApprove={() => reviewAttendanceCorrection(record, "approve")}
+                          onReject={() => reviewAttendanceCorrection(record, "reject")}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        )}
+
+        {/* DAILY CALL REPORTS */}
+        {!loading && counts.dcr > 0 && (
+          <Section id="section-dcr" meta={SECTION_META.dcr} count={counts.dcr}>
+            <div className="table-responsive">
+              <table className="table align-middle mb-0">
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
+                  <tr>
+                    <th className="px-4 py-3 border-0">Rep</th>
+                    <th className="py-3 border-0">Date</th>
+                    <th className="py-3 border-0">Summary</th>
+                    <th className="py-3 border-0 pe-4 text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groups.dcr.map((report) => (
+                    <tr key={report._id}>
+                      <td className="px-4 py-3">
+                        <div className="fw-semibold">{personName(report.employeeId)}<AgePill item={report} slaDays={slaDays} /></div>
+                        <small className="text-muted">{report.employeeId?.email || ""}</small>
+                      </td>
+                      <td className="py-3">{formatDate(report.date)}</td>
+                      <td className="py-3">
+                        <div className="text-muted small" style={{ maxWidth: "260px" }}>{report.summary || "-"}</div>
+                      </td>
+                      <td className="py-3 pe-4 text-end">
+                        <button type="button" className="btn btn-sm btn-primary rounded-3" disabled={busyId === report._id} onClick={() => setDcrReview(report)}>
+                          <i className="bi bi-eye me-1"></i>Review
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        )}
+
       </div>
+
+      {dcrReview && (
+        <DcrDetailModal
+          report={dcrReview}
+          onClose={() => setDcrReview(null)}
+          footer={
+            <>
+              <button type="button" className="btn btn-outline-danger rounded-3" disabled={busyId === dcrReview._id} onClick={() => reviewDcr(dcrReview, "reject")}>Reject</button>
+              <button type="button" className="btn btn-success rounded-3" disabled={busyId === dcrReview._id} onClick={() => reviewDcr(dcrReview, "approve")}>Approve</button>
+            </>
+          }
+        />
+      )}
     </PageContainer>
   );
 };

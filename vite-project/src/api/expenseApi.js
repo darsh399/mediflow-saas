@@ -27,4 +27,19 @@ export async function exportExpenses(params) {
   return resp.data
 }
 
-export default { applyExpense, listExpenses, listMyExpenses, reviewExpense, exportExpenses }
+export async function getSettings() {
+  const resp = await axios.get('/api/expenses/settings')
+  return resp.data
+}
+
+export async function updateSettings(payload) {
+  const resp = await axios.patch('/api/expenses/settings', payload)
+  return resp.data
+}
+
+export async function previewTravelClaim(params) {
+  const resp = await axios.get('/api/expenses/travel-claim/preview', { params })
+  return resp.data
+}
+
+export default { applyExpense, listExpenses, listMyExpenses, reviewExpense, exportExpenses, getSettings, updateSettings, previewTravelClaim }

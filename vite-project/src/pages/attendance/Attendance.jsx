@@ -2,9 +2,19 @@ import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import attendanceApi from '../../api/attendanceApi'
-import { PageContainer, PageHeader, StatCard, Badge, EmptyState } from '../../components/ui'
+import { PageContainer, PageHeader, StatCard, Badge, EmptyState, AppModal } from '../../components/ui'
 
 const REVIEWER_ROLES = ['admin', 'company_owner', 'hr_manager', 'hr']
+const CORRECTION_BADGE = { PENDING: 'text-bg-warning', APPROVED: 'text-bg-success', REJECTED: 'text-bg-danger' }
+
+// Date -> value a datetime-local input expects (YYYY-MM-DDTHH:mm, local time).
+function toLocalInput(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const pad = (number) => String(number).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
 
 function formatTime(value) {
   return value ? new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'
@@ -53,6 +63,9 @@ export default function Attendance() {
   const [error, setError] = useState('')
   const [month, setMonth] = useState('')
   const [year, setYear] = useState('')
+  const [correctionRecord, setCorrectionRecord] = useState(null)
+  const [correctionForm, setCorrectionForm] = useState({ checkIn: '', checkOut: '', reason: '' })
+  const [correctionBusy, setCorrectionBusy] = useState(false)
 
   async function load() {
     try {
@@ -77,6 +90,36 @@ export default function Attendance() {
   useEffect(() => { load() }, [isReviewer, month, year])
 
   const clearMonthFilter = () => { setMonth(''); setYear('') }
+
+  function openCorrection(record) {
+    const recordSessions = record.sessions?.length ? record.sessions : record.checkIn ? [{ checkIn: record.checkIn, checkOut: record.checkOut }] : []
+    setCorrectionForm({
+      checkIn: toLocalInput(recordSessions[0]?.checkIn),
+      checkOut: toLocalInput(recordSessions[recordSessions.length - 1]?.checkOut),
+      reason: '',
+    })
+    setCorrectionRecord(record)
+  }
+
+  async function submitCorrection(event) {
+    event.preventDefault()
+    if (!correctionRecord) return
+    try {
+      setCorrectionBusy(true)
+      setError('')
+      await attendanceApi.requestCorrection(correctionRecord._id, {
+        checkIn: correctionForm.checkIn ? new Date(correctionForm.checkIn).toISOString() : undefined,
+        checkOut: correctionForm.checkOut ? new Date(correctionForm.checkOut).toISOString() : undefined,
+        reason: correctionForm.reason.trim(),
+      })
+      setCorrectionRecord(null)
+      await load()
+    } catch (requestError) {
+      setError(requestMessage(requestError, 'Unable to submit correction request'))
+    } finally {
+      setCorrectionBusy(false)
+    }
+  }
 
   const monthYearFilter = (
     <div className="card border-0 shadow-sm rounded-4 mb-4">
@@ -317,17 +360,31 @@ export default function Attendance() {
                       <th className="py-3 text-muted small text-uppercase">Status</th>
                       <th className="py-3 text-muted small text-uppercase">Sessions</th>
                       <th className="py-3 text-muted small text-uppercase">Total hours</th>
+                      <th className="py-3 text-muted small text-uppercase">Regularization</th>
                     </tr>
                   </thead>
                   <tbody>
                     {records.map((record) => {
                       const recordSessions = record.sessions?.length ? record.sessions : record.checkIn ? [{ checkIn: record.checkIn, checkOut: record.checkOut }] : []
+                      const correctionStatus = record.correction?.status
                       return (
                         <tr key={record._id}>
                           <td className="py-3 px-4">{new Date(record.date).toLocaleDateString()}</td>
                           <td className="py-3"><Badge status={record.status} /></td>
                           <td className="py-3">{recordSessions.map((session) => `${formatTime(session.checkIn)} - ${formatTime(session.checkOut)}`).join(', ') || '-'}</td>
                           <td className="py-3">{formatDuration(record.totalWorkingHours)}</td>
+                          <td className="py-3">
+                            {correctionStatus === 'PENDING' || correctionStatus === 'APPROVED' ? (
+                              <span className={`badge ${CORRECTION_BADGE[correctionStatus]}`}>Correction {correctionStatus.toLowerCase()}</span>
+                            ) : (
+                              <div className="d-flex align-items-center gap-2">
+                                {correctionStatus === 'REJECTED' && <span className="badge text-bg-danger">Rejected</span>}
+                                <button type="button" className="btn btn-sm btn-outline-secondary rounded-3" onClick={() => openCorrection(record)}>
+                                  <i className="bi bi-pencil-square me-1"></i>Request fix
+                                </button>
+                              </div>
+                            )}
+                          </td>
                         </tr>
                       )
                     })}
@@ -337,6 +394,40 @@ export default function Attendance() {
             )}
           </div>
         </>
+      )}
+
+      {correctionRecord && (
+        <AppModal
+          title="Request attendance correction"
+          subtitle={new Date(correctionRecord.date).toLocaleDateString()}
+          onClose={() => (correctionBusy ? null : setCorrectionRecord(null))}
+          footer={
+            <>
+              <button type="button" className="btn btn-outline-secondary rounded-3" disabled={correctionBusy} onClick={() => setCorrectionRecord(null)}>Cancel</button>
+              <button type="submit" form="attendance-correction-form" className="btn btn-primary rounded-3" disabled={correctionBusy}>
+                {correctionBusy ? 'Submitting…' : 'Submit request'}
+              </button>
+            </>
+          }
+        >
+          <form id="attendance-correction-form" onSubmit={submitCorrection}>
+            <div className="row g-3">
+              <div className="col-sm-6">
+                <label className="form-label fw-semibold" htmlFor="correction-check-in">Corrected check-in</label>
+                <input id="correction-check-in" type="datetime-local" className="form-control" value={correctionForm.checkIn} onChange={(event) => setCorrectionForm((form) => ({ ...form, checkIn: event.target.value }))} />
+              </div>
+              <div className="col-sm-6">
+                <label className="form-label fw-semibold" htmlFor="correction-check-out">Corrected check-out</label>
+                <input id="correction-check-out" type="datetime-local" className="form-control" value={correctionForm.checkOut} onChange={(event) => setCorrectionForm((form) => ({ ...form, checkOut: event.target.value }))} />
+              </div>
+              <div className="col-12">
+                <label className="form-label fw-semibold" htmlFor="correction-reason">Reason</label>
+                <textarea id="correction-reason" className="form-control" rows={3} required value={correctionForm.reason} onChange={(event) => setCorrectionForm((form) => ({ ...form, reason: event.target.value }))} placeholder="Explain why this record needs correcting" />
+              </div>
+            </div>
+            <p className="text-muted small mb-0 mt-3">Leave a time unchanged to keep it as recorded. A reviewer must approve before the record updates.</p>
+          </form>
+        </AppModal>
       )}
     </PageContainer>
   )

@@ -3,15 +3,37 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchMedicals, deleteMedical } from "../../redux/slices/medicalSlice";
 import { Link } from "react-router-dom";
 import SearchBar from "../../components/SearchBar";
+import medicalApi from "../../api/medicalApi";
+import { downloadBlob } from "../../utils/downloadBlob";
 import { PageContainer, PageHeader, StatCard, FilterBar, DataTable, EmptyState } from "../../components/ui";
+
+const EXPORT_ROLES = ["admin", "company_owner", "hr", "manager"];
 
 const Medicals = () => {
   const dispatch = useDispatch();
   const { items = [], loading, error } = useSelector((state) => state.medicals);
+  const role = useSelector((state) => state.auth.user?.role);
+  const canExport = EXPORT_ROLES.includes(role);
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [q, setQ] = useState("");
   const [territoryFilter, setTerritoryFilter] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
+
+  const exportCsv = async () => {
+    try {
+      setExporting(true);
+      setExportError("");
+      const params = territoryFilter && territoryFilter !== "__none__" ? { territoryId: territoryFilter } : territoryFilter === "__none__" ? { unassigned: "true" } : {};
+      const blob = await medicalApi.exportMedicals(params);
+      downloadBlob(blob, "medicals.csv");
+    } catch (err) {
+      setExportError(err?.response?.data?.message || "Unable to export medicals");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const territoryOptions = useMemo(
     () => Array.from(new Map(items.filter((m) => m.territoryId).map((m) => [m.territoryId._id, m.territoryId.name])).entries()),
@@ -93,9 +115,17 @@ const Medicals = () => {
         title="Medicals & Shops"
         description="Manage medical shops and their contact information."
         actions={
-          <Link className="btn btn-primary rounded-3 fw-semibold" to="/medicals/add">
-            <i className="bi bi-plus-lg me-2"></i> Add Medical
-          </Link>
+          <div className="d-flex flex-wrap gap-2">
+            {canExport && (
+              <button type="button" className="btn btn-outline-secondary rounded-3" disabled={exporting || !items.length} onClick={exportCsv}>
+                {exporting ? <span className="spinner-border spinner-border-sm me-2"></span> : <i className="bi bi-download me-2"></i>}
+                Export CSV
+              </button>
+            )}
+            <Link className="btn btn-primary rounded-3 fw-semibold" to="/medicals/add">
+              <i className="bi bi-plus-lg me-2"></i> Add Medical
+            </Link>
+          </div>
         }
       />
 
@@ -124,6 +154,13 @@ const Medicals = () => {
         <div className="alert alert-danger border-0 shadow-sm d-flex align-items-center gap-2 mb-0">
           <i className="bi bi-exclamation-triangle-fill"></i>
           <span>Could not load medicals. {error?.message || "Please try again."}</span>
+        </div>
+      )}
+
+      {exportError && (
+        <div className="alert alert-warning border-0 shadow-sm d-flex align-items-center gap-2 mb-0">
+          <i className="bi bi-exclamation-triangle-fill"></i>
+          <span>{exportError}</span>
         </div>
       )}
 

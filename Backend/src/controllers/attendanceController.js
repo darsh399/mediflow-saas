@@ -113,6 +113,7 @@ export async function listAttendance(req, res) {
     const filter = { companyId: req.user.companyId }
     if (req.query.employeeId) filter.employeeId = req.query.employeeId
     if (req.query.status) filter.status = req.query.status
+    if (req.query.correction) filter['correction.status'] = String(req.query.correction).toUpperCase()
     if (req.query.date) {
       const date = parseDate(req.query.date, 'date')
       filter.date = { $gte: startOfDay(date), $lt: endOfDay(date) }

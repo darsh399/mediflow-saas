@@ -4,7 +4,7 @@ import authMiddleware from '../middleware/authMiddleware.js';
 import companyMiddleware from '../middleware/companyMiddleware.js';
 import authorize from '../middleware/permissionMiddleware.js';
 import requireModule from '../middleware/moduleMiddleware.js';
-import { applyExpense, listExpenses, exportExpenses, reviewExpense } from '../controllers/expenseController.js';
+import { applyExpense, listExpenses, exportExpenses, reviewExpense, getExpenseSettings, updateExpenseSettings, previewTravelClaim } from '../controllers/expenseController.js';
 
 const upload = multer({
   dest: 'uploads/expenses/',
@@ -23,6 +23,9 @@ router.use(authMiddleware, companyMiddleware, requireModule('expenses'));
 router.post('/', authorize('expense.apply'), upload.single('receipt'), applyExpense);
 router.get('/', authorize('expense.view'), listExpenses);
 router.get('/export', authorize('expense.view'), exportExpenses);
+router.get('/settings', authorize('expense.view'), getExpenseSettings);
+router.patch('/settings', authorize('expense.approve'), updateExpenseSettings);
+router.get('/travel-claim/preview', authorize('expense.view'), previewTravelClaim);
 router.post('/:id/review', authorize('expense.approve'), reviewExpense);
 
 export default router;

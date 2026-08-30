@@ -12,6 +12,7 @@ const CATEGORIES = [
 ];
 
 const todayInput = () => new Date().toISOString().slice(0, 10);
+const monthAgoInput = () => new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10);
 
 const ApplyExpense = () => {
   const [form, setForm] = useState({
@@ -21,6 +22,12 @@ const ApplyExpense = () => {
     description: "",
   });
   const [receiptFile, setReceiptFile] = useState(null);
+
+  const [travelOpen, setTravelOpen] = useState(false);
+  const [travelRange, setTravelRange] = useState({ from: monthAgoInput(), to: todayInput() });
+  const [travelPreview, setTravelPreview] = useState(null);
+  const [travelLoading, setTravelLoading] = useState(false);
+  const [travelError, setTravelError] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [loadingExpenses, setLoadingExpenses] = useState(true);
@@ -87,6 +94,33 @@ const ApplyExpense = () => {
     }
   };
 
+  const calculateTravel = async () => {
+    try {
+      setTravelLoading(true);
+      setTravelError("");
+      setTravelPreview(null);
+      const preview = await expenseApi.previewTravelClaim(travelRange);
+      setTravelPreview(preview);
+    } catch (err) {
+      setTravelError(err?.response?.data?.message || "Unable to calculate travel from visits");
+    } finally {
+      setTravelLoading(false);
+    }
+  };
+
+  const useTravelAmount = () => {
+    if (!travelPreview) return;
+    const daNote = travelPreview.daAmount ? ` + DA ₹${travelPreview.daAmount}` : "";
+    setForm((current) => ({
+      ...current,
+      category: "TRAVEL",
+      amount: String(travelPreview.total),
+      expenseDate: new Date(travelPreview.to).toISOString().slice(0, 10),
+      description: `Travel claim ${travelRange.from} to ${travelRange.to}: ${travelPreview.totalKm} km over ${travelPreview.daysWithVisits} visit day(s) @ ₹${travelPreview.ratePerKm}/km${daNote}`,
+    }));
+    setMessage("Travel amount applied to the form below. Review and submit.");
+  };
+
   const formatDate = (date) => {
     if (!date) return "N/A";
     return new Date(date).toLocaleDateString("en-IN", {
@@ -146,6 +180,67 @@ const ApplyExpense = () => {
             </div>
           </div>
         )}
+
+        {/* TRAVEL FROM VISITS */}
+        <div className="card border-0 shadow-sm rounded-4 mb-4">
+          <div className="card-body p-4">
+            <button type="button" className="btn btn-link p-0 text-decoration-none fw-semibold" onClick={() => setTravelOpen((open) => !open)}>
+              <i className={`bi ${travelOpen ? "bi-chevron-down" : "bi-chevron-right"} me-1`}></i>
+              Calculate travel from my visits
+            </button>
+            {travelOpen && (
+              <div className="mt-3">
+                <p className="text-muted small">Adds up the distance between your logged visit locations for the period. Home-to-first and last-to-home legs are not included.</p>
+                <div className="row g-3 align-items-end">
+                  <div className="col-sm-4">
+                    <label className="form-label fw-semibold">From</label>
+                    <input type="date" className="form-control" max={travelRange.to} value={travelRange.from} onChange={(e) => setTravelRange((range) => ({ ...range, from: e.target.value }))} />
+                  </div>
+                  <div className="col-sm-4">
+                    <label className="form-label fw-semibold">To</label>
+                    <input type="date" className="form-control" max={todayInput()} value={travelRange.to} onChange={(e) => setTravelRange((range) => ({ ...range, to: e.target.value }))} />
+                  </div>
+                  <div className="col-sm-4">
+                    <button type="button" className="btn btn-outline-primary rounded-3 w-100" disabled={travelLoading} onClick={calculateTravel}>
+                      {travelLoading ? <span className="spinner-border spinner-border-sm"></span> : "Calculate"}
+                    </button>
+                  </div>
+                </div>
+
+                {travelError && <div className="alert alert-warning border-0 mt-3 mb-0">{travelError}</div>}
+
+                {travelPreview && (
+                  <div className="mt-3">
+                    {travelPreview.ratePerKm === 0 && travelPreview.dailyAllowance === 0 && (
+                      <div className="alert alert-info border-0">No travel rate is configured for your company yet — ask an admin to set it in Company Settings.</div>
+                    )}
+                    <div className="table-responsive">
+                      <table className="table table-sm align-middle mb-2">
+                        <thead><tr className="text-muted small text-uppercase"><th>Date</th><th>Visits</th><th className="text-end">Distance (km)</th></tr></thead>
+                        <tbody>
+                          {travelPreview.days.map((day) => (
+                            <tr key={day.date}><td>{formatDate(day.date)}</td><td>{day.visits}</td><td className="text-end">{day.km}</td></tr>
+                          ))}
+                          {travelPreview.days.length === 0 && <tr><td colSpan="3" className="text-muted">No visits with location data in this period.</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="d-flex flex-wrap gap-3 align-items-center">
+                      <span className="small text-muted">
+                        {travelPreview.totalKm} km · {formatAmount(travelPreview.travelAmount)} travel
+                        {travelPreview.daAmount ? ` · ${formatAmount(travelPreview.daAmount)} DA` : ""}
+                      </span>
+                      <span className="fw-bold">Total {formatAmount(travelPreview.total)}</span>
+                      <button type="button" className="btn btn-sm btn-primary rounded-3" disabled={!travelPreview.total} onClick={useTravelAmount}>
+                        Use this amount
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* FORM */}
         <div className="card border-0 shadow-sm rounded-4 mb-4">

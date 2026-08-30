@@ -37,6 +37,9 @@ import VisitRecords from "../pages/admin/VisitRecords";
 import TopPerformers from "../pages/admin/TopPerformers";
 
 import AddVisit from "../pages/mr/AddVisit";
+import DailyCallReport from "../pages/mr/DailyCallReport";
+import TeamCallReports from "../pages/mr/TeamCallReports";
+import Samples from "../pages/samples/Samples";
 
 import Leaves from "../pages/hr/Leaves";
 
@@ -74,6 +77,7 @@ import AddProduct from "../pages/products/AddProduct";
 import EditProduct from "../pages/products/EditProduct";
 import ProductDetails from "../pages/products/ProductDetails";
 import AuditLog from "../pages/audit/AuditLog";
+import CompanySettings from "../pages/settings/CompanySettings";
 import ApprovalsInbox from "../pages/approvals/ApprovalsInbox";
 import OrgChart from "../pages/organization/OrgChart";
 import Territories from "../pages/territories/Territories";
@@ -953,8 +957,29 @@ const AppRoutes = () => {
                             element={<AddVisit />}
                         />
 
+                        <Route
+                            path="dcr"
+                            element={<DailyCallReport />}
+                        />
+
                     </Route>
 
+                </Route>
+
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "manager", "project_manager"]} />}
+                >
+                    <Route path="dcr" element={<AdminLayout />}>
+                        <Route path="team" element={<TeamCallReports />} />
+                    </Route>
+                </Route>
+
+                <Route
+                    element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "manager", "project_manager", "employee", "mr"]} />}
+                >
+                    <Route path="samples" element={<AdminLayout />}>
+                        <Route index element={<Samples />} />
+                    </Route>
                 </Route>
 
 
@@ -1028,6 +1053,9 @@ const AppRoutes = () => {
                 >
                     <Route path="audit-log" element={<AdminLayout />}>
                         <Route index element={<AuditLog />} />
+                    </Route>
+                    <Route path="settings" element={<AdminLayout />}>
+                        <Route index element={<CompanySettings />} />
                     </Route>
                 </Route>
 
