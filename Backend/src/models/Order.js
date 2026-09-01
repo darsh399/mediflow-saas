@@ -16,4 +16,7 @@ const orderSchema = new mongoose.Schema({
   status: { type: String, enum: ['PLACED', 'CONFIRMED', 'FULFILLED', 'CANCELLED'], default: 'PLACED', index: true }
 }, { timestamps: true });
 
+orderSchema.index({ companyId: 1, createdAt: -1 });
+orderSchema.index({ companyId: 1, createdBy: 1, createdAt: -1 });
+
 export default mongoose.model('Order', orderSchema);

@@ -7,19 +7,27 @@ import { PageContainer, PageHeader, FormSection, DataTable, EmptyState } from '.
 const Orders = () => {
   const [orders, setOrders] = useState([]); const [doctors, setDoctors] = useState([]); const [products, setProducts] = useState([])
   const [doctorId, setDoctorId] = useState(''); const [productId, setProductId] = useState(''); const [quantity, setQuantity] = useState(1); const [error, setError] = useState('')
-  const load = async () => { try { const [o, d, p] = await Promise.all([orderApi.listOrders(), doctorApi.listDoctors(), productApi.listProducts()]); setOrders(o.orders || []); setDoctors(d.doctors || []); setProducts(p.products || []) } catch (err) { setError(err?.response?.data?.message || 'Unable to load orders') } }
+  const [pagination, setPagination] = useState({ page: 1, limit: 25, totalPages: 1 })
+  const loadOrders = async (page = pagination.page) => {
+    try {
+      const response = await orderApi.listOrders({ page, limit: pagination.limit })
+      setOrders(response.orders || [])
+      setPagination(response.pagination || { page, limit: pagination.limit, totalPages: 1 })
+    } catch (err) { setError(err?.response?.data?.message || 'Unable to load orders') }
+  }
   useEffect(() => {
     let cancelled = false
-    Promise.all([orderApi.listOrders(), doctorApi.listDoctors(), productApi.listProducts()]).then(([orderResponse, doctorResponse, productResponse]) => {
+    Promise.all([orderApi.listOrders({ page: 1, limit: 25 }), doctorApi.listDoctors(), productApi.listProducts()]).then(([orderResponse, doctorResponse, productResponse]) => {
       if (cancelled) return
       setOrders(orderResponse.orders || [])
       setDoctors(doctorResponse.doctors || [])
       setProducts(productResponse.products || [])
+      setPagination(orderResponse.pagination || { page: 1, limit: 25, totalPages: 1 })
     }).catch(err => { if (!cancelled) setError(err?.response?.data?.message || 'Unable to load orders') })
     return () => { cancelled = true }
   }, [])
-  const create = async event => { event.preventDefault(); try { await orderApi.createOrder({ doctorId, items: [{ productId, quantity: Number(quantity) }] }); setDoctorId(''); setProductId(''); setQuantity(1); load() } catch (err) { setError(err?.response?.data?.message || 'Unable to create order') } }
-  const update = async (id, status) => { try { await orderApi.updateOrderStatus(id, status); load() } catch (err) { setError(err?.response?.data?.message || 'Unable to update order') } }
+  const create = async event => { event.preventDefault(); try { await orderApi.createOrder({ doctorId, items: [{ productId, quantity: Number(quantity) }] }); setDoctorId(''); setProductId(''); setQuantity(1); await loadOrders(1) } catch (err) { setError(err?.response?.data?.message || 'Unable to create order') } }
+  const update = async (id, status) => { try { await orderApi.updateOrderStatus(id, status); await loadOrders() } catch (err) { setError(err?.response?.data?.message || 'Unable to update order') } }
 
   const statusColor = (status) => {
     switch (status) {
@@ -104,11 +112,12 @@ const Orders = () => {
         <DataTable
           columns={columns}
           rows={orders}
-        pageSize={25}
+          pageSize={25}
           rowKey={(o) => o._id}
           mobileCards
           empty={<EmptyState icon="bi-bag" title="No orders yet" description="Orders placed for doctors will appear here." />}
         />
+        {pagination.totalPages > 1 && <div className="d-flex justify-content-between align-items-center mt-3"><small className="text-muted">Page {pagination.page} of {pagination.totalPages}</small><div className="btn-group"><button type="button" className="btn btn-outline-secondary" disabled={pagination.page <= 1} onClick={() => loadOrders(pagination.page - 1)}>Previous</button><button type="button" className="btn btn-outline-secondary" disabled={pagination.page >= pagination.totalPages} onClick={() => loadOrders(pagination.page + 1)}>Next</button></div></div>}
       </div>
     </PageContainer>
   )

@@ -89,8 +89,17 @@ export async function listProducts(req, res) {
     };
     const sort = sortMap[req.query.sort] || sortMap.newest;
 
-    const products = await CompanyProduct.find(filter).populate('createdBy', 'name email role').sort(sort).lean();
-    return res.status(200).json({ products });
+    if (req.query.page === undefined && req.query.limit === undefined) {
+      const products = await CompanyProduct.find(filter).populate('createdBy', 'name email role').sort(sort).lean();
+      return res.status(200).json({ products });
+    }
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+    const [products, total] = await Promise.all([
+      CompanyProduct.find(filter).populate('createdBy', 'name email role').sort(sort).skip((page - 1) * limit).limit(limit).lean(),
+      CompanyProduct.countDocuments(filter),
+    ]);
+    return res.status(200).json({ products, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
   } catch (error) {
     console.error('List company products error:', error);
     return res.status(500).json({ message: 'Error listing products', error: error.message });

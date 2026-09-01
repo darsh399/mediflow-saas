@@ -448,8 +448,17 @@ export const listUsers = async (req, res) => {
     try{
         const companyId = req.user?.companyId;
         const query = companyId ? { companyId } : {};
-        const users = await User.find(query).select('-password');
-        res.status(200).json({ message: 'Users retrieved successfully', users });
+        if (req.query.page === undefined && req.query.limit === undefined) {
+            const users = await User.find(query).select('-password');
+            return res.status(200).json({ message: 'Users retrieved successfully', users });
+        }
+        const page = Math.max(Number(req.query.page) || 1, 1);
+        const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+        const [users, total] = await Promise.all([
+            User.find(query).select('-password').sort({ name: 1 }).skip((page - 1) * limit).limit(limit).lean(),
+            User.countDocuments(query),
+        ]);
+        return res.status(200).json({ message: 'Users retrieved successfully', users, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
     }catch(error){
         console.error("Error retrieving users:", error);
         res.status(500).json({ message: 'Error retrieving users', error: error.message });

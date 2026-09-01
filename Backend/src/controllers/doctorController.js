@@ -56,8 +56,17 @@ export const listDoctors = async (req, res) => {
     if (req.query?.unassigned === 'true') query.territoryId = null;
     else if (req.query?.territoryId) query.territoryId = req.query.territoryId;
     if (req.query.summary === 'true') return res.status(200).json({ doctors: [], pagination: { page: 1, limit: 0, total: await Doctor.countDocuments(query), totalPages: 1 } });
-    const docs = await Doctor.find(query).populate('territoryId', 'name code');
-    return res.status(200).json({ doctors: docs.map(withCompleteness) });
+    if (req.query.page === undefined && req.query.limit === undefined) {
+      const docs = await Doctor.find(query).populate('territoryId', 'name code');
+      return res.status(200).json({ doctors: docs.map(withCompleteness) });
+    }
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+    const [docs, total] = await Promise.all([
+      Doctor.find(query).populate('territoryId', 'name code').sort({ name: 1 }).skip((page - 1) * limit).limit(limit),
+      Doctor.countDocuments(query),
+    ]);
+    return res.status(200).json({ doctors: docs.map(withCompleteness), pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
   } catch (error) {
     console.error('List doctors error:', error);
     return res.status(500).json({ message: 'Error listing doctors', error: error.message });

@@ -73,8 +73,17 @@ function buildExpenseQuery(req) {
 export const listExpenses = async (req, res) => {
   try {
     const query = buildExpenseQuery(req);
-    const expenses = await Expense.find(query).populate('employeeId reviewedBy', 'name email role').sort({ createdAt: -1 });
-    return res.status(200).json({ expenses });
+    if (req.query.page === undefined && req.query.limit === undefined) {
+      const expenses = await Expense.find(query).populate('employeeId reviewedBy', 'name email role').sort({ createdAt: -1 });
+      return res.status(200).json({ expenses });
+    }
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+    const [expenses, total] = await Promise.all([
+      Expense.find(query).populate('employeeId reviewedBy', 'name email role').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      Expense.countDocuments(query),
+    ]);
+    return res.status(200).json({ expenses, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
   } catch (error) {
     console.error('List expenses error:', error);
     return res.status(500).json({ message: 'Error listing expenses', error: error.message });

@@ -319,14 +319,22 @@ export const listVisits = async (req, res) => {
 
     if (req.query.summary === 'true') return res.status(200).json({ visits: [], pagination: { page: 1, limit: 0, total: await Visit.countDocuments(query), totalPages: 1 } });
 
-    const visits = await Visit.find(query)
+    if (req.query.page === undefined && req.query.limit === undefined) {
+      const visits = await Visit.find(query)
       .populate('employeeId', 'name email role')
       .populate('doctorId', 'name specialty phone clinicName')
       .populate('medicalId', 'name address phone')
       .populate('assignedBy', 'name email role')
       .sort({ visitedAt: -1 });
-
-    return res.status(200).json({ visits });
+      return res.status(200).json({ visits });
+    }
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+    const [visits, total] = await Promise.all([
+      Visit.find(query).populate('employeeId', 'name email role').populate('doctorId', 'name specialty phone clinicName').populate('medicalId', 'name address phone').populate('assignedBy', 'name email role').sort({ visitedAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      Visit.countDocuments(query),
+    ]);
+    return res.status(200).json({ visits, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
   } catch (error) {
     console.error('List visits error:', error);
     return res.status(500).json({

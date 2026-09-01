@@ -21,8 +21,17 @@ export async function createOrder(req, res) {
 
 export async function listOrders(req, res) {
   const query = ['admin', 'company_owner', 'hr_manager', 'hr', 'manager'].includes(req.user.role) ? { companyId: req.user.companyId } : { companyId: req.user.companyId, createdBy: req.user.id };
-  const orders = await Order.find(query).populate('doctorId createdBy', 'name email clinicName role').populate('items.productId', 'name sku unitPrice').sort({ createdAt: -1 });
-  return res.json({ orders });
+  if (req.query.page === undefined && req.query.limit === undefined) {
+    const orders = await Order.find(query).populate('doctorId createdBy', 'name email clinicName role').populate('items.productId', 'name sku unitPrice').sort({ createdAt: -1 });
+    return res.json({ orders });
+  }
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+  const [orders, total] = await Promise.all([
+    Order.find(query).populate('doctorId createdBy', 'name email clinicName role').populate('items.productId', 'name sku unitPrice').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    Order.countDocuments(query),
+  ]);
+  return res.json({ orders, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
 }
 
 export async function updateOrderStatus(req, res) {
