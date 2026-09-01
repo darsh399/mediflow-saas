@@ -15,9 +15,11 @@ export const MODULE_CATALOG = [
   { key: 'employees', label: 'Employees', category: 'Core', description: 'Employee directory, invitations and profiles.' },
   { key: 'organization_chart', label: 'Organization Chart', category: 'Core', description: 'Reporting-line tree and org units.' },
   { key: 'attendance', label: 'Attendance', category: 'Core', description: 'Check-in/out, attendance history and approval.' },
+  { key: 'workforce', label: 'Workforce Enhancements', category: 'Core', description: 'Shifts, overtime and attendance workforce tools.', dependsOn: ['attendance'] },
   { key: 'calendar', label: 'Calendar & Holidays', category: 'Core', description: 'Company holidays and working days.' },
   { key: 'notifications', label: 'Notifications', category: 'Core', description: 'In-app notification centre.' },
   { key: 'reports', label: 'Reports & Exports', category: 'Core', description: 'Cross-module reports and CSV exports.' },
+  { key: 'analytics', label: 'Advanced Analytics', category: 'Core', description: 'Cross-module dashboards and operational analytics.', dependsOn: ['reports'] },
   { key: 'documents', label: 'Employee Documents', category: 'Core', description: 'Onboarding document upload and verification.' },
   { key: 'performance', label: 'Performance', category: 'Core', description: 'Performance tracking.' },
 
@@ -32,6 +34,7 @@ export const MODULE_CATALOG = [
   // --- Sales ---
   { key: 'sales_targets', label: 'Sales Targets', category: 'Sales', description: 'Monthly sales and visit targets.' },
   { key: 'orders', label: 'Orders', category: 'Sales', description: 'Product orders for doctors.' },
+  { key: 'order_fulfillment', label: 'Order Fulfillment', category: 'Sales', description: 'Order approval, dispatch and delivery tracking.', dependsOn: ['orders'] },
   { key: 'products', label: 'Product Catalog', category: 'Sales', description: 'Company product catalog.' },
 
   // --- People Ops ---

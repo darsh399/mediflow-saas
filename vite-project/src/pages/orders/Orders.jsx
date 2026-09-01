@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
 import orderApi from '../../api/orderApi'
 import doctorApi from '../../api/doctorApi'
 import companyProductApi from '../../api/companyProductApi'
 import { PageContainer, PageHeader, FormSection, DataTable, EmptyState } from '../../components/ui'
+import { useFeature } from '../../hooks/useFeature'
 
 const Orders = () => {
   const [orders, setOrders] = useState([]); const [doctors, setDoctors] = useState([]); const [products, setProducts] = useState([])
   const [doctorId, setDoctorId] = useState(''); const [productId, setProductId] = useState(''); const [quantity, setQuantity] = useState(1); const [error, setError] = useState('')
+  const role = useSelector((state) => state.auth.user?.role)
+  const fulfillmentEnabled = useFeature('order_fulfillment')
+  const [fulfillmentBusy, setFulfillmentBusy] = useState(null)
   const [pagination, setPagination] = useState({ page: 1, limit: 25, totalPages: 1 })
   const loadOrders = async (page = pagination.page) => {
     try {
@@ -28,6 +33,11 @@ const Orders = () => {
   }, [])
   const create = async event => { event.preventDefault(); try { await orderApi.createOrder({ doctorId, items: [{ productId, quantity: Number(quantity) }] }); setDoctorId(''); setProductId(''); setQuantity(1); await loadOrders(1) } catch (err) { setError(err?.response?.data?.message || 'Unable to create order') } }
   const update = async (id, status) => { try { await orderApi.updateOrderStatus(id, status); await loadOrders() } catch (err) { setError(err?.response?.data?.message || 'Unable to update order') } }
+  const updateFulfillment = async (id, fulfillmentStatus) => {
+    try { setFulfillmentBusy(id); await orderApi.updateFulfillmentStatus(id, fulfillmentStatus); await loadOrders() }
+    catch (err) { setError(err?.response?.data?.message || 'Unable to update fulfillment') }
+    finally { setFulfillmentBusy(null) }
+  }
 
   const statusColor = (status) => {
     switch (status) {
@@ -59,6 +69,11 @@ const Orders = () => {
         </select>
       ),
     },
+    ...(fulfillmentEnabled && ['admin', 'company_owner', 'hr_manager', 'manager'].includes(role) ? [{
+      key: 'fulfillment',
+      header: 'Fulfillment',
+      render: (o) => <select className="form-select form-select-sm" value={o.fulfillmentStatus || 'PENDING'} disabled={fulfillmentBusy === o._id} onChange={(event) => updateFulfillment(o._id, event.target.value)}><option>PENDING</option><option>DISPATCHED</option><option>DELIVERED</option><option>RETURNED</option></select>,
+    }] : []),
   ]
 
   return (

@@ -2,6 +2,7 @@ import Order from '../models/Order.js';
 import Doctor from '../models/Doctor.js';
 import Product from '../models/Product.js';
 import CompanyProduct from '../models/CompanyProduct.js';
+import OrderFulfillmentEvent from '../models/OrderFulfillmentEvent.js';
 import recordAudit from '../utils/audit.js';
 
 export async function createOrder(req, res) {
@@ -59,4 +60,22 @@ export async function updateOrderStatus(req, res) {
   if (!order) return res.status(404).json({ message: 'Order not found' });
   await recordAudit(req, 'order_status_updated', {}, { orderId: order._id, status });
   return res.json({ order });
+}
+
+export async function updateFulfillmentStatus(req, res) {
+  if (!['admin', 'company_owner', 'hr_manager', 'manager'].includes(req.user.role)) return res.status(403).json({ message: 'Insufficient permissions' });
+  const fulfillmentStatus = String(req.body?.fulfillmentStatus || '').toUpperCase();
+  if (!['PENDING', 'DISPATCHED', 'DELIVERED', 'RETURNED'].includes(fulfillmentStatus)) return res.status(400).json({ message: 'Invalid fulfillment status' });
+  const order = await Order.findOneAndUpdate({ _id: req.params.id, companyId: req.user.companyId }, { fulfillmentStatus }, { new: true, runValidators: true });
+  if (!order) return res.status(404).json({ message: 'Order not found' });
+  await OrderFulfillmentEvent.create({ companyId: req.user.companyId, orderId: order._id, status: fulfillmentStatus, note: req.body?.note, createdBy: req.user.id });
+  await recordAudit(req, 'order_fulfillment_updated', {}, { orderId: order._id, fulfillmentStatus });
+  return res.json({ order });
+}
+
+export async function listFulfillmentEvents(req, res) {
+  const order = await Order.findOne({ _id: req.params.id, companyId: req.user.companyId }).select('_id');
+  if (!order) return res.status(404).json({ message: 'Order not found' });
+  const events = await OrderFulfillmentEvent.find({ orderId: order._id, companyId: req.user.companyId }).populate('createdBy', 'name email role').sort({ createdAt: -1 }).lean();
+  return res.json({ events });
 }
