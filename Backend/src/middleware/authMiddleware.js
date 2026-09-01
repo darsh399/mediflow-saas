@@ -31,11 +31,11 @@ export default async function authMiddleware(req, res, next) {
     // company members already have an authoritative companyId on their user.
     let ownedCompany = null;
     if (user.role === 'company_owner' || !user.companyId) {
-      ownedCompany = await Company.findOne({ ownerId: user._id }).select('_id status isActive');
+      ownedCompany = await Company.findOne({ ownerId: user._id }).select('_id status isActive enabledModules');
       if (!ownedCompany) {
         const acceptedOwnerInvite = await Invite.findOne({ inviteeEmail: user.email, role: 'company_owner', status: 'accepted' }).sort({ acceptedAt: -1 });
         if (acceptedOwnerInvite?.companyId) {
-          ownedCompany = await Company.findByIdAndUpdate(acceptedOwnerInvite.companyId, { ownerId: user._id }, { new: true }).select('_id status isActive');
+          ownedCompany = await Company.findByIdAndUpdate(acceptedOwnerInvite.companyId, { ownerId: user._id }, { new: true }).select('_id status isActive enabledModules');
         }
       }
     }
@@ -58,6 +58,8 @@ export default async function authMiddleware(req, res, next) {
       companyId: user.companyId || null,
       role: user.role
     };
+    req.company = company;
+    req.companyId = user.companyId || null;
     return next();
   } catch (error) {
     if (error?.name === 'TokenExpiredError') return res.status(401).json({ message: 'Access token expired', code: 'TOKEN_EXPIRED' });

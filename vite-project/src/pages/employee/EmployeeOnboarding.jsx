@@ -30,21 +30,9 @@ const formatLabel = value => {
 const getDocumentUrl = document => {
   if (!document) return null
 
-  let url = null
-
-  if (typeof document === 'string') {
-    url = document
-  } else {
-    url =
-      document.url ||
-      document.fileUrl ||
-      document.path ||
-      document.location ||
-      document.filePath ||
-      document.secure_url ||
-      document.secureUrl ||
-      null
-  }
+  const url = typeof document === 'string'
+    ? document
+    : document.url || document.fileUrl || document.path || document.location || document.filePath || document.secure_url || document.secureUrl || null
 
   if (!url) return null
 
@@ -78,6 +66,22 @@ const getFileName = document => {
     document.name ||
     'Uploaded document'
   )
+}
+
+const openPrivateDocument = async document => {
+  const source = getDocumentUrl(document)
+  if (!source) return
+  const tab = window.open('about:blank', '_blank', 'noopener,noreferrer')
+  try {
+    const blob = await employeeProfileApi.downloadDocument(source)
+    const blobUrl = URL.createObjectURL(blob)
+    if (tab) tab.location.href = blobUrl
+    else window.open(blobUrl, '_blank', 'noopener,noreferrer')
+    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
+  } catch (err) {
+    if (tab) tab.close()
+    throw err
+  }
 }
 
 const EmployeeOnboarding = () => {
@@ -780,15 +784,14 @@ const EmployeeOnboarding = () => {
                         </div>
 
                         {url && (
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
                             className="btn btn-sm btn-outline-primary"
+                            onClick={() => openPrivateDocument(document).catch(() => setError('Unable to open document'))}
                           >
                             <i className="bi bi-eye me-1" />
                             View
-                          </a>
+                          </button>
                         )}
 
                       </div>
@@ -930,15 +933,14 @@ const EmployeeOnboarding = () => {
                       </div>
 
                       {url && (
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
                           className="btn btn-sm btn-outline-primary"
+                          onClick={() => openPrivateDocument(document).catch(() => setError('Unable to open document'))}
                         >
                           <i className="bi bi-eye me-1" />
                           View
-                        </a>
+                        </button>
                       )}
 
                     </div>

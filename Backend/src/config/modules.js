@@ -64,8 +64,8 @@ export function normalizeModules(modules) {
 // explicitly. The one-time migration (utils/migrateCompanyModules) makes every
 // company's array explicit so this only matters for un-migrated data.
 export function resolveEnabledModules(company) {
+  if (!Array.isArray(company?.enabledModules)) return [...MODULES];
   const stored = normalizeModules(company?.enabledModules);
-  if (!stored.length) return [...MODULES];
   return stored;
 }
 

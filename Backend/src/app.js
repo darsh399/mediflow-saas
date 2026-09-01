@@ -49,9 +49,17 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 
 
+const allowedOrigins = new Set([
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    ...(process.env.CLIENT_URL || process.env.FRONTEND_URL || '').split(',').map((origin) => origin.trim()).filter(Boolean),
+]);
+
 const corsOptions = {
-    
-    origin: true,
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+        return callback(new Error('Origin not allowed by CORS'));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -67,16 +75,6 @@ app.use((req, res, next) => {
     }
 });
 
-app.use((req, res, next) => {
-    const origin = req.headers.origin || process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
-   
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    if (req.method === 'OPTIONS') return res.sendStatus(200);
-    next();
-});
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
@@ -90,8 +88,6 @@ app.get('/activate-account', (req, res) => {
     const query = new URLSearchParams(req.query).toString();
     res.redirect(`${frontendUrl.replace(/\/$/, '')}/activate-account${query ? `?${query}` : ''}`);
 });
-
-connectDB().then(() => startBirthdayScheduler()).catch((error) => console.error('Database startup failed:', error.message));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/doctors', doctorRoutes);
@@ -131,33 +127,16 @@ app.use('/superadmin', superadminRoutes);
 // Also expose superadmin API under /api/superadmin so frontend dev proxy can forward API calls
 app.use('/api/superadmin', superadminRoutes);
 
-// Debug: list registered routes (temporary)
-app.get('/__routes', (req, res) => {
-    try {
-        const routes = []
-        app._router.stack.forEach((middleware) => {
-            if (middleware.route) {
-                // routes registered directly on the app
-                const methods = Object.keys(middleware.route.methods).join(',')
-                routes.push({ path: middleware.route.path, methods })
-            } else if (middleware.name === 'router' && middleware.handle && middleware.handle.stack) {
-                // router middleware
-                middleware.handle.stack.forEach((handler) => {
-                    if (handler.route) {
-                        const methods = Object.keys(handler.route.methods).join(',')
-                        routes.push({ path: handler.route.path, methods })
-                    }
-                })
-            }
-        })
-        res.json({ routes })
-    } catch (err) { res.status(500).json({ error: err.message }) }
-})
-
 // error handler (should be last)
 app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+connectDB()
+    .then(() => {
+        startBirthdayScheduler();
+        app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+    })
+    .catch((error) => {
+        console.error('Database startup failed:', error.message);
+        process.exitCode = 1;
+    });

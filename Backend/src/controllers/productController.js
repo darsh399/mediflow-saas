@@ -1,8 +1,18 @@
 import Product from '../models/Product.js';
 
 export const listProducts = async (req, res) => {
-  const products = await Product.find({ companyId: req.user.companyId }).sort({ name: 1 });
-  return res.json({ products });
+  const query = { companyId: req.user.companyId };
+  if (req.query.page === undefined && req.query.limit === undefined) {
+    const products = await Product.find(query).sort({ name: 1 });
+    return res.json({ products });
+  }
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+  const [products, total] = await Promise.all([
+    Product.find(query).sort({ name: 1 }).skip((page - 1) * limit).limit(limit).lean(),
+    Product.countDocuments(query),
+  ]);
+  return res.json({ products, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
 };
 
 export const createProduct = async (req, res) => {
