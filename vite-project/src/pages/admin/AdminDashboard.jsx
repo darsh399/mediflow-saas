@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { Bar } from 'react-chartjs-2'
 import {
@@ -16,6 +17,7 @@ import doctorApi from '../../api/doctorApi'
 import medicalApi from '../../api/medicalApi'
 import visitApi from '../../api/visitApi'
 import leaveApi from '../../api/leaveApi'
+import tourPlanApi from '../../api/tourPlanApi'
 import { PageContainer, PageHeader, StatCard } from '../../components/ui'
 
 ChartJS.register(
@@ -29,6 +31,7 @@ ChartJS.register(
 
 const AdminDashboard = () => {
   const navigate = useNavigate()
+  const role = useSelector((state) => state.auth.user?.role)
 
   const [counts, setCounts] = useState({
     users: 0,
@@ -58,16 +61,22 @@ const AdminDashboard = () => {
           doctorApi.listDoctors({ summary: 'true' }),
           medicalApi.listMedicals({ summary: 'true' }),
           visitApi.listVisits({ summary: 'true' }),
-          leaveApi.listLeaves(undefined, { params: { summary: 'true' } })
+          leaveApi.listLeaves(undefined, { params: { summary: 'true' } }),
+          ['admin', 'company_owner', 'hr_manager', 'manager', 'project_manager'].includes(role)
+            ? tourPlanApi.listTourPlans({ status: 'SUBMITTED' })
+            : Promise.resolve({ tourPlans: [] })
         ]
         const results = await Promise.allSettled(requests)
-        const keys = ['users', 'doctors', 'medicals', 'visits', 'leaves']
+        const keys = ['users', 'doctors', 'medicals', 'visits', 'leaves', 'plans']
         const nextErrors = {}
         const nextCounts = {}
         results.forEach((result, index) => {
           const key = keys[index]
-          if (result.status === 'fulfilled') nextCounts[key] = countFromResponse(result.value, key)
-          else nextErrors[key] = result.reason?.response?.data?.message || `Unable to load ${key}`
+          if (result.status === 'fulfilled') {
+            nextCounts[key] = key === 'plans' ? (result.value?.tourPlans || []).length : countFromResponse(result.value, key)
+          } else {
+            nextErrors[key] = result.reason?.response?.data?.message || `Unable to load ${key}`
+          }
         })
         setCounts(current => ({ ...current, ...nextCounts }))
         setErrors(nextErrors)
@@ -87,7 +96,8 @@ const AdminDashboard = () => {
       'Doctors',
       'Medicals',
       'Visits',
-      'Leaves'
+      'Leaves',
+      'Plans'
     ],
     datasets: [
       {
@@ -97,7 +107,8 @@ const AdminDashboard = () => {
           counts.doctors,
           counts.medicals,
           counts.visits,
-          counts.leaves
+          counts.leaves,
+          counts.plans || 0
         ],
         borderWidth: 1
       }
@@ -161,7 +172,14 @@ const AdminDashboard = () => {
       icon: 'bi-calendar3',
       iconBg: 'var(--mf-color-warning-subtle)',
       iconColor: 'var(--mf-color-warning)'
-    }
+    },
+    ...(role && ['admin', 'company_owner', 'hr_manager', 'manager', 'project_manager'].includes(role) ? [{
+      title: 'Pending Plans',
+      value: counts.plans || 0,
+      icon: 'bi-map',
+      iconBg: 'var(--mf-color-primary-subtle)',
+      iconColor: 'var(--mf-color-primary)'
+    }] : [])
   ]
 
   return (
@@ -222,7 +240,7 @@ const AdminDashboard = () => {
               </h5>
 
               <p className="text-muted small mb-0">
-                Overview of users, doctors, medicals, visits and leaves.
+                Overview of users, doctors, medicals, visits, leaves and pending plan approvals.
               </p>
 
             </div>
