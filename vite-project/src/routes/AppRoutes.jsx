@@ -1,17 +1,17 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import MainLayout from "../layout/MainLayout";
 
 import Login from "../components/Login";
-import SuperAdminLogin from "../pages/superadmin/SuperAdminLogin";
-
-import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard";
-import Companies from "../pages/superadmin/Companies";
-import CompanyList from "../pages/superadmin/CompanyList";
-import CompanyDetails from "../pages/superadmin/CompanyDetails";
-import DemoRequests from "../pages/superadmin/DemoRequests";
-
-import ActivateAccount from "../pages/ActivateAccount";
+const lazyPage = (importer) => lazy(importer);
+const SuperAdminLogin = lazyPage(() => import("../pages/superadmin/SuperAdminLogin"));
+const SuperAdminDashboard = lazyPage(() => import("../pages/superadmin/SuperAdminDashboard"));
+const Companies = lazyPage(() => import("../pages/superadmin/Companies"));
+const CompanyList = lazyPage(() => import("../pages/superadmin/CompanyList"));
+const CompanyDetails = lazyPage(() => import("../pages/superadmin/CompanyDetails"));
+const DemoRequests = lazyPage(() => import("../pages/superadmin/DemoRequests"));
+const ActivateAccount = lazyPage(() => import("../pages/ActivateAccount"));
 
 import Home from "../components/Home";
 import About from "../components/About";
@@ -24,83 +24,73 @@ import AdminLayout from "../layouts/AdminLayout";
 import ProtectedRoute from "../components/ProtectedRoute";
 import GuestRoute from "../components/GuestRoute";
 
-import Doctors from "../pages/admin/Doctors";
-import DoctorEngagement from "../pages/doctors/DoctorEngagement";
-import AddDoctor from "../pages/admin/AddDoctor";
-import DoctorDetails from "../pages/admin/DoctorDetails";
-
-import Medicals from "../pages/admin/Medicals";
-import AddMedical from "../pages/admin/AddMedical";
-import MedicalDetails from "../pages/admin/MedicalDetails";
-
-import VisitRecords from "../pages/admin/VisitRecords";
-import TopPerformers from "../pages/admin/TopPerformers";
-
-import AddVisit from "../pages/mr/AddVisit";
-import DailyCallReport from "../pages/mr/DailyCallReport";
-import TeamCallReports from "../pages/mr/TeamCallReports";
-import Samples from "../pages/samples/Samples";
-
-import Leaves from "../pages/hr/Leaves";
-
-import Users from "../pages/admin/Users";
-import AddEmployee from "../pages/admin/AddEmployee";
-import UserDetails from "../pages/admin/UserDetails";
-
-import AdminDashboard from "../pages/admin/AdminDashboard";
-
-import Profile from "../pages/profile/Profile";
-import EditProfile from "../pages/profile/EditProfile";
-
-import ForgotPassword from "../pages/ForgotPassword";
-import ResetPassword from "../pages/ResetPassword";
-
-import EmployeeOnboarding from "../pages/employee/EmployeeOnboarding";
-import ProfileReviews from "../pages/employee/ProfileReviews";
-import ProfileReviewDetails from "../pages/employee/ProfileReviewDetails";
-import MyVisits from "../pages/employee/MyVisits";
-
-import Tasks from "../pages/tasks/Tasks";
-import Orders from "../pages/orders/Orders";
-import Notifications from "../pages/notifications/Notifications";
-import Projects from "../pages/projects/Projects";
-
-import DailyActivity from "../pages/employee/DailyActivity";
-import SendMessage from "../pages/messages/SendMessage";
-import ApplyLeave from "../pages/leaves/ApplyLeaves";
-import MyLeaves from "../pages/leaves/MyLeave";
-import LeaveManagement from "../pages/leaves/LeaveManagement";
-import ApplyExpense from "../pages/expenses/ApplyExpense";
-import ExpenseManagement from "../pages/expenses/ExpenseManagement";
-import Products from "../pages/products/Products";
-import AddProduct from "../pages/products/AddProduct";
-import EditProduct from "../pages/products/EditProduct";
-import ProductDetails from "../pages/products/ProductDetails";
-import AuditLog from "../pages/audit/AuditLog";
-import CompanySettings from "../pages/settings/CompanySettings";
-import ApprovalsInbox from "../pages/approvals/ApprovalsInbox";
-import OrgChart from "../pages/organization/OrgChart";
-import Territories from "../pages/territories/Territories";
-import TerritoryDetail from "../pages/territories/TerritoryDetail";
-import TourPlans from "../pages/tours/TourPlans";
-import TourPlanDetail from "../pages/tours/TourPlanDetail";
-import CoverageReport from "../pages/tours/CoverageReport";
-import SalesTargets from "../pages/sales/SalesTargets";
-import VisitReport from "../pages/reports/VisitReport";
-import ReportsHub from "../pages/reports/ReportsHub";
-import ReportView from "../pages/reports/ReportView";
-import Billing from "../pages/billing/Billing";
-import NotFound from "../pages/NotFound";
-import Attendance from "../pages/attendance/Attendance";
-import EmployeeAttendanceHistory from "../pages/attendance/EmployeeAttendanceHistory";
-import Calendar from "../pages/calendar/Calendar";
-import SalaryPortal from "../pages/salary/SalaryPortal";
-import PayrollRuns from "../pages/salary/PayrollRuns";
-import PayrollRunDetail from "../pages/salary/PayrollRunDetail";
+const Doctors = lazyPage(() => import("../pages/admin/Doctors"));
+const DoctorEngagement = lazyPage(() => import("../pages/doctors/DoctorEngagement"));
+const AddDoctor = lazyPage(() => import("../pages/admin/AddDoctor"));
+const DoctorDetails = lazyPage(() => import("../pages/admin/DoctorDetails"));
+const Medicals = lazyPage(() => import("../pages/admin/Medicals"));
+const AddMedical = lazyPage(() => import("../pages/admin/AddMedical"));
+const MedicalDetails = lazyPage(() => import("../pages/admin/MedicalDetails"));
+const VisitRecords = lazyPage(() => import("../pages/admin/VisitRecords"));
+const TopPerformers = lazyPage(() => import("../pages/admin/TopPerformers"));
+const AddVisit = lazyPage(() => import("../pages/mr/AddVisit"));
+const DailyCallReport = lazyPage(() => import("../pages/mr/DailyCallReport"));
+const TeamCallReports = lazyPage(() => import("../pages/mr/TeamCallReports"));
+const Samples = lazyPage(() => import("../pages/samples/Samples"));
+const Leaves = lazyPage(() => import("../pages/hr/Leaves"));
+const Users = lazyPage(() => import("../pages/admin/Users"));
+const AddEmployee = lazyPage(() => import("../pages/admin/AddEmployee"));
+const UserDetails = lazyPage(() => import("../pages/admin/UserDetails"));
+const AdminDashboard = lazyPage(() => import("../pages/admin/AdminDashboard"));
+const Profile = lazyPage(() => import("../pages/profile/Profile"));
+const EditProfile = lazyPage(() => import("../pages/profile/EditProfile"));
+const ForgotPassword = lazyPage(() => import("../pages/ForgotPassword"));
+const ResetPassword = lazyPage(() => import("../pages/ResetPassword"));
+const EmployeeOnboarding = lazyPage(() => import("../pages/employee/EmployeeOnboarding"));
+const ProfileReviews = lazyPage(() => import("../pages/employee/ProfileReviews"));
+const ProfileReviewDetails = lazyPage(() => import("../pages/employee/ProfileReviewDetails"));
+const MyVisits = lazyPage(() => import("../pages/employee/MyVisits"));
+const Tasks = lazyPage(() => import("../pages/tasks/Tasks"));
+const Orders = lazyPage(() => import("../pages/orders/Orders"));
+const Notifications = lazyPage(() => import("../pages/notifications/Notifications"));
+const Projects = lazyPage(() => import("../pages/projects/Projects"));
+const DailyActivity = lazyPage(() => import("../pages/employee/DailyActivity"));
+const SendMessage = lazyPage(() => import("../pages/messages/SendMessage"));
+const ApplyLeave = lazyPage(() => import("../pages/leaves/ApplyLeaves"));
+const MyLeaves = lazyPage(() => import("../pages/leaves/MyLeave"));
+const LeaveManagement = lazyPage(() => import("../pages/leaves/LeaveManagement"));
+const ApplyExpense = lazyPage(() => import("../pages/expenses/ApplyExpense"));
+const ExpenseManagement = lazyPage(() => import("../pages/expenses/ExpenseManagement"));
+const Products = lazyPage(() => import("../pages/products/Products"));
+const AddProduct = lazyPage(() => import("../pages/products/AddProduct"));
+const EditProduct = lazyPage(() => import("../pages/products/EditProduct"));
+const ProductDetails = lazyPage(() => import("../pages/products/ProductDetails"));
+const AuditLog = lazyPage(() => import("../pages/audit/AuditLog"));
+const CompanySettings = lazyPage(() => import("../pages/settings/CompanySettings"));
+const ApprovalsInbox = lazyPage(() => import("../pages/approvals/ApprovalsInbox"));
+const OrgChart = lazyPage(() => import("../pages/organization/OrgChart"));
+const Territories = lazyPage(() => import("../pages/territories/Territories"));
+const TerritoryDetail = lazyPage(() => import("../pages/territories/TerritoryDetail"));
+const TourPlans = lazyPage(() => import("../pages/tours/TourPlans"));
+const TourPlanDetail = lazyPage(() => import("../pages/tours/TourPlanDetail"));
+const CoverageReport = lazyPage(() => import("../pages/tours/CoverageReport"));
+const SalesTargets = lazyPage(() => import("../pages/sales/SalesTargets"));
+const VisitReport = lazyPage(() => import("../pages/reports/VisitReport"));
+const ReportsHub = lazyPage(() => import("../pages/reports/ReportsHub"));
+const ReportView = lazyPage(() => import("../pages/reports/ReportView"));
+const Billing = lazyPage(() => import("../pages/billing/Billing"));
+const NotFound = lazyPage(() => import("../pages/NotFound"));
+const Attendance = lazyPage(() => import("../pages/attendance/Attendance"));
+const EmployeeAttendanceHistory = lazyPage(() => import("../pages/attendance/EmployeeAttendanceHistory"));
+const Calendar = lazyPage(() => import("../pages/calendar/Calendar"));
+const SalaryPortal = lazyPage(() => import("../pages/salary/SalaryPortal"));
+const PayrollRuns = lazyPage(() => import("../pages/salary/PayrollRuns"));
+const PayrollRunDetail = lazyPage(() => import("../pages/salary/PayrollRunDetail"));
 
 
 const AppRoutes = () => {
     return (
+        <Suspense fallback={<div className="container py-5 text-center">Loading page...</div>}>
         <Routes>
 
             <Route path="/" element={<MainLayout />}>
@@ -1117,6 +1107,7 @@ const AppRoutes = () => {
             </Route>
 
         </Routes>
+        </Suspense>
     );
 };
 

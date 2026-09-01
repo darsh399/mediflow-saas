@@ -38,14 +38,23 @@ export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValu
     }
 })
 
-export const validateSession = createAsyncThunk('auth/validateSession', async (_, { rejectWithValue }) => {
-    try {
-        const resp = await axios.get('/api/auth/me')
-        return resp.data
-    } catch (err) {
-        return rejectWithValue(err.response?.data || { message: err.message })
+export const validateSession = createAsyncThunk(
+    'auth/validateSession',
+    async (_, { rejectWithValue }) => {
+        try {
+            const resp = await axios.get('/api/auth/me')
+            return resp.data
+        } catch (err) {
+            return rejectWithValue(err.response?.data || { message: err.message })
+        }
+    },
+    {
+        condition: (_, { getState }) => {
+            const auth = getState().auth
+            return Boolean(auth.token && !auth.sessionValidated && !auth.loading)
+        }
     }
-})
+)
 
 const slice = createSlice({
     name: 'auth',
@@ -56,6 +65,7 @@ const slice = createSlice({
             state.user = user
             state.token = token
             state.isAuthenticated = !!token
+            state.sessionValidated = !!token
             state.error = null
             persistState(state)
             setAuthToken(token)

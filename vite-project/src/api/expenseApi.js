@@ -7,8 +7,8 @@ export async function applyExpense(data) {
   return resp.data
 }
 
-export async function listExpenses(params) {
-  const resp = await axios.get('/api/expenses', { params })
+export async function listExpenses(params, config) {
+  const resp = await axios.get('/api/expenses', { params, ...config })
   return resp.data
 }
 

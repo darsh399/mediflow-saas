@@ -17,7 +17,7 @@ export const previewSlip = (params) => request('get', '/api/salaries/slips/previ
 export const createSlip = (data) => request('post', '/api/salaries/slips', data)
 export const deleteSlip = (id) => request('delete', `/api/salaries/slips/${id}`)
 export const sendSlip = (id) => request('post', `/api/salaries/slips/${id}/send`)
-export const listOffers = (params) => request('get', '/api/salaries/offers', null, { params })
+export const listOffers = (params, config) => request('get', '/api/salaries/offers', null, { params, ...config })
 export const listMyOffers = (params) => request('get', '/api/salaries/offers/my', null, { params })
 export const getOffer = (id) => request('get', `/api/salaries/offers/${id}`)
 export const createOffer = (data) => request('post', '/api/salaries/offers', data)

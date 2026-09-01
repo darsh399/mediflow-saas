@@ -12,10 +12,11 @@ import ApprovalsProvider from './hooks/useApprovals';
 const App = () => {
   const dispatch = useDispatch()
   const token = useSelector(state => state.auth.token)
+  const sessionValidated = useSelector(state => state.auth.sessionValidated)
 
   useEffect(() => {
-    if (token) dispatch(validateSession())
-  }, [dispatch, token])
+    if (token && !sessionValidated) dispatch(validateSession())
+  }, [dispatch, token, sessionValidated])
 
   useEffect(() => {
     const handleTokenRefresh = (event) => {

@@ -7,8 +7,8 @@ export async function applyLeave(data){
   return resp.data
 }
 
-export async function listLeaves(params){
-  const resp = await axios.get('/api/leaves', { params })
+export async function listLeaves(params, config){
+  const resp = await axios.get('/api/leaves', { params, ...config })
   return resp.data
 }
 

@@ -54,11 +54,11 @@ const AdminDashboard = () => {
         setLoading(true)
 
         const requests = [
-          userApi.listUsers(),
-          doctorApi.listDoctors(),
-          medicalApi.listMedicals(),
-          visitApi.listVisits(),
-          leaveApi.listLeaves()
+          userApi.listUsers({ summary: 'true' }),
+          doctorApi.listDoctors({ summary: 'true' }),
+          medicalApi.listMedicals({ summary: 'true' }),
+          visitApi.listVisits({ summary: 'true' }),
+          leaveApi.listLeaves(undefined, { params: { summary: 'true' } })
         ]
         const results = await Promise.allSettled(requests)
         const keys = ['users', 'doctors', 'medicals', 'visits', 'leaves']

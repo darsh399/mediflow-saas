@@ -20,8 +20,8 @@ export async function toggleBreak() {
   return response.data
 }
 
-export async function listAttendance(params) {
-  const response = await axios.get('/api/attendance', { params })
+export async function listAttendance(params, config) {
+  const response = await axios.get('/api/attendance', { params, ...config })
   return response.data
 }
 

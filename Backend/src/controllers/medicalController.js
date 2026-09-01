@@ -26,6 +26,7 @@ export const listMedicals = async (req, res) => {
     const query = companyId ? { companyId } : {};
     if (req.query?.unassigned === 'true') query.territoryId = null;
     else if (req.query?.territoryId) query.territoryId = req.query.territoryId;
+    if (req.query.summary === 'true') return res.status(200).json({ medicals: [], pagination: { page: 1, limit: 0, total: await Medical.countDocuments(query), totalPages: 1 } });
     const meds = await Medical.find(query).populate('territoryId', 'name code');
     return res.status(200).json({ medicals: meds });
   } catch (error) {

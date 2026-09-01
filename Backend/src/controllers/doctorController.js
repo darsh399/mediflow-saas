@@ -55,6 +55,7 @@ export const listDoctors = async (req, res) => {
     }
     if (req.query?.unassigned === 'true') query.territoryId = null;
     else if (req.query?.territoryId) query.territoryId = req.query.territoryId;
+    if (req.query.summary === 'true') return res.status(200).json({ doctors: [], pagination: { page: 1, limit: 0, total: await Doctor.countDocuments(query), totalPages: 1 } });
     const docs = await Doctor.find(query).populate('territoryId', 'name code');
     return res.status(200).json({ doctors: docs.map(withCompleteness) });
   } catch (error) {

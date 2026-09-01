@@ -317,6 +317,8 @@ export const listVisits = async (req, res) => {
       }
     }
 
+    if (req.query.summary === 'true') return res.status(200).json({ visits: [], pagination: { page: 1, limit: 0, total: await Visit.countDocuments(query), totalPages: 1 } });
+
     const visits = await Visit.find(query)
       .populate('employeeId', 'name email role')
       .populate('doctorId', 'name specialty phone clinicName')

@@ -50,7 +50,7 @@ function refreshAccessToken() {
 
 axiosInstance.interceptors.request.use(
   config => {
-    notifyApiLoading(true)
+    if (!config._skipGlobalLoader) notifyApiLoading(true)
     // Defensive fallback: normally the Authorization header comes from
     // axiosInstance.defaults.headers.common (set once at bootstrap/login),
     // but a dev-server hot-reload of this module can reset that default
@@ -70,18 +70,18 @@ axiosInstance.interceptors.request.use(
     return config
   },
   error => {
-    notifyApiLoading(false)
+    if (!error.config?._skipGlobalLoader) notifyApiLoading(false)
     return Promise.reject(error)
   }
 )
 
 axiosInstance.interceptors.response.use(
   response => {
-    notifyApiLoading(false)
+    if (!response.config?._skipGlobalLoader) notifyApiLoading(false)
     return response
   },
   error => {
-    notifyApiLoading(false)
+    if (!error.config?._skipGlobalLoader) notifyApiLoading(false)
     const status = error.response?.status
     const message = error.response?.data?.message || ''
     const config = error.config || {}

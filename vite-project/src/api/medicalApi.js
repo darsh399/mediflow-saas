@@ -5,8 +5,8 @@ export async function createMedical(payload){
   return resp.data
 }
 
-export async function listMedicals(){
-  const resp = await axios.get('/api/medicals')
+export async function listMedicals(params){
+  const resp = await axios.get('/api/medicals', { params })
   return resp.data
 }
 
