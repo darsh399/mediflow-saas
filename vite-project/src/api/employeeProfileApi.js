@@ -5,7 +5,7 @@ export async function saveProfile(data){ return (await axios.put('/api/employee-
 export async function saveBankDetails(data){ return (await axios.put('/api/employee-profiles/me/bank-details', data)).data }
 export async function submitProfile(){ return (await axios.post('/api/employee-profiles/me/submit')).data }
 export async function uploadDocuments(formData){ return (await axios.post('/api/employee-profiles/me/documents', formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data }
-export async function listProfiles(){ return (await axios.get('/api/employee-profiles')).data }
+export async function listProfiles(config){ return (await axios.get('/api/employee-profiles', config)).data }
 export async function reviewProfile(id, data){ return (await axios.patch(`/api/employee-profiles/${id}/review`, data)).data }
 export async function downloadDocument(storageName){
 	const fileName = storageName.split('/').pop()

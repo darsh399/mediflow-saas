@@ -113,13 +113,14 @@ function ApprovalsProvider({ children }) {
     setLoading(true);
     setError("");
 
+    const backgroundRequest = { _skipGlobalLoader: true };
     const [leaveResult, expenseResult, onboardingResult, offerResult, attendanceResult, dcrResult] = await Promise.allSettled([
-      capabilities.leaves ? leaveApi.listLeaves() : Promise.resolve(null),
-      capabilities.expenses ? expenseApi.listExpenses() : Promise.resolve(null),
-      capabilities.onboarding ? employeeProfileApi.listProfiles() : Promise.resolve(null),
-      capabilities.offers ? salaryApi.listOffers({ limit: 100 }) : Promise.resolve(null),
-      capabilities.attendance ? attendanceApi.listAttendance({ correction: "PENDING", limit: 100 }) : Promise.resolve(null),
-      capabilities.dcr ? dcrApi.listReports({ status: "SUBMITTED" }) : Promise.resolve(null),
+      capabilities.leaves ? leaveApi.listLeaves(undefined, backgroundRequest) : Promise.resolve(null),
+      capabilities.expenses ? expenseApi.listExpenses(undefined, backgroundRequest) : Promise.resolve(null),
+      capabilities.onboarding ? employeeProfileApi.listProfiles(backgroundRequest) : Promise.resolve(null),
+      capabilities.offers ? salaryApi.listOffers({ limit: 100 }, backgroundRequest) : Promise.resolve(null),
+      capabilities.attendance ? attendanceApi.listAttendance({ correction: "PENDING", limit: 100 }, backgroundRequest) : Promise.resolve(null),
+      capabilities.dcr ? dcrApi.listReports({ status: "SUBMITTED" }, backgroundRequest) : Promise.resolve(null),
     ]);
 
     if (!mountedRef.current) return;

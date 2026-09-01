@@ -27,11 +27,16 @@ export default async function authMiddleware(req, res, next) {
     if (!user) return res.status(401).json({ message: 'User account not found' });
     if (user.blocked || user.active === false) return res.status(403).json({ message: 'Account is disabled or blocked' });
     let company = null;
-    let ownedCompany = await Company.findOne({ ownerId: user._id }).select('_id status isActive');
-    if (!ownedCompany) {
-      const acceptedOwnerInvite = await Invite.findOne({ inviteeEmail: user.email, role: 'company_owner', status: 'accepted' }).sort({ acceptedAt: -1 });
-      if (acceptedOwnerInvite?.companyId) {
-        ownedCompany = await Company.findByIdAndUpdate(acceptedOwnerInvite.companyId, { ownerId: user._id }, { new: true }).select('_id status isActive');
+    // Only owner candidates need the legacy ownership-repair lookups. Regular
+    // company members already have an authoritative companyId on their user.
+    let ownedCompany = null;
+    if (user.role === 'company_owner' || !user.companyId) {
+      ownedCompany = await Company.findOne({ ownerId: user._id }).select('_id status isActive');
+      if (!ownedCompany) {
+        const acceptedOwnerInvite = await Invite.findOne({ inviteeEmail: user.email, role: 'company_owner', status: 'accepted' }).sort({ acceptedAt: -1 });
+        if (acceptedOwnerInvite?.companyId) {
+          ownedCompany = await Company.findByIdAndUpdate(acceptedOwnerInvite.companyId, { ownerId: user._id }, { new: true }).select('_id status isActive');
+        }
       }
     }
     if (ownedCompany) {

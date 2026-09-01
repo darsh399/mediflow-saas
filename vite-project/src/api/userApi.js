@@ -15,8 +15,8 @@ export async function createUser(data) {
   return resp.data
 }
 
-export async function listUsers() {
-  const resp = await axios.get('/api/users')
+export async function listUsers(params) {
+  const resp = await axios.get('/api/users', { params })
   return resp.data
 }
 

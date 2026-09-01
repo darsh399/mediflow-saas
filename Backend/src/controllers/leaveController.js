@@ -123,6 +123,7 @@ export const listLeaves = async (req, res) => {
   try {
     const { query, error } = buildLeaveQuery(req);
     if (error) return res.status(400).json({ message: error });
+    if (req.query.summary === 'true') return res.status(200).json({ leaves: [], pagination: { page: 1, limit: 0, total: await Leave.countDocuments(query), totalPages: 1 } });
     const leaves = await Leave.find(query).populate('userId appliedBy reviewedBy', '-password');
     return res.status(200).json({ leaves });
   } catch (error) {

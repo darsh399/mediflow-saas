@@ -5,8 +5,8 @@ export async function getDay(payload) {
   return resp.data
 }
 
-export async function listReports(params) {
-  const resp = await axios.get('/api/dcr', { params })
+export async function listReports(params, config) {
+  const resp = await axios.get('/api/dcr', { params, ...config })
   return resp.data
 }
 
