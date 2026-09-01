@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import orderApi from '../../api/orderApi'
 import doctorApi from '../../api/doctorApi'
-import productApi from '../../api/productApi'
+import companyProductApi from '../../api/companyProductApi'
 import { PageContainer, PageHeader, FormSection, DataTable, EmptyState } from '../../components/ui'
 
 const Orders = () => {
@@ -17,7 +17,7 @@ const Orders = () => {
   }
   useEffect(() => {
     let cancelled = false
-    Promise.all([orderApi.listOrders({ page: 1, limit: 25 }), doctorApi.listDoctors(), productApi.listProducts()]).then(([orderResponse, doctorResponse, productResponse]) => {
+    Promise.all([orderApi.listOrders({ page: 1, limit: 25 }), doctorApi.listDoctors(), companyProductApi.listProducts({ status: 'ACTIVE' })]).then(([orderResponse, doctorResponse, productResponse]) => {
       if (cancelled) return
       setOrders(orderResponse.orders || [])
       setDoctors(doctorResponse.doctors || [])
