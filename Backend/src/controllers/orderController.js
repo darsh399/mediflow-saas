@@ -9,10 +9,26 @@ export async function createOrder(req, res) {
   if (!doctorId || !Array.isArray(items) || items.length === 0) return res.status(400).json({ message: 'doctorId and items are required' });
   const doctor = await Doctor.findOne({ _id: doctorId, companyId: req.user.companyId });
   if (!doctor) return res.status(404).json({ message: 'Doctor not found in this company' });
-  const productIds = [...new Set(items.map(item => String(item.productId)))];
-  const products = await CompanyProduct.find({ _id: { $in: productIds }, companyId: req.user.companyId, status: 'ACTIVE' }).select('_id name productCode').lean();
-  if (products.length !== productIds.length) return res.status(400).json({ message: 'One or more products are invalid' });
-  const normalizedItems = items.map(item => ({ productId: item.productId, productModel: 'CompanyProduct', quantity: Number(item.quantity), unitPrice: 0 }));
+  const productIds = [...new Set(items.map(item => item.productId).filter(Boolean).map(String))];
+  if (productIds.length !== items.length) return res.status(400).json({ message: 'One or more products are invalid' });
+  const [companyProducts, legacyProducts] = await Promise.all([
+    CompanyProduct.find({ _id: { $in: productIds }, companyId: req.user.companyId, status: 'ACTIVE' }).select('_id').lean(),
+    Product.find({ _id: { $in: productIds }, companyId: req.user.companyId, active: true }).select('_id unitPrice').lean(),
+  ]);
+  const companyProductIds = new Set(companyProducts.map(product => String(product._id)));
+  const legacyProductMap = new Map(legacyProducts.map(product => [String(product._id), product]));
+  const invalidProduct = productIds.some(id => !companyProductIds.has(id) && !legacyProductMap.has(id));
+  if (invalidProduct) return res.status(400).json({ message: 'One or more products are invalid' });
+  const normalizedItems = items.map(item => {
+    const id = String(item.productId);
+    const legacyProduct = legacyProductMap.get(id);
+    return {
+      productId: item.productId,
+      productModel: legacyProduct && !companyProductIds.has(id) ? 'Product' : 'CompanyProduct',
+      quantity: Number(item.quantity),
+      unitPrice: legacyProduct?.unitPrice || 0,
+    };
+  });
   if (normalizedItems.some(item => !Number.isInteger(item.quantity) || item.quantity < 1)) return res.status(400).json({ message: 'Quantities must be positive integers' });
   const order = await Order.create({ companyId: req.user.companyId, doctorId, visitId, items: normalizedItems, notes, createdBy: req.user.id });
   await recordAudit(req, 'order_created', {}, { orderId: order._id, doctorId, itemCount: normalizedItems.length });
