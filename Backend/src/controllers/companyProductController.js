@@ -72,7 +72,10 @@ export async function createProduct(req, res) {
 export async function listProducts(req, res) {
   try {
     const filter = { companyId: req.user.companyId };
-    if (req.query.status) filter.status = String(req.query.status).toUpperCase();
+    if (req.query.status) {
+      const status = String(req.query.status).toUpperCase();
+      filter.status = status === 'ACTIVE' ? { $ne: 'INACTIVE' } : status;
+    }
     if (req.query.category) filter.category = req.query.category;
     if (req.query.type) filter.type = req.query.type;
     if (req.query.brand) filter.brand = req.query.brand;

@@ -9,10 +9,11 @@ export async function createOrder(req, res) {
   if (!doctorId || !Array.isArray(items) || items.length === 0) return res.status(400).json({ message: 'doctorId and items are required' });
   const doctor = await Doctor.findOne({ _id: doctorId, companyId: req.user.companyId });
   if (!doctor) return res.status(404).json({ message: 'Doctor not found in this company' });
-  const productIds = [...new Set(items.map(item => item.productId).filter(Boolean).map(String))];
-  if (productIds.length !== items.length) return res.status(400).json({ message: 'One or more products are invalid' });
+  const submittedProductIds = items.map(item => item.productId).filter(Boolean).map(String);
+  const productIds = [...new Set(submittedProductIds)];
+  if (submittedProductIds.length !== items.length || !productIds.length) return res.status(400).json({ message: 'One or more products are invalid' });
   const [companyProducts, legacyProducts] = await Promise.all([
-    CompanyProduct.find({ _id: { $in: productIds }, companyId: req.user.companyId, status: 'ACTIVE' }).select('_id').lean(),
+    CompanyProduct.find({ _id: { $in: productIds }, companyId: req.user.companyId, status: { $ne: 'INACTIVE' } }).select('_id').lean(),
     Product.find({ _id: { $in: productIds }, companyId: req.user.companyId, active: true }).select('_id unitPrice').lean(),
   ]);
   const companyProductIds = new Set(companyProducts.map(product => String(product._id)));
