@@ -7,6 +7,7 @@ import employeeProfileApi from "../api/employeeProfileApi";
 import salaryApi from "../api/salaryApi";
 import attendanceApi from "../api/attendanceApi";
 import dcrApi from "../api/dcrApi";
+import tourPlanApi from "../api/tourPlanApi";
 import { useFeatureSet, hasFeature } from "./useFeature";
 
 // Which roles can actually action each kind of request. These mirror the
@@ -18,15 +19,16 @@ const ONBOARDING_REVIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr"]
 const OFFER_MANAGER_ROLES = ["admin", "company_owner", "hr_manager"];
 const ATTENDANCE_REVIEWER_ROLES = ["admin", "company_owner", "hr_manager", "hr"];
 const DCR_REVIEWER_ROLES = ["admin", "company_owner", "hr_manager", "manager", "project_manager"];
+const TOUR_PLAN_REVIEWER_ROLES = ["admin", "company_owner", "hr_manager", "manager", "project_manager"];
 
 // A request older than this (calendar days) is flagged overdue in the inbox.
 const SLA_DAYS = 3;
 
-const EMPTY_GROUPS = { leaves: [], expenses: [], onboarding: [], offers: [], attendance: [], dcr: [] };
+const EMPTY_GROUPS = { leaves: [], expenses: [], onboarding: [], offers: [], attendance: [], dcr: [], tours: [] };
 
 const ApprovalsContext = createContext({
   groups: EMPTY_GROUPS,
-  counts: { leaves: 0, expenses: 0, onboarding: 0, offers: 0, attendance: 0, dcr: 0 },
+  counts: { leaves: 0, expenses: 0, onboarding: 0, offers: 0, attendance: 0, dcr: 0, tours: 0 },
   total: 0,
   overdue: 0,
   slaDays: SLA_DAYS,
@@ -34,7 +36,7 @@ const ApprovalsContext = createContext({
   error: "",
   ready: false,
   active: false,
-  capabilities: { leaves: false, expenses: false, onboarding: false, offers: false, attendance: false, dcr: false },
+  capabilities: { leaves: false, expenses: false, onboarding: false, offers: false, attendance: false, dcr: false, tours: false },
   refresh: () => {},
 });
 
@@ -46,6 +48,7 @@ const PENDING_SINCE = {
   offers: (item) => item.createdAt,
   attendance: (item) => item.correction?.requestedAt || item.updatedAt,
   dcr: (item) => item.updatedAt || item.date,
+  tours: (item) => item.updatedAt || item.createdAt || item.periodStart,
 };
 
 // Adds `_ageDays` / `_overdue` to each row and sorts oldest first.
@@ -83,6 +86,7 @@ function ApprovalsProvider({ children }) {
       offers: OFFER_MANAGER_ROLES.includes(role),
       attendance: ATTENDANCE_REVIEWER_ROLES.includes(role) && hasFeature(featureSet, "attendance"),
       dcr: DCR_REVIEWER_ROLES.includes(role) && hasFeature(featureSet, "visits"),
+      tours: TOUR_PLAN_REVIEWER_ROLES.includes(role),
     }),
     [role, featureSet]
   );
@@ -114,13 +118,14 @@ function ApprovalsProvider({ children }) {
     setError("");
 
     const backgroundRequest = { _skipGlobalLoader: true };
-    const [leaveResult, expenseResult, onboardingResult, offerResult, attendanceResult, dcrResult] = await Promise.allSettled([
+    const [leaveResult, expenseResult, onboardingResult, offerResult, attendanceResult, dcrResult, tourResult] = await Promise.allSettled([
       capabilities.leaves ? leaveApi.listLeaves(undefined, backgroundRequest) : Promise.resolve(null),
       capabilities.expenses ? expenseApi.listExpenses(undefined, backgroundRequest) : Promise.resolve(null),
       capabilities.onboarding ? employeeProfileApi.listProfiles(backgroundRequest) : Promise.resolve(null),
       capabilities.offers ? salaryApi.listOffers({ limit: 100 }, backgroundRequest) : Promise.resolve(null),
       capabilities.attendance ? attendanceApi.listAttendance({ correction: "PENDING", limit: 100 }, backgroundRequest) : Promise.resolve(null),
       capabilities.dcr ? dcrApi.listReports({ status: "SUBMITTED" }, backgroundRequest) : Promise.resolve(null),
+      capabilities.tours ? tourPlanApi.listTourPlans({ status: "SUBMITTED" }, backgroundRequest) : Promise.resolve(null),
     ]);
 
     if (!mountedRef.current) return;
@@ -134,6 +139,7 @@ function ApprovalsProvider({ children }) {
       [capabilities.offers, offerResult],
       [capabilities.attendance, attendanceResult],
       [capabilities.dcr, dcrResult],
+      [capabilities.tours, tourResult],
     ].some(([entitled, result]) => entitled && result.status === "rejected");
 
     const valueOf = (result) => (result.status === "fulfilled" ? result.value : null);
@@ -150,6 +156,7 @@ function ApprovalsProvider({ children }) {
       (record) => record.correction?.status === "PENDING"
     );
     const dcr = asArray(valueOf(dcrResult), "reports").filter((report) => report.status === "SUBMITTED");
+    const tours = asArray(valueOf(tourResult), "tourPlans").filter((plan) => String(plan.status || "").toUpperCase() === "SUBMITTED");
 
     setGroups({
       leaves: annotateAge(leaves, "leaves"),
@@ -158,6 +165,7 @@ function ApprovalsProvider({ children }) {
       offers: annotateAge(offers, "offers"),
       attendance: annotateAge(attendance, "attendance"),
       dcr: annotateAge(dcr, "dcr"),
+      tours: annotateAge(tours, "tours"),
     });
     setError(failed ? "Some approval queues could not be loaded." : "");
     setLoading(false);
@@ -176,11 +184,12 @@ function ApprovalsProvider({ children }) {
       offers: groups.offers.length,
       attendance: groups.attendance.length,
       dcr: groups.dcr.length,
+      tours: groups.tours.length,
     }),
     [groups]
   );
 
-  const total = counts.leaves + counts.expenses + counts.onboarding + counts.offers + counts.attendance + counts.dcr;
+  const total = counts.leaves + counts.expenses + counts.onboarding + counts.offers + counts.attendance + counts.dcr + counts.tours;
 
   const overdue = useMemo(
     () => Object.values(groups).reduce((sum, list) => sum + list.filter((item) => item._overdue).length, 0),

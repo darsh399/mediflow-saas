@@ -54,6 +54,7 @@ const SECTION_META = {
   offers: { icon: "bi-file-earmark-text", label: "Offer letters", accent: "#198754" },
   attendance: { icon: "bi-clock-history", label: "Attendance corrections", accent: "#20c997" },
   dcr: { icon: "bi-journal-check", label: "Daily call reports", accent: "#6f42c1" },
+  tours: { icon: "bi-map", label: "Tour plan approvals", accent: "#0d6efd" },
 };
 
 const ApprovalsInbox = () => {
@@ -134,7 +135,7 @@ const ApprovalsInbox = () => {
   };
 
   const anySource =
-    capabilities.leaves || capabilities.expenses || capabilities.onboarding || capabilities.offers || capabilities.attendance || capabilities.dcr;
+    capabilities.leaves || capabilities.expenses || capabilities.onboarding || capabilities.offers || capabilities.attendance || capabilities.dcr || capabilities.tours;
 
   return (
     <PageContainer>
@@ -445,6 +446,40 @@ const ApprovalsInbox = () => {
                           onApprove={() => reviewAttendanceCorrection(record, "approve")}
                           onReject={() => reviewAttendanceCorrection(record, "reject")}
                         />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        )}
+
+        {!loading && counts.tours > 0 && (
+          <Section id="section-tours" meta={SECTION_META.tours} count={counts.tours}>
+            <div className="table-responsive">
+              <table className="table align-middle mb-0">
+                <thead style={{ backgroundColor: "var(--mf-surface-2)" }}>
+                  <tr>
+                    <th className="px-4 py-3 border-0">Employee</th>
+                    <th className="py-3 border-0">Period</th>
+                    <th className="py-3 border-0">Stops</th>
+                    <th className="py-3 border-0 pe-4 text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groups.tours.map((plan) => (
+                    <tr key={plan._id}>
+                      <td className="px-4 py-3">
+                        <div className="fw-semibold">{personName(plan.employeeId)}<AgePill item={plan} slaDays={slaDays} /></div>
+                        <small className="text-muted">{plan.employeeId?.email || ""}</small>
+                      </td>
+                      <td className="py-3">{formatDate(plan.periodStart)} – {formatDate(plan.periodEnd)}</td>
+                      <td className="py-3">{plan.items?.length || 0}</td>
+                      <td className="py-3 pe-4 text-end">
+                        <button type="button" className="btn btn-sm btn-primary rounded-3" onClick={() => navigate(`/tours/${plan._id}`)}>
+                          <i className="bi bi-eye me-1"></i>Review
+                        </button>
                       </td>
                     </tr>
                   ))}

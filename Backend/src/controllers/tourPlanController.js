@@ -7,7 +7,24 @@ import User from '../models/User.js'
 import recordAudit from '../utils/audit.js'
 import { hasAnyRole } from '../utils/authorize.js'
 
-const REVIEWER_ROLES = ['admin', 'company_owner', 'hr_manager', 'manager']
+const REVIEWER_ROLES = ['admin', 'company_owner', 'hr_manager', 'manager', 'project_manager']
+
+export function detectDuplicatePlanItems(items = []) {
+  const seen = new Set()
+  for (const item of items || []) {
+    if (!item || typeof item !== 'object') continue
+    const kind = String(item.kind || '').toUpperCase()
+    if (!['DOCTOR', 'MEDICAL'].includes(kind)) continue
+    const plannedDate = item.plannedDate ? new Date(item.plannedDate).toISOString().slice(0, 10) : null
+    const key = `${kind}::${kind === 'DOCTOR' ? String(item.doctorId || '') : String(item.medicalId || '')}::${plannedDate || 'unknown'}`
+    if (!key || key.endsWith('::unknown')) continue
+    if (seen.has(key)) {
+      throw new Error(kind === 'DOCTOR' ? 'Doctor already exists in this plan.' : 'Chemist already exists in this plan.')
+    }
+    seen.add(key)
+  }
+  return items
+}
 
 const isReviewer = (user) => hasAnyRole(user, REVIEWER_ROLES)
 
@@ -40,6 +57,8 @@ async function normalizeItems(rawItems, companyId) {
     }
     return entry
   })
+
+  detectDuplicatePlanItems(items)
   const [validDoctors, validMedicals] = await Promise.all([
     doctorIds.size ? Doctor.find({ _id: { $in: [...doctorIds] }, companyId }).select('_id').lean() : [],
     medicalIds.size ? Medical.find({ _id: { $in: [...medicalIds] }, companyId }).select('_id').lean() : [],
@@ -180,9 +199,13 @@ export async function updateTourPlan(req, res) {
     if (!plan) return res.status(404).json({ message: 'Tour plan not found' })
 
     const isOwner = String(plan.employeeId) === String(req.user.id)
+    const canEditSubmitted = plan.status === 'SUBMITTED' && isReviewer(req.user)
     if (!isOwner && !isReviewer(req.user)) return res.status(403).json({ message: 'You cannot edit this tour plan' })
-    if (!['DRAFT', 'REJECTED'].includes(plan.status)) {
-      return res.status(409).json({ message: 'Only a draft or rejected plan can be edited' })
+    if (!['DRAFT', 'REJECTED', 'SUBMITTED'].includes(plan.status)) {
+      return res.status(409).json({ message: 'Only a draft, rejected or submitted plan can be edited' })
+    }
+    if (plan.status === 'SUBMITTED' && !canEditSubmitted) {
+      return res.status(409).json({ message: 'Submitted plans can only be edited by a reviewer before approval' })
     }
 
     if (req.body?.title !== undefined) plan.title = req.body.title
@@ -192,6 +215,11 @@ export async function updateTourPlan(req, res) {
     if (req.body?.items !== undefined) plan.items = await normalizeItems(req.body.items, companyId)
     if (plan.status === 'REJECTED') {
       plan.status = 'DRAFT'
+      plan.reviewNote = undefined
+      plan.reviewedBy = undefined
+      plan.reviewedAt = undefined
+    }
+    if (plan.status === 'SUBMITTED' && isReviewer(req.user)) {
       plan.reviewNote = undefined
       plan.reviewedBy = undefined
       plan.reviewedAt = undefined

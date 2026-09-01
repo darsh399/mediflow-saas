@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import userApi from "../../api/userApi";
 import organizationApi from "../../api/organizationApi";
+import activityApi from "../../api/activityApi";
+import visitApi from "../../api/visitApi";
+import tourPlanApi from "../../api/tourPlanApi";
 import { Link, useNavigate } from "react-router-dom";
 import { PageContainer, PageHeader } from "../../components/ui";
 
@@ -12,6 +15,8 @@ const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [reportingLine, setReportingLine] = useState(null);
+  const [fieldWork, setFieldWork] = useState({ todayPlan: [], tomorrowPlan: [], todayActivities: [], todayVisits: [], totalHours: 0 });
+  const [workExpanded, setWorkExpanded] = useState(true);
 
   const nav = useNavigate();
 
@@ -55,6 +60,71 @@ const Profile = () => {
 
     fetchProfile();
   }, [user]);
+
+  useEffect(() => {
+    if (!myId) return;
+
+    let cancelled = false;
+
+    const loadFieldWork = async () => {
+      try {
+        const planResponse = await tourPlanApi.listTourPlans({ mine: "true" });
+        const planResults = await Promise.allSettled(
+          (planResponse.tourPlans || []).slice(0, 10).map((plan) => tourPlanApi.getTourPlan(plan._id))
+        );
+
+        const plans = planResults
+          .filter((result) => result.status === "fulfilled")
+          .map((result) => result.value.tourPlan)
+          .sort((a, b) => new Date(a.periodStart) - new Date(b.periodStart));
+
+        const [activitiesResponse, visitsResponse] = await Promise.all([
+          activityApi.listActivities({ employeeId: myId }),
+          visitApi.listEmployeeVisits(myId, { limit: 50 }),
+        ]);
+
+        if (cancelled) return;
+
+        const today = new Date();
+        const todayKey = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().slice(0, 10);
+        const tomorrowKey = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString().slice(0, 10);
+
+        const todayPlan = plans.flatMap((plan) =>
+          (plan.items || []).filter((item) => new Date(item.plannedDate).toISOString().slice(0, 10) === todayKey).map((item) => ({ ...item, planId: plan._id, planTitle: plan.title || "Tour plan", planStatus: plan.status }))
+        );
+        const tomorrowPlan = plans.flatMap((plan) =>
+          (plan.items || []).filter((item) => new Date(item.plannedDate).toISOString().slice(0, 10) === tomorrowKey).map((item) => ({ ...item, planId: plan._id, planTitle: plan.title || "Tour plan", planStatus: plan.status }))
+        );
+
+        const activities = (activitiesResponse.activities || []).filter((activity) => {
+          const date = new Date(activity.date);
+          return date.toDateString() === today.toDateString();
+        });
+
+        const todayVisits = (visitsResponse.visits || []).filter((visit) => {
+          const date = new Date(visit.visitedAt || visit.date || visit.createdAt);
+          return date.toDateString() === today.toDateString();
+        });
+
+        const totalHours = activities.reduce((sum, activity) => sum + (Number(activity.hoursWorked) || 0), 0);
+
+        setFieldWork({
+          todayPlan,
+          tomorrowPlan,
+          todayActivities: activities,
+          todayVisits,
+          totalHours,
+        });
+      } catch (err) {
+        console.error("Field work loading error:", err);
+      }
+    };
+
+    loadFieldWork();
+    return () => {
+      cancelled = true;
+    };
+  }, [myId]);
 
   const formatRole = (role) => {
     if (!role) return "-";
@@ -212,6 +282,22 @@ const Profile = () => {
         "-"
       : profile.companyId
     : "-";
+
+  const itemName = (item) => {
+    if (item.kind === "DOCTOR") return item.doctorId?.name || "Doctor visit";
+    return item.medicalId?.name || "Chemist visit";
+  };
+
+  const formatVisitDate = (value) =>
+    value
+      ? new Date(value).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+      : "-";
+
+  const planBadgeClass = (status) => {
+    if (status === "APPROVED") return "bg-success-subtle text-success border border-success-subtle";
+    if (status === "SUBMITTED") return "bg-warning-subtle text-warning border border-warning-subtle";
+    return "bg-secondary-subtle text-secondary border border-secondary-subtle";
+  };
 
   return (
     <PageContainer width="narrow">
@@ -641,6 +727,138 @@ const Profile = () => {
             </div>
             )}
 
+            <div className="card border-0 shadow-sm rounded-4 mt-4 profile-work-section">
+              <div className="card-body p-4">
+                <div className="d-flex align-items-center justify-content-between gap-3 mb-4 profile-work-header">
+                  <div className="d-flex align-items-center gap-3">
+                    <div
+                      className="rounded-3 bg-warning bg-opacity-10 text-warning d-flex align-items-center justify-content-center"
+                      style={{ width: 45, height: 45 }}
+                    >
+                      <i className="bi bi-briefcase-fill fs-5"></i>
+                    </div>
+
+                    <div>
+                      <h5 className="fw-bold mb-0">Field Work Overview</h5>
+                      <small className="text-muted">Daily plan and work summary</small>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-light border rounded-3 d-md-none"
+                    onClick={() => setWorkExpanded((value) => !value)}
+                  >
+                    <i className={`bi ${workExpanded ? "bi-chevron-up" : "bi-chevron-down"} me-1`}></i>
+                    {workExpanded ? "Hide" : "Show"}
+                  </button>
+                </div>
+
+                <div className={`row g-3 profile-work-grid ${workExpanded ? "" : "d-none d-md-flex"}`}>
+                  <div className="col-md-4">
+                    <div className="rounded-4 border-0 shadow-sm p-3 h-100" style={{ background: "#f8fafc" }}>
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                          <small className="text-muted d-block">Today</small>
+                          <h6 className="fw-bold mb-0">Today’s Plan</h6>
+                        </div>
+                        <span className="badge bg-primary rounded-pill">{fieldWork.todayPlan.length}</span>
+                      </div>
+                      {fieldWork.todayPlan.length ? (
+                        <div className="d-grid gap-2">
+                          {fieldWork.todayPlan.slice(0, 4).map((item, index) => (
+                            <div key={`${item.planId}-${item.doctorId?._id || item.medicalId?._id || index}`} className="rounded-3 border bg-white p-2">
+                              <div className="d-flex justify-content-between align-items-center gap-2 mb-1">
+                                <div className="fw-semibold small">{itemName(item)}</div>
+                                {item.planStatus && ["APPROVED", "SUBMITTED"].includes(item.planStatus) && (
+                                  <span className={`badge rounded-pill small px-2 ${planBadgeClass(item.planStatus)}`}>
+                                    {item.planStatus === "APPROVED" ? "Approved" : "Submitted"}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-muted small mt-1">{item.objective || "Planned visit"}</div>
+                              <div className="mt-2 d-flex justify-content-between align-items-center gap-2">
+                                <Link to={`/tours/${item.planId}`} className="text-decoration-none small">Open plan</Link>
+                                <Link to={`/tours/${item.planId}`} className="btn btn-xs btn-outline-primary rounded-3 px-2 py-1 small">
+                                  Open Tour Plan
+                                </Link>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-muted small">No planned stops for today.</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <div className="rounded-4 border-0 shadow-sm p-3 h-100" style={{ background: "#f8fafc" }}>
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                          <small className="text-muted d-block">Tomorrow</small>
+                          <h6 className="fw-bold mb-0">Tomorrow’s Plan</h6>
+                        </div>
+                        <span className="badge bg-info text-white rounded-pill">{fieldWork.tomorrowPlan.length}</span>
+                      </div>
+                      {fieldWork.tomorrowPlan.length ? (
+                        <div className="d-grid gap-2">
+                          {fieldWork.tomorrowPlan.slice(0, 4).map((item, index) => (
+                            <div key={`${item.planId}-${item.doctorId?._id || item.medicalId?._id || index}`} className="rounded-3 border bg-white p-2">
+                              <div className="d-flex justify-content-between align-items-center gap-2 mb-1">
+                                <div className="fw-semibold small">{itemName(item)}</div>
+                                {item.planStatus && ["APPROVED", "SUBMITTED"].includes(item.planStatus) && (
+                                  <span className={`badge rounded-pill small px-2 ${planBadgeClass(item.planStatus)}`}>
+                                    {item.planStatus === "APPROVED" ? "Approved" : "Submitted"}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-muted small mt-1">{item.objective || "Follow-up visit"}</div>
+                              <div className="mt-2 d-flex justify-content-between align-items-center gap-2">
+                                <Link to={`/tours/${item.planId}`} className="text-decoration-none small">Open plan</Link>
+                                <Link to={`/tours/${item.planId}`} className="btn btn-xs btn-outline-primary rounded-3 px-2 py-1 small">
+                                  Open Tour Plan
+                                </Link>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-muted small">No planned stops for tomorrow.</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <div className="rounded-4 border-0 shadow-sm p-3 h-100" style={{ background: "#f8fafc" }}>
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                          <small className="text-muted d-block">Work log</small>
+                          <h6 className="fw-bold mb-0">Today’s Work</h6>
+                        </div>
+                        <span className="badge bg-success rounded-pill">{fieldWork.totalHours.toFixed(1)} hrs</span>
+                      </div>
+
+                      <div className="small text-muted mb-3">{fieldWork.todayVisits.length} visit(s) logged today</div>
+
+                      {fieldWork.todayActivities.length ? (
+                        <div className="d-grid gap-2">
+                          {fieldWork.todayActivities.slice(0, 3).map((activity) => (
+                            <div key={activity._id} className="rounded-3 border bg-white p-2">
+                              <div className="fw-semibold small">{activity.description}</div>
+                              <div className="text-muted small mt-1">{activity.hoursWorked} hrs</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-muted small">No work log entries added today yet.</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -709,6 +927,35 @@ const Profile = () => {
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07) !important;
         }
 
+        .profile-work-section .card-body {
+          padding-top: 1.25rem !important;
+        }
+
+        .profile-work-header h5 {
+          letter-spacing: -0.01em;
+        }
+
+        .profile-work-section .rounded-4 {
+          border-radius: 1rem !important;
+        }
+
+        .profile-work-section .rounded-3 {
+          border-radius: 0.75rem !important;
+        }
+
+        .profile-work-section .fw-semibold,
+        .profile-work-section .small,
+        .profile-work-section .text-muted {
+          line-height: 1.4;
+        }
+
+        .profile-work-section .btn-xs {
+          font-size: 0.72rem;
+          line-height: 1.2;
+          padding: 0.32rem 0.55rem;
+          white-space: nowrap;
+        }
+
         @media (max-width: 767px) {
           .profile-cover {
             height: 120px !important;
@@ -716,6 +963,18 @@ const Profile = () => {
 
           .profile-header {
             align-items: center !important;
+          }
+
+          .profile-work-grid {
+            transition: all 0.2s ease;
+          }
+
+          .profile-work-section .card-body {
+            padding: 1rem !important;
+          }
+
+          .profile-work-header {
+            align-items: flex-start !important;
           }
         }
       `}</style>
