@@ -16,6 +16,7 @@ const orderSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   items: { type: [orderItemSchema], required: true, validate: value => value.length > 0 },
   notes: String,
+  fulfillmentStatus: { type: String, enum: ['PENDING', 'DISPATCHED', 'DELIVERED', 'RETURNED'], default: 'PENDING', index: true },
   status: { type: String, enum: ['PLACED', 'CONFIRMED', 'FULFILLED', 'CANCELLED'], default: 'PLACED', index: true }
 }, { timestamps: true });
 

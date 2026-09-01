@@ -195,6 +195,7 @@ const AdminLayout = () => {
           {has("reports") && (canViewReports
             ? <NavLink className={navClass} to="/reports" onClick={closeSidebar}><i className="bi bi-bar-chart-line"></i> Reports</NavLink>
             : <NavLink className={navClass} to="/reports/visits" onClick={closeSidebar}><i className="bi bi-clipboard-data"></i> Visit Report</NavLink>)}
+          {has("analytics") && <NavLink className={navClass} to="/analytics" onClick={closeSidebar}><i className="bi bi-speedometer2"></i> Analytics</NavLink>}
 
           {/* ---- PEOPLE ---- */}
           <p className="sidebar-label">PEOPLE</p>
@@ -202,6 +203,7 @@ const AdminLayout = () => {
           {canManageCompany && <NavLink className={navClass} to="/projects" onClick={closeSidebar}><i className="bi bi-kanban"></i> Projects</NavLink>}
           {has("organization_chart") && <NavLink className={navClass} to="/organization" onClick={closeSidebar}><i className="bi bi-diagram-3"></i> Org Chart</NavLink>}
           {has("attendance") && <NavLink className={navClass} to="/attendance" onClick={closeSidebar}><i className="bi bi-clock-history"></i> Attendance</NavLink>}
+          {has("workforce") && <NavLink className={navClass} to="/workforce/shifts" onClick={closeSidebar}><i className="bi bi-calendar2-week"></i> Shift Schedule</NavLink>}
 
           {canSeeLeave && <>
             {folder("Leave", "bi-calendar2-week", leavesOpen, setLeavesOpen, ["/leaves"])}

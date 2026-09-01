@@ -86,6 +86,8 @@ const Calendar = lazyPage(() => import("../pages/calendar/Calendar"));
 const SalaryPortal = lazyPage(() => import("../pages/salary/SalaryPortal"));
 const PayrollRuns = lazyPage(() => import("../pages/salary/PayrollRuns"));
 const PayrollRunDetail = lazyPage(() => import("../pages/salary/PayrollRunDetail"));
+const AnalyticsDashboard = lazyPage(() => import("../pages/analytics/AnalyticsDashboard"));
+const WorkforceShifts = lazyPage(() => import("../pages/workforce/WorkforceShifts"));
 
 
 const AppRoutes = () => {
@@ -229,6 +231,14 @@ const AppRoutes = () => {
                     </Route>
                     </Route>
 
+                </Route>
+
+                <Route element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager"]} />}>
+                    <Route path="analytics" element={<AdminLayout />}><Route index element={<AnalyticsDashboard />} /></Route>
+                </Route>
+
+                <Route element={<ProtectedRoute rolesAllowed={["admin", "company_owner", "hr_manager", "hr", "manager", "project_manager", "employee", "mr"]} />}>
+                    <Route path="workforce" element={<AdminLayout />}><Route path="shifts" element={<WorkforceShifts />} /></Route>
                 </Route>
 
 

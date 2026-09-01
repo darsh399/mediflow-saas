@@ -4,6 +4,7 @@ import Leave from '../models/Leave.js'
 import Expense from '../models/Expense.js'
 import Visit from '../models/Visit.js'
 import Sale from '../models/Sale.js'
+import Order from '../models/Order.js'
 import User from '../models/User.js'
 import { sendCsv } from '../utils/csv.js'
 import { hasPermission } from '../config/permissions.js'
@@ -262,6 +263,23 @@ export async function getReport(req, res) {
     return res.status(200).json({ type, period: window.label, columns, rows, summary, scope: employeeIds ? 'team' : 'company' })
   } catch (error) {
     return res.status(error.status || 400).json({ message: error.message })
+  }
+}
+
+export async function getAnalyticsSummary(req, res) {
+  try {
+    const window = resolveWindow(req.query)
+    const companyId = oid(req.user.companyId)
+    const [attendance, visits, sales, expenses, orders] = await Promise.all([
+      Attendance.countDocuments({ companyId, date: { $gte: window.start, $lt: window.end } }),
+      Visit.countDocuments({ companyId, visitedAt: { $gte: window.start, $lt: window.end } }),
+      Sale.aggregate([{ $match: { companyId, saleDate: { $gte: window.start, $lt: window.end } } }, { $group: { _id: null, count: { $sum: 1 }, value: { $sum: '$amount' } } }]),
+      Expense.aggregate([{ $match: { companyId, expenseDate: { $gte: window.start, $lt: window.end } } }, { $group: { _id: '$status', count: { $sum: 1 }, value: { $sum: '$amount' } } }]),
+      Order.aggregate([{ $match: { companyId, createdAt: { $gte: window.start, $lt: window.end } } }, { $group: { _id: '$fulfillmentStatus', count: { $sum: 1 } } }]),
+    ])
+    return res.json({ period: window.label, attendance, visits, sales: sales[0] || { count: 0, value: 0 }, expenses, orders })
+  } catch (error) {
+    return res.status(500).json({ message: 'Unable to load analytics summary', error: error.message })
   }
 }
 
